@@ -17,8 +17,36 @@
 //
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/alecthomas/kong"
+)
+
+type CLI struct {
+	Fn FnCmd `cmd:"" help:"Fn subcommand help"`
+}
 
 func main() {
-	fmt.Println("Hello funless cli")
+	cli := CLI{}
+
+	ctx := kong.Parse(&cli,
+		kong.Name("funlesscli"),
+		kong.UsageOnError(),
+		kong.ConfigureHelp(kong.HelpOptions{
+			Compact:             true,
+			NoExpandSubcommands: true,
+		}),
+	)
+	err := ctx.Run()
+
+	ctx.FatalIfErrorf(err)
+}
+
+type FnCmd struct {
+}
+
+func (f *FnCmd) Run() error {
+	fmt.Println("Hello fn")
+	return nil
 }
