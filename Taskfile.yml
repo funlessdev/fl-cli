@@ -1,0 +1,66 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+version: '3'
+vars:
+  BASETAG: 0.0.1
+  MILESTONE: todo #TODO
+  FL:
+    sh: echo ${GOBIN:-.}/fl
+  TAG:
+    sh: git describe --tags --abbrev=0 2>/dev/null || echo {{.MILESTONE}}-latest
+
+tasks:
+
+  default: task --list-all
+
+  cli-tag: git tag -d $(git tag) ; git tag -f v{{.BASETAG}}.$(date +%y%m%d%H)
+
+  build:
+    cmds:
+      - go build -ldflags "-X main.FLVersion={{.TAG}}" -o ./fl
+    sources:
+      - "*.go"
+      - "embed/*"
+    generates:
+      - "{{.FL}}"
+
+  install:
+    deps: [build]
+    cmds:
+      - cp ./fl {{.FL}}
+
+  vendor:
+    cmds:
+      - go mod vendor
+    status:
+      - test -d vendor
+
+  test:
+    cmds:
+      - go test -v -cover
+
+  debug:
+    deps:
+      - vendor
+    cmds:
+      - go build -gcflags '-N -l' -mod=vendor -ldflags "-X main.FLVersion={{.TAG}}" -o {{.FL}}-debug
+    generates:
+      - "{{.FL}}-debug"
+
+  clean: rm -f {{.FL}} {{.FL}}-debug
+  setup: {silent:true} 
