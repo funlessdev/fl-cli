@@ -110,5 +110,4 @@ func TestSend(t *testing.T) {
 	res, _ := client.Send(req)
 
 	require.Equal(t, http.StatusOK, res.StatusCode)
-
 }
