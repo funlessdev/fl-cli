@@ -24,8 +24,13 @@ import (
 	"net/url"
 )
 
+const (
+	DefaultNamespace = "default"
+)
+
 type ClientAPI interface {
-	NewRequest(method string, url url.URL, body interface{}, includeNamespaceInUrl bool) (*http.Request, error)
+	CreateGetRequest(urlStr string) (*http.Request, error)
+	// CreatePostRequest(u string, body interface{}) (*http.Request, error)
 }
 
 type Client struct {
@@ -34,46 +39,98 @@ type Client struct {
 }
 
 type Config struct {
-	Host    string
-	BaseURL *url.URL
-}
-
-func (c *Config) isHostMissing() bool {
-	return len(c.Host) == 0
-
-}
-
-func (c *Config) prepareBaseURL() error {
-	if c.BaseURL == nil {
-		baseURL, err := makeBaseURL(c.Host)
-		if err != nil {
-			return fmt.Errorf("unable to create new client because the api host %s is invalid", c.Host)
-		}
-		c.BaseURL = baseURL
-	}
-	return nil
+	Host      string
+	Namespace string
+	BaseURL   *url.URL
 }
 
 // NewClient creates a new funless client with the provided http client and fl configuration.
 func NewClient(httpClient *http.Client, config Config) (*Client, error) {
-	if config.isHostMissing() {
+	if len(config.Host) == 0 { // is host missing?
 		return nil, errors.New("unable to create new client, missing API host")
 	}
 
-	err := config.prepareBaseURL()
-	if err != nil {
-		return nil, err
+	if config.BaseURL == nil { // if BaseURL missing, create it
+		u, err := buildBaseURL(config.Host)
+		if err != nil {
+			return nil, err
+		}
+		config.BaseURL = u
 	}
 
 	return &Client{client: httpClient, Config: config}, nil
 }
 
-func makeBaseURL(host string) (*url.URL, error) {
-	url, err := url.Parse(host + "/api")
+func buildBaseURL(host string) (*url.URL, error) {
+	baseURL, err := url.Parse(host)
 
-	if err != nil || len(url.Scheme) == 0 || len(url.Host) == 0 {
-		url, err = url.Parse("https://" + host + "/api")
+	if err != nil || len(baseURL.Scheme) == 0 || len(baseURL.Host) == 0 {
+		baseURL, err = url.Parse("https://" + host)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("unable to create new client because the api host %s is invalid", host)
 	}
 
-	return url, err
+	return baseURL, nil
 }
+
+func (c *Client) buildRequestURL(endPoint string) (*url.URL, error) {
+	ns := DefaultNamespace
+	if len(c.Config.Namespace) != 0 { // If namespace not missing
+		ns = c.Config.Namespace
+	}
+	ep := fmt.Sprintf("%s/%s/%s", c.Config.BaseURL.String(), ns, endPoint)
+
+	u, err := url.Parse(ep)
+	if err != nil {
+		// todo Debug "url.Parse(%s) error: %s\n", urlStr, err
+		return nil, fmt.Errorf("invalid endpoint given %s", endPoint)
+	}
+	return u, nil
+}
+
+func (c *Client) CreateGetRequest(urlStr string) (*http.Request, error) {
+	u, err := c.buildRequestURL(urlStr)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	if err != nil {
+		// Debug(DbgError, "http.NewRequest(%v, %s, buf) error: %s\n", method, u.String(), err)
+		// errStr := wski18n.T("Error initializing request: {{.err}}", map[string]interface{}{"err": err})
+		// werr := MakeWskError(errors.New(errStr), EXIT_CODE_ERR_GENERAL, DISPLAY_MSG, NO_DISPLAY_USAGE)
+		return nil, errors.New("error initializing request")
+	}
+
+	return req, nil
+}
+
+// func (c *Client) CreatePostRequest(u url.URL, body interface{}) (*http.Request, error) {
+// 	var buf io.ReadWriter
+// 	if body != nil {
+// 		buf = new(bytes.Buffer)
+// 		encoder := json.NewEncoder(buf)
+// 		encoder.SetEscapeHTML(false)
+// 		err := encoder.Encode(body)
+
+// 		if err != nil {
+// 			// Debug(DbgError, "json.Encode(%#v) error: %s\n", body, err)
+// 			// errStr := wski18n.T("Error encoding request body: {{.err}}", map[string]interface{}{"err": err})
+// 			// werr := MakeWskError(errors.New(errStr), EXIT_CODE_ERR_GENERAL, DISPLAY_MSG, NO_DISPLAY_USAGE)
+// 			return nil, errors.New("error encoding request body")
+// 		}
+// 	}
+
+// 	req, err := http.NewRequest(http.MethodPost, u.String(), buf)
+// 	if err != nil {
+// 		// Debug(DbgError, "http.NewRequest(%v, %s, buf) error: %s\n", method, u.String(), err)
+// 		// errStr := wski18n.T("Error initializing request: {{.err}}", map[string]interface{}{"err": err})
+// 		// werr := MakeWskError(errors.New(errStr), EXIT_CODE_ERR_GENERAL, DISPLAY_MSG, NO_DISPLAY_USAGE)
+// 		return nil, errors.New("error initializing request")
+// 	}
+
+// 	req.Header.Add("Content-Type", "application/json")
+
+// 	return req, nil
+// }
