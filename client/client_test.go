@@ -19,6 +19,7 @@ package client
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -29,7 +30,7 @@ import (
 func TestNewClient(t *testing.T) {
 	t.Run("should create a client when config is valid", func(t *testing.T) {
 		host := "test-host.com"
-		expectedBaseUrl := "https://" + host + "/api"
+		expectedBaseUrl := "https://" + host
 
 		config := Config{Host: host}
 		client, err := NewClient(http.DefaultClient, config)
@@ -95,4 +96,19 @@ func Test_buildRequestURL(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, err.Error(), "invalid endpoint given "+uStr)
 	})
+}
+
+func TestSend(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/_/hello", r.URL.Path)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+	req, _ := client.CreateGet("hello")
+	res, _ := client.Send(req)
+
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
 }

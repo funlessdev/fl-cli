@@ -25,13 +25,8 @@ import (
 )
 
 const (
-	DefaultNamespace = "default"
+	DefaultNamespace = "_"
 )
-
-type ClientAPI interface {
-	CreateGetRequest(urlStr string) (*http.Request, error)
-	// CreatePostRequest(u string, body interface{}) (*http.Request, error)
-}
 
 type Client struct {
 	client *http.Client
@@ -44,7 +39,7 @@ type Config struct {
 	BaseURL   *url.URL
 }
 
-// NewClient creates a new funless client with the provided http client and fl configuration.
+// NewClient creates a new funless client with the provided http client and configuration.
 func NewClient(httpClient *http.Client, config Config) (*Client, error) {
 	if len(config.Host) == 0 { // is host missing?
 		return nil, errors.New("unable to create new client, missing API host")
@@ -89,7 +84,7 @@ func (c *Client) buildRequestURL(endPoint string) (*url.URL, error) {
 	return u, nil
 }
 
-func (c *Client) CreateGetRequest(urlStr string) (*http.Request, error) {
+func (c *Client) CreateGet(urlStr string) (*http.Request, error) {
 	u, err := c.buildRequestURL(urlStr)
 	if err != nil {
 		return nil, err
@@ -104,6 +99,18 @@ func (c *Client) CreateGetRequest(urlStr string) (*http.Request, error) {
 	}
 
 	return req, nil
+}
+
+func (c *Client) Send(request *http.Request) (*http.Response, error) {
+	// Issue the request to the funless server endpoint
+	res, err := c.client.Do(request)
+	if err != nil {
+		// Debug(DbgError, "HTTP Do() [req %s] error: %s\n", req.URL.String(), err)
+		// werr := MakeWskError(err, EXIT_CODE_ERR_NETWORK, DISPLAY_MSG, NO_DISPLAY_USAGE)
+		return nil, fmt.Errorf("error sending request %s", request.URL.String())
+	}
+
+	return res, nil
 }
 
 // func (c *Client) CreatePostRequest(u url.URL, body interface{}) (*http.Request, error) {
