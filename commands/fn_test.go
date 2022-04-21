@@ -17,7 +17,7 @@ func TestFn(t *testing.T) {
 
 	t.Run("should use FnService.Invoke to invoke functions", func(t *testing.T) {
 		cmd := fn{Name: testfn}
-		mockInvoker := mocks.NewInvoker(t)
+		mockInvoker := mocks.NewFnHandler(t)
 
 		mockInvoker.On("Invoke", testfn).Return(&http.Response{}, nil)
 
@@ -30,7 +30,7 @@ func TestFn(t *testing.T) {
 
 	t.Run("should return error if invalid invoke request", func(t *testing.T) {
 		cmd := fn{Name: testfn}
-		mockInvoker := mocks.NewInvoker(t)
+		mockInvoker := mocks.NewFnHandler(t)
 		mockInvoker.On("Invoke", testfn).Return(nil, fmt.Errorf("some error in FnService.Invoke"))
 
 		err := cmd.Run(mockInvoker)
@@ -43,7 +43,6 @@ func TestFn(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
-
 	c, _ := client.NewClient(http.DefaultClient, client.Config{Host: server.URL})
 	svc := &client.FnService{Client: c}
 	t.Run("should send invoke request to server", func(t *testing.T) {

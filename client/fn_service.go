@@ -24,7 +24,7 @@ import "net/http"
 // https://${HOST}/{NAMESPACE}/ev/event1
 // https://${HOST}/{NAMESPACE}/pkg/{PACKAGE}/fn/hello
 
-type Invoker interface {
+type FnHandler interface {
 	Invoke(fnName string) (*http.Response, error)
 }
 
@@ -32,9 +32,7 @@ type FnService struct {
 	*Client
 }
 
-type Fn struct {
-	Name string `json:"name,omitempty"`
-}
+var _ FnHandler = &FnService{}
 
 func (fn *FnService) Invoke(fnName string) (*http.Response, error) {
 	// https://${HOST}/{NAMESPACE}/fn/hello
