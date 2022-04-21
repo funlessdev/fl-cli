@@ -15,42 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-package main
+package commands
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/alecthomas/kong"
 	"github.com/funlessdev/funless-cli/client"
-	"github.com/funlessdev/funless-cli/commands"
 )
 
-type CLI struct {
-	commands.Commands
+type fn struct {
+	Name string `arg:"" name:"name" help:"name of the function to invoke"`
 }
 
-func main() {
-	cli := CLI{}
-
-	flConfig := client.Config{Host: "http://localhost:8080"}
-	flClient, err := client.NewClient(http.DefaultClient, flConfig)
+func (f *fn) Run(invoker client.FnHandler) error {
+	res, err := invoker.Invoke(f.Name)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
-	fnSvc := &client.FnService{Client: flClient}
 
-	ctx := kong.Parse(&cli,
-		kong.Name("fl"),
-		kong.Description("Funless CLI - fl"),
-		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Compact:             true,
-			NoExpandSubcommands: true,
-		}),
-		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
-	)
-
-	ctx.FatalIfErrorf(ctx.Run())
+	fmt.Println(res.Status)
+	return nil
 }

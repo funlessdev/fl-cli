@@ -15,42 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-package main
+package client
 
-import (
-	"fmt"
-	"net/http"
+import "net/http"
 
-	"github.com/alecthomas/kong"
-	"github.com/funlessdev/funless-cli/client"
-	"github.com/funlessdev/funless-cli/commands"
-)
+//					 default
+// https://${HOST}/{NAMESPACE}/fn/hello
+// https://${HOST}/{NAMESPACE}/ev/event1
+// https://${HOST}/{NAMESPACE}/pkg/{PACKAGE}/fn/hello
 
-type CLI struct {
-	commands.Commands
+type FnHandler interface {
+	Invoke(fnName string) (*http.Response, error)
 }
 
-func main() {
-	cli := CLI{}
+type FnService struct {
+	*Client
+}
 
-	flConfig := client.Config{Host: "http://localhost:8080"}
-	flClient, err := client.NewClient(http.DefaultClient, flConfig)
+var _ FnHandler = &FnService{}
+
+func (fn *FnService) Invoke(fnName string) (*http.Response, error) {
+	// https://${HOST}/{NAMESPACE}/fn/hello
+	req, err := fn.CreateGet("fn/" + fnName)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return nil, err
 	}
-	fnSvc := &client.FnService{Client: flClient}
-
-	ctx := kong.Parse(&cli,
-		kong.Name("fl"),
-		kong.Description("Funless CLI - fl"),
-		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Compact:             true,
-			NoExpandSubcommands: true,
-		}),
-		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
-	)
-
-	ctx.FatalIfErrorf(ctx.Run())
+	return fn.Send(req)
 }

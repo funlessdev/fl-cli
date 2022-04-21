@@ -15,42 +15,34 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-package main
+package client
 
 import (
-	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"testing"
 
-	"github.com/alecthomas/kong"
-	"github.com/funlessdev/funless-cli/client"
-	"github.com/funlessdev/funless-cli/commands"
+	"github.com/stretchr/testify/require"
 )
 
-type CLI struct {
-	commands.Commands
-}
+func TestInvoke(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
 
-func main() {
-	cli := CLI{}
+	c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+	fnService := &FnService{c}
 
-	flConfig := client.Config{Host: "http://localhost:8080"}
-	flClient, err := client.NewClient(http.DefaultClient, flConfig)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fnSvc := &client.FnService{Client: flClient}
+	t.Run("should send a GET request", func(t *testing.T) {
+		res, _ := fnService.Invoke("test")
+		require.Equal(t, http.MethodGet, res.Request.Method)
+	})
 
-	ctx := kong.Parse(&cli,
-		kong.Name("fl"),
-		kong.Description("Funless CLI - fl"),
-		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Compact:             true,
-			NoExpandSubcommands: true,
-		}),
-		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
-	)
+	t.Run("should have /_/fn/test as url path when invoking fn named test", func(t *testing.T) {
+		res, _ := fnService.Invoke("test")
+		require.Equal(t, "/_/fn/test", res.Request.URL.Path)
+	})
 
-	ctx.FatalIfErrorf(ctx.Run())
+	// TODO what does invoke should return?
 }
