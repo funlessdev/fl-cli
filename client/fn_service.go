@@ -24,6 +24,10 @@ import "net/http"
 // https://${HOST}/{NAMESPACE}/ev/event1
 // https://${HOST}/{NAMESPACE}/pkg/{PACKAGE}/fn/hello
 
+type Invoker interface {
+	Invoke(fnName string) (*http.Response, error)
+}
+
 type FnService struct {
 	*Client
 }

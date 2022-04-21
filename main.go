@@ -18,13 +18,12 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/alecthomas/kong"
+	"github.com/funlessdev/funless-cli/commands"
 )
 
 type CLI struct {
-	Fn FnCmd `cmd:"" help:"Fn subcommand help"`
+	commands.Commands
 }
 
 func main() {
@@ -41,12 +40,4 @@ func main() {
 	err := ctx.Run()
 
 	ctx.FatalIfErrorf(err)
-}
-
-type FnCmd struct {
-}
-
-func (f *FnCmd) Run() error {
-	fmt.Println("Hello fn")
-	return nil
 }
