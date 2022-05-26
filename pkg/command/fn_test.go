@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-package commands
+package command
 
 import (
 	"fmt"
@@ -23,8 +23,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/funlessdev/funless-cli/client"
-	"github.com/funlessdev/funless-cli/mocks"
+	"github.com/funlessdev/funless-cli/pkg/client"
+	"github.com/funlessdev/funless-cli/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func TestFn(t *testing.T) {
 	testfn := "test-fn"
 
 	t.Run("should use FnService.Invoke to invoke functions", func(t *testing.T) {
-		cmd := fn{Name: testfn}
+		cmd := Fn{Name: testfn}
 		mockInvoker := mocks.NewFnHandler(t)
 
 		mockInvoker.On("Invoke", testfn).Return(&http.Response{}, nil)
@@ -46,7 +46,7 @@ func TestFn(t *testing.T) {
 	})
 
 	t.Run("should return error if invalid invoke request", func(t *testing.T) {
-		cmd := fn{Name: testfn}
+		cmd := Fn{Name: testfn}
 		mockInvoker := mocks.NewFnHandler(t)
 		mockInvoker.On("Invoke", testfn).Return(nil, fmt.Errorf("some error in FnService.Invoke"))
 
@@ -63,7 +63,7 @@ func TestFn(t *testing.T) {
 	c, _ := client.NewClient(http.DefaultClient, client.Config{Host: server.URL})
 	svc := &client.FnService{Client: c}
 	t.Run("should send invoke request to server", func(t *testing.T) {
-		cmd := fn{Name: testfn}
+		cmd := Fn{Name: testfn}
 		err := cmd.Run(svc)
 		require.NoError(t, err)
 	})

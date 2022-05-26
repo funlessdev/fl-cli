@@ -22,12 +22,13 @@ import (
 	"net/http"
 
 	"github.com/alecthomas/kong"
-	"github.com/funlessdev/funless-cli/client"
-	"github.com/funlessdev/funless-cli/commands"
+	"github.com/funlessdev/funless-cli/pkg/client"
+	"github.com/funlessdev/funless-cli/pkg/command"
 )
 
 type CLI struct {
-	commands.Commands
+	Fn    command.Fn    `cmd:"" help:"todo fn subcommand help"`
+	Admin command.Admin `cmd:"" help:"todo admin subcommand help"`
 }
 
 func main() {

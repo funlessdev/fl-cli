@@ -31,6 +31,7 @@ tasks:
   cli-tag: git tag -d $(git tag) ; git tag -f v{{.BASETAG}}.$(date +%y%m%d%H)
 
   build:
+    dir: cmd/fl
     cmds:
       - go build -ldflags "-X main.FLVersion={{.TAG}}" -o ./fl
     sources:

@@ -15,8 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-package commands
+package command
 
-type Commands struct {
-	Fn fn `cmd:"" help:"todo fn subcommand help"`
+import (
+	"fmt"
+
+	"github.com/funlessdev/funless-cli/pkg/client"
+)
+
+type Fn struct {
+	Name string `arg:"" name:"name" help:"name of the function to invoke"`
+}
+
+func (f *Fn) Run(invoker client.FnHandler) error {
+	res, err := invoker.Invoke(f.Name)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(res.Status)
+	return nil
 }
