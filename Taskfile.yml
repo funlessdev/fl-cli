@@ -33,7 +33,7 @@ tasks:
   build:
     dir: cmd/fl
     cmds:
-      - go build -ldflags "-X main.FLVersion={{.TAG}}" -o ./fl
+      - go build -ldflags "-X main.FLVersion={{.TAG}}" -o ../../fl
     sources:
       - "*.go"
       - "embed/*"
@@ -43,7 +43,7 @@ tasks:
   install:
     deps: [build]
     cmds:
-      - cp ./fl {{.FL}}
+      - cp cmd/fl/fl {{.FL}}
 
   vendor:
     cmds:
