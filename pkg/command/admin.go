@@ -20,8 +20,8 @@ package command
 import (
 	"time"
 
-	"github.com/funlessdev/funless-cli/pkg/spinner"
-	"github.com/theckman/yacspin"
+	"github.com/funlessdev/funless-cli/pkg/docker"
+	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
 type Admin struct {
@@ -31,46 +31,25 @@ type Admin struct {
 type deploy struct {
 }
 
-func (d *deploy) Run() error {
-	cfg := yacspin.Config{
-		Frequency:         150 * time.Millisecond,
-		Colors:            []string{"fgYellow"},
-		CharSet:           yacspin.CharSets[59],
-		Suffix:            " deploying funless locally",
-		SuffixAutoColon:   true,
-		Message:           "pulling component images",
-		StopCharacter:     "✓",
-		StopColors:        []string{"fgGreen"},
-		StopMessage:       "done",
-		StopFailCharacter: "✗",
-		StopFailColors:    []string{"fgRed"},
-		StopFailMessage:   "failed",
-	}
-	spinner, err := spinner.CreateSpinner(cfg)
+func (d *deploy) Run(logger log.FLogger) error {
+	err := docker.RunPreflightChecks(logger)
 	if err != nil {
 		return err
 	}
 
-	err = spinner.Start()
-	if err != nil {
-		return err
-	}
+	logger.SpinnerSuffix("Deploying funless locally")
+
+	logger.StartSpinner("pulling component images")
 
 	time.Sleep(2 * time.Second)
-	err = spinner.Stop()
-	// doing some work
 
-	spinner.Message("uploading data")
-	err = spinner.Start()
-	if err != nil {
-		return err
-	}
+	logger.StopSpinner(true)
+
+	logger.StartSpinner("uploading data")
+
 	time.Sleep(2 * time.Second)
 
-	err = spinner.Stop()
-
-	// upload...
-	time.Sleep(2 * time.Second)
+	logger.StopSpinner(true)
 
 	return err
 }

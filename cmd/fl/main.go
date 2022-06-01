@@ -24,6 +24,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/funlessdev/funless-cli/pkg/client"
 	"github.com/funlessdev/funless-cli/pkg/command"
+	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
 type CLI struct {
@@ -33,6 +34,11 @@ type CLI struct {
 
 func main() {
 	cli := CLI{}
+
+	logger, err := log.NewBaseLogger(false)
+	if err != nil {
+		panic(err)
+	}
 
 	flConfig := client.Config{Host: "http://localhost:8080"}
 	flClient, err := client.NewClient(http.DefaultClient, flConfig)
@@ -45,12 +51,12 @@ func main() {
 	ctx := kong.Parse(&cli,
 		kong.Name("fl"),
 		kong.Description("Funless CLI - fl"),
-		kong.UsageOnError(),
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact:             true,
 			NoExpandSubcommands: true,
 		}),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
+		kong.BindTo(logger, (*log.FLogger)(nil)),
 	)
 
 	ctx.FatalIfErrorf(ctx.Run())
