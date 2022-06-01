@@ -20,6 +20,7 @@ package docker
 import (
 	"testing"
 
+	"github.com/funlessdev/funless-cli/pkg/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,19 +34,20 @@ func (sh *fakeShell) runShellCmd(cmd string, args ...string) (string, error) {
 }
 
 func Test_ensureDockerVersion(t *testing.T) {
-	p := preflightChecksPipeline{shell: &fakeShell{out: "19.03.5", err: nil}}
+	l, _ := log.NewBaseLogger(false)
+	p := preflightChecksPipeline{shell: &fakeShell{out: "19.03.5", err: nil}, logger: l}
 	p.step(ensureDockerVersion)
 	assert.NoError(t, p.err)
 
-	p = preflightChecksPipeline{shell: &fakeShell{out: "10.03.5", err: nil}}
+	p = preflightChecksPipeline{shell: &fakeShell{out: "10.03.5", err: nil}, logger: l}
 	p.step(ensureDockerVersion)
 	assert.ErrorContains(t, p.err, "installed docker version 10.3.5 is no longer supported")
 
-	p = preflightChecksPipeline{shell: &fakeShell{out: MinDockerVersion, err: nil}}
+	p = preflightChecksPipeline{shell: &fakeShell{out: MinDockerVersion, err: nil}, logger: l}
 	p.step(ensureDockerVersion)
 	assert.NoError(t, p.err)
 
-	p = preflightChecksPipeline{shell: &fakeShell{out: "", err: assert.AnError}}
+	p = preflightChecksPipeline{shell: &fakeShell{out: "", err: assert.AnError}, logger: l}
 	p.step(ensureDockerVersion)
 	assert.Error(t, p.err)
 }

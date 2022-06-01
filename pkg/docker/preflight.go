@@ -22,12 +22,14 @@ import (
 	"strings"
 
 	"github.com/coreos/go-semver/semver"
+	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
 const MinDockerVersion = "18.06.3-ce"
 
 type preflightChecksPipeline struct {
 	shell      shellExecutor
+	logger     log.FLogger
 	dockerData string
 	err        error
 }
@@ -44,14 +46,21 @@ func (p *preflightChecksPipeline) step(f checkStep) {
 // RunPreflightChecks performs preflight checks
 // It ensures that docker is at least @MinDockerVersion.
 // It returns an error if occured, nil otherwise
-func RunPreflightChecks() error {
+func RunPreflightChecks(logger log.FLogger) error {
 
+	logger.SpinnerSuffix("Running PreFlight Checks")
+	logger.StartSpinner("")
 	// Preflight Checks pipeline
-	pp := preflightChecksPipeline{shell: &baseShell{}}
+	pp := preflightChecksPipeline{shell: &baseShell{}, logger: logger}
 
 	pp.step(extractDockerInfo)
 	pp.step(ensureDockerVersion)
 
+	if pp.err != nil {
+		logger.StopSpinner(false)
+	} else {
+		logger.StopSpinner(true)
+	}
 	return pp.err
 }
 
@@ -60,21 +69,16 @@ func extractDockerInfo(p *preflightChecksPipeline) {
 }
 
 func ensureDockerVersion(p *preflightChecksPipeline) {
-	fmt.Printf("Check Docker version (min %s)\n", MinDockerVersion)
-	// p.logger.StartSpinner("Check Docker version (min. " + MinDockerVersion + ")")
+	p.logger.SpinnerMessage("Check Docker version (min. " + MinDockerVersion + ")")
 	version, err := dockerVersion(p.shell)
 	if err != nil {
 		p.err = err
-		// p.logger.EndSpinner(false)
 		return
 	}
 	vA := semver.New(MinDockerVersion)
 	vB := semver.New(strings.TrimSpace(version))
 	if vB.Compare(*vA) == -1 {
 		p.err = fmt.Errorf("installed docker version %s is no longer supported", vB)
-		// p.logger.EndSpinner(false)
 		return
 	}
-	// p.logger.EndSpinner(true)
-	fmt.Println("Docker supported")
 }
