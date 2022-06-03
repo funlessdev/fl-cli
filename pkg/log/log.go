@@ -94,12 +94,14 @@ func (l *BaseFLogger) Infof(format string, args ...interface{}) {
 
 func (l *BaseFLogger) Debug(args ...interface{}) {
 	if l.debug {
+		fmt.Print("DEBUG: ")
 		fmt.Println(args...)
 	}
 }
 
 func (l *BaseFLogger) Debugf(format string, args ...interface{}) {
 	if l.debug {
+		fmt.Print("DEBUG: ")
 		fmt.Printf(format, args...)
 	}
 }
