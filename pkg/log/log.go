@@ -18,8 +18,7 @@
 package log
 
 import (
-	"log"
-	"os"
+	"fmt"
 	"time"
 
 	"github.com/theckman/yacspin"
@@ -40,7 +39,6 @@ type FLogger interface {
 
 type BaseFLogger struct {
 	debug   bool
-	logger  *log.Logger
 	spinner *yacspin.Spinner
 }
 
@@ -62,7 +60,7 @@ func NewBaseLogger(debug bool) (*BaseFLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &BaseFLogger{debug: debug, logger: log.New(os.Stdout, "", 5), spinner: s}, nil
+	return &BaseFLogger{debug: debug, spinner: s}, nil
 }
 
 func (l *BaseFLogger) SpinnerSuffix(suffix string) {
@@ -87,21 +85,21 @@ func (l *BaseFLogger) StopSpinner(success bool) {
 }
 
 func (l *BaseFLogger) Info(args ...interface{}) {
-	l.logger.Println(args...)
+	fmt.Println(args...)
 }
 
 func (l *BaseFLogger) Infof(format string, args ...interface{}) {
-	l.logger.Printf(format, args...)
+	fmt.Printf(format, args...)
 }
 
 func (l *BaseFLogger) Debug(args ...interface{}) {
 	if l.debug {
-		l.logger.Println(args...)
+		fmt.Println(args...)
 	}
 }
 
 func (l *BaseFLogger) Debugf(format string, args ...interface{}) {
 	if l.debug {
-		l.logger.Printf(format, args...)
+		fmt.Printf(format, args...)
 	}
 }
