@@ -27,9 +27,15 @@ import (
 	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
+// CLIVersion holds the current version, to be set by the build with
+//  go build -ldflags "-X main.FLVersion=<version>"
+var FLVersion = "vX.Y.Z-milestone.build"
+
 type CLI struct {
 	Fn    command.Fn    `cmd:"" help:"todo fn subcommand help"`
 	Admin command.Admin `cmd:"" help:"todo admin subcommand help"`
+
+	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
 
 func main() {
@@ -57,6 +63,9 @@ func main() {
 		}),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
+		kong.Vars{
+			"version": FLVersion,
+		},
 	)
 
 	ctx.FatalIfErrorf(ctx.Run())
