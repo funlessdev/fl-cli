@@ -60,8 +60,10 @@ func TestFn(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
+
 	c, _ := client.NewClient(http.DefaultClient, client.Config{Host: server.URL})
 	svc := &client.FnService{Client: c}
+
 	t.Run("should send invoke request to server", func(t *testing.T) {
 		cmd := Fn{Name: testfn}
 		err := cmd.Run(svc)
