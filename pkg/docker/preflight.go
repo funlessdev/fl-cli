@@ -28,7 +28,7 @@ import (
 const MinDockerVersion = "18.06.3-ce"
 
 type preflightChecksPipeline struct {
-	shell      shellExecutor
+	shell      shell
 	logger     log.FLogger
 	dockerData string
 	err        error

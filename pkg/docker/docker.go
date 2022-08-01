@@ -19,12 +19,9 @@ package docker
 
 import (
 	"errors"
-	"os/exec"
-	"regexp"
-	"strings"
 )
 
-func dockerInfo(exec shellExecutor) (string, error) {
+func dockerInfo(exec shell) (string, error) {
 	out, err := exec.runShellCmd("docker info")
 	if err != nil {
 		return "", errors.New("docker is not running")
@@ -32,31 +29,6 @@ func dockerInfo(exec shellExecutor) (string, error) {
 	return out, nil
 }
 
-func dockerVersion(exec shellExecutor) (string, error) {
+func dockerVersion(exec shell) (string, error) {
 	return exec.runShellCmd("docker version --format {{.Server.Version}}")
-}
-
-type shellExecutor interface {
-	runShellCmd(cmd string, args ...string) (string, error)
-}
-
-type baseShell struct{}
-
-func parseCmd(cmd string, args ...string) (string, []string) {
-	re := regexp.MustCompile(`[\r\t\n\f ]+`)
-	a := strings.Split(re.ReplaceAllString(cmd, " "), " ")
-
-	params := args
-	if len(a) > 1 {
-		params = append(a[1:], args...)
-	}
-	exe := a[0]
-
-	return exe, params
-}
-
-func (sh *baseShell) runShellCmd(cmd string, args ...string) (string, error) {
-	exe, params := parseCmd(cmd, args...)
-	out, err := exec.Command(exe, params...).CombinedOutput()
-	return string(out), err
 }
