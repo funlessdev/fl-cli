@@ -29,7 +29,7 @@ import (
 
 // CLIVersion holds the current version, to be set by the build with
 //  go build -ldflags "-X main.FLVersion=<version>"
-var FLVersion = "vX.Y.Z-milestone.build"
+var FLVersion = "vX.Y.Z.build"
 
 type CLI struct {
 	Fn    command.Fn    `cmd:"" help:"todo fn subcommand help"`

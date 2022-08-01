@@ -31,7 +31,8 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-fl
+./cmd/fl/fl
+./fl
 .task
 vendor/
 bin/

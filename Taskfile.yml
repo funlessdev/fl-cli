@@ -15,20 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '3'
+version: "3"
 
 vars:
-  BASETAG: v0.1.0-fl
+  BASETAG: v0.1.0
   TAG:
     sh: git describe --tags --abbrev=0 2>/dev/null || echo latest
   CMD: "./fl"
-  
-tasks:
 
+tasks:
   default: task --list-all
 
-  cli-tag: 
-    - git tag -d $(git tag) 
+  cli-tag:
+    - git tag -d $(git tag)
     - git tag -f {{.BASETAG}}.$(date +%y%m%d%H)
     - git tag
 
@@ -66,4 +65,4 @@ tasks:
       - "{{.FL}}-debug"
 
   clean: rm -f {{.FL}} {{.FL}}-debug
-  setup: {silent:true} 
+  setup: { silent:true }
