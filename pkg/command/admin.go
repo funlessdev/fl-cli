@@ -18,8 +18,13 @@
 package command
 
 import (
-	"time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/funlessdev/funless-cli/pkg/docker"
 	"github.com/funlessdev/funless-cli/pkg/log"
 )
@@ -31,25 +36,74 @@ type Admin struct {
 type deploy struct {
 }
 
-func (d *deploy) Run(logger log.FLogger) error {
-	err := docker.RunPreflightChecks(logger)
+func (d *deploy) Run(ctx context.Context, logger log.FLogger) error {
+	if err := docker.RunPreflightChecks(logger); err != nil {
+		return err
+	}
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return err
 	}
 
-	logger.SpinnerSuffix("Deploying funless locally")
-
-	logger.StartSpinner("pulling component images")
-
-	time.Sleep(2 * time.Second)
-
-	logger.StopSpinner(true)
-
-	logger.StartSpinner("uploading data")
-
-	time.Sleep(2 * time.Second)
-
-	logger.StopSpinner(true)
+	err = deployWithDocker(ctx, &dockerClient{cli}, logger)
 
 	return err
+}
+
+type dockerClient struct {
+	*client.Client
+}
+
+// Function to connect to docker, pull images and start containers
+func deployWithDocker(ctx context.Context, cli *dockerClient, logger log.FLogger) error {
+	logger.SpinnerSuffix("Deploying funless locally")
+	logger.StartSpinner("pulling images... ")
+
+	cli.pullImage(ctx, logger, FLCore)
+	logger.Info("Core image pulled.")
+
+	cli.pullImage(ctx, logger, FLWorker)
+	logger.Info("Worker image pulled.")
+
+	logger.StopSpinner(true)
+	return nil
+}
+
+func (c *dockerClient) pullImage(ctx context.Context, logger log.FLogger, image string) error {
+	out, err := c.ImagePull(ctx, image, types.ImagePullOptions{})
+	if err != nil {
+		logger.StopSpinner(false)
+		return err
+	}
+	defer out.Close()
+
+	d := json.NewDecoder(out)
+
+	type Event struct {
+		Status         string `json:"status"`
+		Error          string `json:"error"`
+		Progress       string `json:"progress"`
+		ProgressDetail struct {
+			Current int `json:"current"`
+			Total   int `json:"total"`
+		} `json:"progressDetail"`
+	}
+
+	var event *Event
+	for {
+		if err := d.Decode(&event); err != nil {
+			if err == io.EOF {
+				break
+			}
+			logger.StopSpinner(false)
+			return err
+		}
+
+		if event.Error != "" {
+			logger.StopSpinner(false)
+			return fmt.Errorf("error pulling image: %s", event.Error)
+		}
+	}
+	return nil
 }

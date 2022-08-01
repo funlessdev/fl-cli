@@ -18,6 +18,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -40,6 +41,7 @@ type CLI struct {
 
 func main() {
 	cli := CLI{}
+	ctx := context.Background()
 
 	logger, err := log.NewBaseLogger(false)
 	if err != nil {
@@ -54,13 +56,16 @@ func main() {
 	}
 	fnSvc := &client.FnService{Client: flClient}
 
-	ctx := kong.Parse(&cli,
+	kong_ctx := kong.Parse(&cli,
 		kong.Name("fl"),
 		kong.Description("Funless CLI - fl"),
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact:             true,
 			NoExpandSubcommands: true,
+			Summary:             true,
+			FlagsLast:           true,
 		}),
+		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.Vars{
@@ -68,5 +73,5 @@ func main() {
 		},
 	)
 
-	ctx.FatalIfErrorf(ctx.Run())
+	kong_ctx.FatalIfErrorf(kong_ctx.Run())
 }
