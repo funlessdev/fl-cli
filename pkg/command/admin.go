@@ -6,7 +6,7 @@
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
 //
-//   http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -14,7 +14,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-//
 package command
 
 import (
@@ -24,7 +23,9 @@ import (
 	"io"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/funlessdev/funless-cli/pkg/docker"
 	"github.com/funlessdev/funless-cli/pkg/log"
 )
@@ -60,20 +61,37 @@ func deployWithDocker(ctx context.Context, cli *dockerClient, logger log.FLogger
 	logger.SpinnerSuffix("Deploying funless locally")
 	logger.StartSpinner("pulling images... ")
 
-	cli.pullImage(ctx, logger, FLCore)
-	logger.Info("Core image pulled.")
+	if err := pullFLImages(ctx, cli, logger); err != nil {
+		return err
+	}
 
-	cli.pullImage(ctx, logger, FLWorker)
-	logger.Info("Worker image pulled.")
+	if err := startFLContainers(ctx, cli, logger); err != nil {
+		return err
+	}
 
 	logger.StopSpinner(true)
 	return nil
 }
 
-func (c *dockerClient) pullImage(ctx context.Context, logger log.FLogger, image string) error {
+func pullFLImages(ctx context.Context, cli *dockerClient, logger log.FLogger) error {
+	if err := cli.pullImage(ctx, FLCore); err != nil {
+		logger.StopSpinner(false)
+		return err
+	}
+
+	logger.Info("Core image pulled.")
+
+	if err := cli.pullImage(ctx, FLWorker); err != nil {
+		logger.StopSpinner(false)
+		return err
+	}
+	logger.Info("Worker image pulled.")
+	return nil
+}
+
+func (c *dockerClient) pullImage(ctx context.Context, image string) error {
 	out, err := c.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
-		logger.StopSpinner(false)
 		return err
 	}
 	defer out.Close()
@@ -96,14 +114,75 @@ func (c *dockerClient) pullImage(ctx context.Context, logger log.FLogger, image 
 			if err == io.EOF {
 				break
 			}
-			logger.StopSpinner(false)
 			return err
 		}
 
 		if event.Error != "" {
-			logger.StopSpinner(false)
 			return fmt.Errorf("error pulling image: %s", event.Error)
 		}
 	}
+	return nil
+}
+
+func startFLContainers(ctx context.Context, cli *dockerClient, logger log.FLogger) error {
+	logger.SpinnerMessage("starting containers... ")
+
+	if err := startCoreContainer(ctx, cli); err != nil {
+		return err
+	}
+
+	logger.Info("Core container started.")
+
+	if err := startWorkerContainer(ctx, cli); err != nil {
+		return err
+	}
+
+	logger.Info("Worker container started.")
+
+	return nil
+
+}
+
+func startCoreContainer(ctx context.Context, client *dockerClient) error {
+	containerConfig := &container.Config{
+		Image: FLCore,
+		ExposedPorts: nat.PortSet{
+			"4001/tcp": struct{}{},
+		},
+	}
+
+	hostConfig := &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"4001/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "4001",
+				},
+			},
+		},
+	}
+
+	return client.startContainer(ctx, containerConfig, hostConfig)
+
+}
+
+func startWorkerContainer(ctx context.Context, client *dockerClient) error {
+	containerConfig := &container.Config{
+		Image: FLWorker,
+	}
+	return client.startContainer(ctx, containerConfig, nil)
+}
+
+func (c *dockerClient) startContainer(ctx context.Context, containerConfig *container.Config, hostConfig *container.HostConfig) error {
+	resp, err := c.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, "")
+
+	if err != nil {
+		return err
+	}
+
+	if err := c.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
 	return nil
 }
