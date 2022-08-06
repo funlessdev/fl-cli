@@ -38,6 +38,8 @@ type deploy struct {
 }
 
 func (d *deploy) Run(ctx context.Context, logger log.FLogger) error {
+	logger.Info("Deploying funless locally...\n")
+
 	if err := docker.RunPreflightChecks(logger); err != nil {
 		return err
 	}
@@ -58,34 +60,30 @@ type dockerClient struct {
 
 // Function to connect to docker, pull images and start containers
 func deployWithDocker(ctx context.Context, cli *dockerClient, logger log.FLogger) error {
-	logger.SpinnerSuffix("Deploying funless locally")
-	logger.StartSpinner("pulling images... ")
-
 	if err := pullFLImages(ctx, cli, logger); err != nil {
-		return err
+		return logger.StopSpinner(err)
 	}
 
 	if err := startFLContainers(ctx, cli, logger); err != nil {
-		return err
+		return logger.StopSpinner(err)
 	}
 
-	logger.StopSpinner(true)
+	logger.Info("\nDeployment complete!")
+	logger.Info("You can now start using Funless! 🎉")
 	return nil
 }
 
 func pullFLImages(ctx context.Context, cli *dockerClient, logger log.FLogger) error {
-	if err := cli.pullImage(ctx, FLCore); err != nil {
-		logger.StopSpinner(false)
+	logger.StartSpinner(fmt.Sprintf("pulling Core image (%s) 📦", FLCore))
+	if err := logger.StopSpinner(cli.pullImage(ctx, FLCore)); err != nil {
 		return err
 	}
 
-	logger.Info("Core image pulled.")
-
-	if err := cli.pullImage(ctx, FLWorker); err != nil {
-		logger.StopSpinner(false)
+	logger.StartSpinner(fmt.Sprintf("pulling Worker image (%s) 📦📦", FLWorker))
+	if err := logger.StopSpinner(cli.pullImage(ctx, FLWorker)); err != nil {
 		return err
 	}
-	logger.Info("Worker image pulled.")
+
 	return nil
 }
 
@@ -118,26 +116,23 @@ func (c *dockerClient) pullImage(ctx context.Context, image string) error {
 		}
 
 		if event.Error != "" {
-			return fmt.Errorf("error pulling image: %s", event.Error)
+			return fmt.Errorf("pulling image: %s", event.Error)
 		}
 	}
 	return nil
 }
 
 func startFLContainers(ctx context.Context, cli *dockerClient, logger log.FLogger) error {
-	logger.SpinnerMessage("starting containers... ")
+	logger.StartSpinner("starting Core container 🎛️")
 
-	if err := startCoreContainer(ctx, cli); err != nil {
+	if err := logger.StopSpinner(startCoreContainer(ctx, cli)); err != nil {
 		return err
 	}
 
-	logger.Info("Core container started.")
-
-	if err := startWorkerContainer(ctx, cli); err != nil {
+	logger.StartSpinner("starting Worker container 👷")
+	if err := logger.StopSpinner(startWorkerContainer(ctx, cli)); err != nil {
 		return err
 	}
-
-	logger.Info("Worker container started.")
 
 	return nil
 

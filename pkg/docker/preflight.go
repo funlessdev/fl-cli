@@ -46,21 +46,14 @@ func (p *preflightChecksPipeline) step(f checkStep) {
 // It ensures that docker is at least @MinDockerVersion.
 // It returns an error if occured, nil otherwise
 func RunPreflightChecks(logger log.FLogger) error {
+	logger.StartSpinner("Running PreFlight Checks")
 
-	logger.SpinnerSuffix("Running PreFlight Checks")
-	logger.StartSpinner("")
-	// Preflight Checks pipeline
 	pp := preflightChecksPipeline{shell: &baseShell{}, logger: logger}
 
 	pp.step(extractDockerInfo)
 	pp.step(ensureDockerVersion)
 
-	if pp.err != nil {
-		logger.StopSpinner(false)
-	} else {
-		logger.StopSpinner(true)
-	}
-	return pp.err
+	return logger.StopSpinner(pp.err)
 }
 
 func extractDockerInfo(p *preflightChecksPipeline) {
@@ -68,7 +61,6 @@ func extractDockerInfo(p *preflightChecksPipeline) {
 }
 
 func ensureDockerVersion(p *preflightChecksPipeline) {
-	p.logger.SpinnerMessage("Check Docker version (min. " + MinDockerVersion + ")")
 	version, err := dockerVersion(p.shell)
 	if err != nil {
 		p.err = err

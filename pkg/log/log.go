@@ -24,10 +24,10 @@ import (
 )
 
 type FLogger interface {
-	SpinnerSuffix(suffix string)
-	SpinnerMessage(msg string)
-	StartSpinner(msg string)
-	StopSpinner(success bool)
+	SpinnerSuffix(string)
+	SpinnerMessage(string)
+	StartSpinner(string)
+	StopSpinner(error) error
 
 	Info(args ...interface{})
 	Infof(format string, args ...interface{})
@@ -37,8 +37,9 @@ type FLogger interface {
 }
 
 type BaseFLogger struct {
-	debug   bool
-	spinner *yacspin.Spinner
+	debug          bool
+	currentMessage string
+	spinner        *yacspin.Spinner
 }
 
 func NewBaseLogger(debug bool) (*BaseFLogger, error) {
@@ -49,10 +50,8 @@ func NewBaseLogger(debug bool) (*BaseFLogger, error) {
 		SuffixAutoColon:   true,
 		StopCharacter:     "✓",
 		StopColors:        []string{"fgGreen"},
-		StopMessage:       "done",
 		StopFailCharacter: "✗",
 		StopFailColors:    []string{"fgRed"},
-		StopFailMessage:   "failed",
 	}
 
 	s, err := yacspin.New(cfg)
@@ -67,20 +66,25 @@ func (l *BaseFLogger) SpinnerSuffix(suffix string) {
 }
 
 func (l *BaseFLogger) SpinnerMessage(msg string) {
+	l.currentMessage = msg
 	l.spinner.Message(msg)
 }
 
 func (l *BaseFLogger) StartSpinner(msg string) {
+	l.currentMessage = msg
 	l.spinner.Message(msg)
 	l.spinner.Start()
 }
 
-func (l *BaseFLogger) StopSpinner(success bool) {
-	if success {
+func (l *BaseFLogger) StopSpinner(err error) error {
+	if err == nil {
+		l.spinner.StopMessage(l.currentMessage)
 		l.spinner.Stop()
 	} else {
+		l.spinner.StopFailMessage(l.currentMessage)
 		l.spinner.StopFail()
 	}
+	return err
 }
 
 func (l *BaseFLogger) Info(args ...interface{}) {
