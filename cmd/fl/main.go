@@ -6,7 +6,7 @@
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
 //
-//   http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -14,7 +14,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-//
 package main
 
 import (
@@ -28,8 +27,7 @@ import (
 	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
-// CLIVersion holds the current version, to be set by the build with
-//  go build -ldflags "-X main.FLVersion=<version>"
+// CLIVersion holds the current version, to be set by the build with go build -ldflags "-X main.FLVersion=<version>"
 var FLVersion = "vX.Y.Z.build"
 
 type CLI struct {
@@ -45,7 +43,7 @@ func main() {
 
 	logger, err := log.NewBaseLogger(false)
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
 	}
 
 	flConfig := client.Config{Host: "http://localhost:8080"}
@@ -71,6 +69,7 @@ func main() {
 		kong.Vars{
 			"version": FLVersion,
 		},
+		kong.UsageOnError(),
 	)
 
 	kong_ctx.FatalIfErrorf(kong_ctx.Run())

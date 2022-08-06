@@ -21,7 +21,7 @@ vars:
   BASETAG: v0.1.0
   TAG:
     sh: git describe --tags --abbrev=0 2>/dev/null || echo latest
-  CMD: "./fl"
+  CMD: "../../fl"
 
 tasks:
   default: task --list-all
