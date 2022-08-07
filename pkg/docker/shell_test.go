@@ -15,24 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-package commands
+package docker
 
 import (
-	"fmt"
+	"testing"
 
-	"github.com/funlessdev/funless-cli/client"
+	"github.com/stretchr/testify/assert"
 )
 
-type fn struct {
-	Name string `arg:"" name:"name" help:"name of the function to invoke"`
-}
-
-func (f *fn) Run(invoker client.FnHandler) error {
-	res, err := invoker.Invoke(f.Name)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(res.Status)
-	return nil
+func Test_parseCmd(t *testing.T) {
+	t.Run("should split cmd from params in cmd string", func(t *testing.T) {
+		exe, _ := parseCmd("docker info")
+		assert.Equal(t, "docker", exe)
+	})
+	t.Run("should append arg in cmd string at the start of params array", func(t *testing.T) {
+		_, params := parseCmd("docker info", "hello")
+		assert.Equal(t, []string{"info", "hello"}, params)
+	})
 }

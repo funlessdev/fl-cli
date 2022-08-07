@@ -15,34 +15,35 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-package client
+package docker
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"github.com/stretchr/testify/require"
+	"os/exec"
+	"regexp"
+	"strings"
 )
 
-func TestInvoke(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
+type shell interface {
+	runShellCmd(cmd string, args ...string) (string, error)
+}
 
-	c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-	fnService := &FnService{c}
+type baseShell struct{}
 
-	t.Run("should send a GET request", func(t *testing.T) {
-		res, _ := fnService.Invoke("test")
-		require.Equal(t, http.MethodGet, res.Request.Method)
-	})
+func (sh *baseShell) runShellCmd(cmd string, args ...string) (string, error) {
+	exe, params := parseCmd(cmd, args...)
+	out, err := exec.Command(exe, params...).CombinedOutput()
+	return string(out), err
+}
 
-	t.Run("should have /_/fn/test as url path when invoking fn named test", func(t *testing.T) {
-		res, _ := fnService.Invoke("test")
-		require.Equal(t, "/_/fn/test", res.Request.URL.Path)
-	})
+func parseCmd(cmd string, args ...string) (string, []string) {
+	re := regexp.MustCompile(`[\r\t\n\f ]+`)
+	a := strings.Split(re.ReplaceAllString(cmd, " "), " ")
 
-	// TODO what does invoke should return?
+	params := args
+	if len(a) > 1 {
+		params = append(a[1:], args...)
+	}
+	exe := a[0]
+
+	return exe, params
 }

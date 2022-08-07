@@ -15,34 +15,36 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '3'
+version: "3"
+
 vars:
-  BASETAG: 0.0.1
-  MILESTONE: todo #TODO
-  FL:
-    sh: echo ${GOBIN:-.}/fl
+  BASETAG: v0.1.0
   TAG:
-    sh: git describe --tags --abbrev=0 2>/dev/null || echo {{.MILESTONE}}-latest
+    sh: git describe --tags --abbrev=0 2>/dev/null || echo latest
+  CMD: "../../fl"
 
 tasks:
-
   default: task --list-all
 
-  cli-tag: git tag -d $(git tag) ; git tag -f v{{.BASETAG}}.$(date +%y%m%d%H)
+  cli-tag:
+    - git tag -d $(git tag)
+    - git tag -f {{.BASETAG}}.$(date +%y%m%d%H)
+    - git tag
 
   build:
+    dir: cmd/fl
     cmds:
-      - go build -ldflags "-X main.FLVersion={{.TAG}}" -o ./fl
+      - go build -ldflags "-X main.FLVersion={{.TAG}}" -o {{.CMD}}
     sources:
       - "*.go"
       - "embed/*"
     generates:
-      - "{{.FL}}"
+      - "{{.CMD}}"
 
   install:
-    deps: [build]
-    cmds:
-      - cp ./fl {{.FL}}
+    - task: build
+    - sudo install ./fl /usr/bin/nuv
+    - fl -v
 
   vendor:
     cmds:
@@ -63,4 +65,4 @@ tasks:
       - "{{.FL}}-debug"
 
   clean: rm -f {{.FL}} {{.FL}}-debug
-  setup: {silent:true} 
+  setup: { silent:true }

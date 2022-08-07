@@ -6,7 +6,7 @@
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
 //
-//   http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -14,9 +14,30 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-//
-package commands
+package client
 
-type Commands struct {
-	Fn fn `cmd:"" help:"todo fn subcommand help"`
+import "net/http"
+
+//					 default
+// https://${HOST}/{NAMESPACE}/fn/hello
+// https://${HOST}/{NAMESPACE}/ev/event1
+// https://${HOST}/{NAMESPACE}/pkg/{PACKAGE}/fn/hello
+
+type FnHandler interface {
+	Invoke(fnName string) (*http.Response, error)
+}
+
+type FnService struct {
+	*Client
+}
+
+var _ FnHandler = &FnService{}
+
+func (fn *FnService) Invoke(fnName string) (*http.Response, error) {
+	// https://${HOST}/{NAMESPACE}/fn/hello
+	req, err := fn.CreateGet("fn/" + fnName)
+	if err != nil {
+		return nil, err
+	}
+	return fn.Send(req)
 }

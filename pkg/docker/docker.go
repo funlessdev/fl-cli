@@ -6,7 +6,7 @@
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
 //
-//   http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -14,43 +14,20 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-//
-package main
+package docker
 
 import (
-	"fmt"
-	"net/http"
-
-	"github.com/alecthomas/kong"
-	"github.com/funlessdev/funless-cli/client"
-	"github.com/funlessdev/funless-cli/commands"
+	"errors"
 )
 
-type CLI struct {
-	commands.Commands
+func dockerInfo(exec shell) (string, error) {
+	out, err := exec.runShellCmd("docker info")
+	if err != nil {
+		return "", errors.New("docker is not running")
+	}
+	return out, nil
 }
 
-func main() {
-	cli := CLI{}
-
-	flConfig := client.Config{Host: "http://localhost:8080"}
-	flClient, err := client.NewClient(http.DefaultClient, flConfig)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fnSvc := &client.FnService{Client: flClient}
-
-	ctx := kong.Parse(&cli,
-		kong.Name("fl"),
-		kong.Description("Funless CLI - fl"),
-		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Compact:             true,
-			NoExpandSubcommands: true,
-		}),
-		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
-	)
-
-	ctx.FatalIfErrorf(ctx.Run())
+func dockerVersion(exec shell) (string, error) {
+	return exec.runShellCmd("docker version --format {{.Server.Version}}")
 }
