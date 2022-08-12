@@ -16,7 +16,15 @@
 # under the License.
 #
 name: Test
-on: [push]
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - main
+  pull_request:
+
 jobs:
   test:
     name: Test

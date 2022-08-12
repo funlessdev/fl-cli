@@ -16,7 +16,15 @@
 # under the License.
 #
 name: License-check
-on: [push]
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - main
+  pull_request:
+
 jobs:
   license:
     name: License
