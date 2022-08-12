@@ -15,18 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Test
+name: License-check
 on: [push]
 jobs:
-  test:
-    name: Test
+  license:
+    name: License
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ">=1.18.0"
-      - name: Test
-        run: go test -v -cover ./...
+      - name: License
+        uses: apache/skywalking-eyes@main
