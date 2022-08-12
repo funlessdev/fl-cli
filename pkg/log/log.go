@@ -73,16 +73,16 @@ func (l *BaseFLogger) SpinnerMessage(msg string) {
 func (l *BaseFLogger) StartSpinner(msg string) {
 	l.currentMessage = msg
 	l.spinner.Message(msg)
-	l.spinner.Start()
+	_ = l.spinner.Start()
 }
 
 func (l *BaseFLogger) StopSpinner(err error) error {
 	if err == nil {
 		l.spinner.StopMessage(l.currentMessage)
-		l.spinner.Stop()
+		err = l.spinner.Stop()
 	} else {
 		l.spinner.StopFailMessage(l.currentMessage)
-		l.spinner.StopFail()
+		err = l.spinner.StopFail()
 	}
 	return err
 }
