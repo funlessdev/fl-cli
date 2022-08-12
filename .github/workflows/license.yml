@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: License-check
+name: CLI CI
 on:
   push:
     tags:
@@ -27,7 +27,7 @@ on:
 
 jobs:
   license:
-    name: License
+    name: Check license headers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
