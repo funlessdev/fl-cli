@@ -33,7 +33,7 @@ func (sh *fakeShell) runShellCmd(cmd string, args ...string) (string, error) {
 }
 
 func Test_ensureDockerVersion(t *testing.T) {
-	l, _ := log.NewBaseLogger(false)
+	l, _ := log.NewLoggerBuilder().Build()
 	p := preflightChecksPipeline{shell: &fakeShell{out: "19.03.5", err: nil}, logger: l}
 	p.step(ensureDockerVersion)
 	assert.NoError(t, p.err)
