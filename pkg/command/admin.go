@@ -19,6 +19,7 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -26,30 +27,45 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/funlessdev/funless-cli/pkg/docker"
+	"github.com/funlessdev/funless-cli/pkg/admin"
 	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
-type Admin struct {
-	Deploy deploy `cmd:"" help:"deploy sub sub command"`
-}
+type (
+	Admin struct {
+		Deploy deploy `cmd:"" help:"deploy 1 core and 1 worker locally with docker containers"`
+		Reset  reset  `cmd:"" help:"removes the deployment of local containers"`
+	}
 
-type deploy struct {
-}
+	deploy struct{}
+	reset  struct{}
+)
 
 func (d *deploy) Run(ctx context.Context, logger log.FLogger) error {
 	logger.Info("Deploying funless locally...\n")
 
-	if err := docker.RunPreflightChecks(logger); err != nil {
-		return err
-	}
+	// check client manages to connect to docker
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	// check if fl_net network already exists
+	// if not, create it
+	// if yes, use it
+
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	if err != nil {
 		return err
 	}
 
-	err = deployWithDocker(ctx, &dockerClient{cli}, logger)
+	id, err := admin.ObtainFLNet(ctx, cli, logger)
+
+	if err != nil {
+		if client.IsErrConnectionFailed(err) {
+			return errors.New("could not connect to docker, please make sure docker is running and accessible")
+		}
+		return err
+	}
+
+	logger.Infof("FLNet network id: %s\n", id)
+	// err = deployWithDocker(ctx, &dockerClient{cli}, logger)
 
 	return err
 }
