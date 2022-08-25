@@ -46,12 +46,12 @@ func (l *FLoggerImpl) StartSpinner(msg string) {
 func (l *FLoggerImpl) StopSpinner(err error) error {
 	if err == nil {
 		l.spinner.StopMessage(l.currentMessage)
-		err = l.spinner.Stop()
+		return l.spinner.Stop()
 	} else {
 		l.spinner.StopFailMessage(l.currentMessage)
-		err = l.spinner.StopFail()
+		_ = l.spinner.StopFail()
+		return err
 	}
-	return err
 }
 
 func (l *FLoggerImpl) Info(args ...interface{}) {
