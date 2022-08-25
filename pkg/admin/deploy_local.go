@@ -18,19 +18,88 @@ package admin
 
 import (
 	"context"
+	"errors"
 
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/funlessdev/funless-cli/pkg/log"
+	"github.com/docker/go-connections/nat"
+	"github.com/funlessdev/funless-cli/pkg"
 )
 
-func ObtainFLNet(ctx context.Context, client *client.Client, logger log.FLogger) (string, error) {
-	exists, net, err := flNetExists(ctx, client)
+type LocalDeployer struct {
+	ctx    context.Context
+	client *client.Client
+	fl_net string
+}
+
+func NewLocalDeployer(ctx context.Context, client *client.Client) *LocalDeployer {
+	return &LocalDeployer{
+		ctx:    ctx,
+		client: client,
+	}
+}
+
+// Apply performs the steps to deploy funless locally
+func (d *LocalDeployer) Apply(f func(*LocalDeployer) error) error {
+	if err := f(d); err != nil {
+		if client.IsErrConnectionFailed(err) {
+			return errors.New("could not connect to docker, please make sure docker is running and accessible")
+		}
+		return err
+	}
+	return nil
+}
+
+func SetupFLNetwork(d *LocalDeployer) error {
+	exists, net, err := flNetExists(d.ctx, d.client)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 	if exists {
-		return net.ID, nil
+
+		d.fl_net = net.ID
+		return nil
 	}
-	return flNetCreate(ctx, client, logger)
+	id, err := flNetCreate(d.ctx, d.client)
+	d.fl_net = id
+	return err
+}
+
+func PullCoreImage(d *LocalDeployer) error {
+	return pullFLImage(d.ctx, d.client, pkg.FLCore)
+}
+
+func PullWorkerImage(d *LocalDeployer) error {
+	return pullFLImage(d.ctx, d.client, pkg.FLWorker)
+}
+
+func StartCoreContainer(d *LocalDeployer) error {
+	containerConfig := &container.Config{
+		Image: pkg.FLCore,
+		ExposedPorts: nat.PortSet{
+			"4001/tcp": struct{}{},
+		},
+	}
+
+	hostConfig := &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"4001/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "4001",
+				},
+			},
+		},
+	}
+
+	return startContainer(d.ctx, d.client, containerConfig, hostConfig)
+}
+
+func StartWorkerContainer(d *LocalDeployer) error {
+
+	containerConfig := &container.Config{
+		Image: pkg.FLWorker,
+	}
+	return startContainer(d.ctx, d.client, containerConfig, nil)
 }
