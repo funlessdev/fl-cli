@@ -27,15 +27,17 @@ import (
 )
 
 type LocalDeployer struct {
-	ctx    context.Context
-	client *client.Client
-	fl_net string
+	ctx       context.Context
+	client    *client.Client
+	flNetId   string
+	flNetName string
 }
 
-func NewLocalDeployer(ctx context.Context, client *client.Client) *LocalDeployer {
+func NewLocalDeployer(ctx context.Context, client *client.Client, flNetName string) *LocalDeployer {
 	return &LocalDeployer{
-		ctx:    ctx,
-		client: client,
+		ctx:       ctx,
+		client:    client,
+		flNetName: flNetName,
 	}
 }
 
@@ -51,18 +53,18 @@ func (d *LocalDeployer) Apply(f func(*LocalDeployer) error) error {
 }
 
 func SetupFLNetwork(d *LocalDeployer) error {
-	exists, net, err := flNetExists(d.ctx, d.client)
+	exists, net, err := flNetExists(d.ctx, d.client, d.flNetName)
 
 	if err != nil {
 		return err
 	}
 	if exists {
 
-		d.fl_net = net.ID
+		d.flNetId = net.ID
 		return nil
 	}
-	id, err := flNetCreate(d.ctx, d.client)
-	d.fl_net = id
+	id, err := flNetCreate(d.ctx, d.client, d.flNetName)
+	d.flNetId = id
 	return err
 }
 
@@ -93,7 +95,15 @@ func StartCoreContainer(d *LocalDeployer) error {
 		},
 	}
 
-	return startContainer(d.ctx, d.client, containerConfig, hostConfig)
+	netConf := buildNetworkConfig(d.flNetName, d.flNetId)
+
+	configs := configuration{
+		container:  containerConfig,
+		host:       hostConfig,
+		networking: &netConf,
+	}
+
+	return startContainer(d.ctx, d.client, configs)
 }
 
 func StartWorkerContainer(d *LocalDeployer) error {
@@ -101,5 +111,13 @@ func StartWorkerContainer(d *LocalDeployer) error {
 	containerConfig := &container.Config{
 		Image: pkg.FLWorker,
 	}
-	return startContainer(d.ctx, d.client, containerConfig, nil)
+
+	netConf := buildNetworkConfig(d.flNetName, d.flNetId)
+
+	configs := configuration{
+		container:  containerConfig,
+		host:       nil,
+		networking: &netConf,
+	}
+	return startContainer(d.ctx, d.client, configs)
 }

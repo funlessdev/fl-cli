@@ -25,8 +25,15 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
+
+type configuration struct {
+	container  *container.Config
+	host       *container.HostConfig
+	networking *network.NetworkingConfig
+}
 
 func pullFLImage(ctx context.Context, c *client.Client, image string) error {
 	if err := pullImage(ctx, c, image); err != nil {
@@ -70,9 +77,9 @@ func pullImage(ctx context.Context, c *client.Client, image string) error {
 	return nil
 }
 
-func flNetExists(ctx context.Context, client *client.Client) (bool, types.NetworkResource, error) {
+func flNetExists(ctx context.Context, client *client.Client, netName string) (bool, types.NetworkResource, error) {
 	nets, err := client.NetworkList(ctx, types.NetworkListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: "fl_net"}),
+		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: netName}),
 	})
 	if err != nil {
 		return false, types.NetworkResource{}, err
@@ -85,8 +92,8 @@ func flNetExists(ctx context.Context, client *client.Client) (bool, types.Networ
 	return true, nets[0], nil
 }
 
-func flNetCreate(ctx context.Context, client *client.Client) (string, error) {
-	res, err := client.NetworkCreate(ctx, "fl_net", types.NetworkCreate{})
+func flNetCreate(ctx context.Context, client *client.Client, netName string) (string, error) {
+	res, err := client.NetworkCreate(ctx, netName, types.NetworkCreate{})
 	if err != nil {
 		return "", err
 	}
@@ -96,8 +103,8 @@ func flNetCreate(ctx context.Context, client *client.Client) (string, error) {
 	return res.ID, nil
 }
 
-func startContainer(ctx context.Context, c *client.Client, containerConfig *container.Config, hostConfig *container.HostConfig) error {
-	resp, err := c.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, "")
+func startContainer(ctx context.Context, c *client.Client, configs configuration) error {
+	resp, err := c.ContainerCreate(ctx, configs.container, configs.host, configs.networking, nil, "")
 
 	if err != nil {
 		return err
@@ -108,4 +115,15 @@ func startContainer(ctx context.Context, c *client.Client, containerConfig *cont
 	}
 
 	return nil
+}
+
+func buildNetworkConfig(networkName, networkID string) network.NetworkingConfig {
+	endpoints := make(map[string]*network.EndpointSettings, 1)
+	endpoints[networkName] = &network.EndpointSettings{
+		NetworkID: networkID,
+	}
+
+	return network.NetworkingConfig{
+		EndpointsConfig: endpoints,
+	}
 }

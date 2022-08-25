@@ -36,21 +36,16 @@ type (
 	reset  struct{}
 )
 
+// TODO: give proper names to containers
 func (d *deploy) Run(ctx context.Context, logger log.FLogger) error {
 	logger.Info("Deploying funless locally...\n")
-
-	// check client manages to connect to docker
-
-	// check if fl_net network already exists
-	// if not, create it
-	// if yes, use it
 
 	logger.StartSpinner("Setting things up...")
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	if err != nil {
 		return err
 	}
-	deployer := admin.NewLocalDeployer(ctx, cli)
+	deployer := admin.NewLocalDeployer(ctx, cli, "fl_net")
 
 	if err := logger.StopSpinner(deployer.Apply(admin.SetupFLNetwork)); err != nil {
 		return err
