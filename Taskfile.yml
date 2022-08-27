@@ -54,15 +54,21 @@ tasks:
 
   test:
     cmds:
-      - go test -v -cover ./...
+      - go test -v ./...
 
   debug:
+    dir: cmd/fl
     deps:
       - vendor
     cmds:
-      - go build -gcflags '-N -l' -mod=vendor -ldflags "-X main.FLVersion={{.TAG}}" -o {{.FL}}-debug
+      - go build -gcflags '-N -l' -mod=vendor -ldflags "-X main.FLVersion={{.TAG}}" -o {{.CMD}}-debug
     generates:
       - "{{.FL}}-debug"
 
-  clean: rm -f {{.FL}} {{.FL}}-debug
-  setup: { silent:true }
+  clean: rm -f fl fl-debug
+
+  rebuild:
+    deps:
+      - clean
+    cmds:
+      - task: build
