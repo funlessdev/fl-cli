@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"regexp"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -113,6 +114,9 @@ func StartWorkerContainer(d *LocalDeployer) error {
 	dockerHost, exists := os.LookupEnv("DOCKER_HOST")
 	if !exists || dockerHost == "" {
 		dockerHost = "/var/run/docker.sock"
+	} else {
+		r, _ := regexp.Compile("^((unix|tcp|http)://)")
+		dockerHost = r.ReplaceAllString(dockerHost, "")
 	}
 
 	containerConfig := &container.Config{
