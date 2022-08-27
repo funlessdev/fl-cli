@@ -22,6 +22,7 @@ go 1.18
 require (
 	github.com/alecthomas/kong v0.5.0
 	github.com/docker/docker v20.10.16+incompatible
+	github.com/docker/go-connections v0.4.0
 	github.com/theckman/yacspin v0.13.12
 )
 
@@ -29,7 +30,6 @@ require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -48,13 +48,11 @@ require (
 	golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	gopkg.in/check.v1 v1.0.0-20141024133853-64131543e789 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gotest.tools/v3 v3.2.0 // indirect
 )
 
 require (
-	github.com/coreos/go-semver v0.3.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.7.1
 )

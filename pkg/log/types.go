@@ -14,20 +14,28 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package docker
+package log
 
-import (
-	"errors"
-)
+import "time"
 
-func dockerInfo(exec shell) (string, error) {
-	out, err := exec.runShellCmd("docker info")
-	if err != nil {
-		return "", errors.New("docker is not running")
+type (
+	FLogger interface {
+		SpinnerSuffix(string)
+		SpinnerMessage(string)
+		StartSpinner(string)
+		StopSpinner(error) error
+
+		Info(args ...interface{})
+		Infof(format string, args ...interface{})
+
+		Debug(args ...interface{})
+		Debugf(format string, args ...interface{})
 	}
-	return out, nil
-}
 
-func dockerVersion(exec shell) (string, error) {
-	return exec.runShellCmd("docker version --format {{.Server.Version}}")
-}
+	builder interface {
+		WithDebug(bool) builder
+		SpinnerFrequency(time.Duration) builder
+		SpinnerCharSet(int) builder
+		Build() (FLogger, error)
+	}
+)

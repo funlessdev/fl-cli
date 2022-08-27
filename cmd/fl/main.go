@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/funlessdev/funless-cli/pkg/client"
@@ -41,9 +42,11 @@ func main() {
 	cli := CLI{}
 	ctx := context.Background()
 
-	logger, err := log.NewBaseLogger(false)
+	logger, err := buildLogger()
+
 	if err != nil {
 		fmt.Println(err.Error())
+		return
 	}
 
 	flConfig := client.Config{Host: "http://localhost:8080"}
@@ -73,4 +76,10 @@ func main() {
 	)
 
 	kong_ctx.FatalIfErrorf(kong_ctx.Run())
+}
+
+func buildLogger() (log.FLogger, error) {
+	b := log.NewLoggerBuilder()
+	logger, err := b.WithDebug(true).SpinnerFrequency(150 * time.Millisecond).SpinnerCharSet(59).Build()
+	return logger, err
 }
