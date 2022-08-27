@@ -19,8 +19,10 @@ package admin
 import (
 	"context"
 	"errors"
+	"os"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/funlessdev/funless-cli/pkg"
@@ -108,15 +110,31 @@ func StartCoreContainer(d *LocalDeployer) error {
 
 func StartWorkerContainer(d *LocalDeployer) error {
 
+	dockerHost, exists := os.LookupEnv("DOCKER_HOST")
+	if !exists || dockerHost == "" {
+		dockerHost = "/var/run/docker.sock"
+	}
+
 	containerConfig := &container.Config{
 		Image: pkg.FLWorker,
+		Env:   []string{"RUNTIME_NETWORK=" + d.flNetName},
+	}
+
+	hostConf := &container.HostConfig{
+		Mounts: []mount.Mount{
+			{
+				Source: dockerHost,
+				Target: "/var/run/docker-host.sock",
+				Type:   mount.TypeBind,
+			},
+		},
 	}
 
 	netConf := buildNetworkConfig(d.flNetName, d.flNetId)
 
 	configs := configuration{
 		container:  containerConfig,
-		host:       nil,
+		host:       hostConf,
 		networking: &netConf,
 	}
 	return startContainer(d.ctx, d.client, configs)
