@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -126,4 +128,15 @@ func buildNetworkConfig(networkName, networkID string) network.NetworkingConfig 
 	return network.NetworkingConfig{
 		EndpointsConfig: endpoints,
 	}
+}
+
+func getDockerHost() string {
+	dockerHost, exists := os.LookupEnv("DOCKER_HOST")
+	if !exists || dockerHost == "" {
+		dockerHost = "/var/run/docker.sock"
+	} else {
+		r, _ := regexp.Compile("^((unix|tcp|http)://)")
+		dockerHost = r.ReplaceAllString(dockerHost, "")
+	}
+	return dockerHost
 }
