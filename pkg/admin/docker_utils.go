@@ -105,8 +105,8 @@ func flNetCreate(ctx context.Context, client *client.Client, netName string) (st
 	return res.ID, nil
 }
 
-func startContainer(ctx context.Context, c *client.Client, configs configuration) error {
-	resp, err := c.ContainerCreate(ctx, configs.container, configs.host, configs.networking, nil, "")
+func startContainer(ctx context.Context, c *client.Client, configs configuration, containerName string) error {
+	resp, err := c.ContainerCreate(ctx, configs.container, configs.host, configs.networking, nil, containerName)
 
 	if err != nil {
 		return err

@@ -104,7 +104,7 @@ func StartCoreContainer(d *LocalDeployer) error {
 		networking: &netConf,
 	}
 
-	return startContainer(d.ctx, d.client, configs)
+	return startContainer(d.ctx, d.client, configs, "fl-core")
 }
 
 func StartWorkerContainer(d *LocalDeployer) error {
@@ -133,5 +133,5 @@ func StartWorkerContainer(d *LocalDeployer) error {
 		host:       hostConf,
 		networking: &netConf,
 	}
-	return startContainer(d.ctx, d.client, configs)
+	return startContainer(d.ctx, d.client, configs, "fl-worker")
 }

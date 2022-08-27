@@ -36,7 +36,6 @@ type (
 	reset  struct{}
 )
 
-// TODO: give proper names to containers
 func (d *deploy) Run(ctx context.Context, logger log.FLogger) error {
 	logger.Info("Deploying funless locally...\n")
 
