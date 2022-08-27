@@ -140,3 +140,35 @@ func getDockerHost() string {
 	}
 	return dockerHost
 }
+
+func flContainerExists(ctx context.Context, c *client.Client, containerName string) (bool, types.Container, error) {
+	containers, err := c.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: containerName}),
+	})
+	if err != nil {
+		return false, types.Container{}, err
+	}
+
+	if len(containers) == 0 {
+		return false, types.Container{}, nil
+	}
+
+	return true, containers[0], nil
+}
+
+func functionContainersList(ctx context.Context, c *client.Client) ([]types.Container, error) {
+
+	// match all containers name containing funless suffix
+	filter := filters.NewArgs(filters.KeyValuePair{Key: "name", Value: "funless"})
+	filter.Contains("funless")
+
+	containers, err := c.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filter,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return containers, nil
+}
