@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	swagger "github.com/funlessdev/fl-client-sdk-go"
 )
 
 const (
@@ -28,8 +30,9 @@ const (
 )
 
 type Client struct {
-	client *http.Client
-	Config Config
+	client    *http.Client
+	Config    Config
+	ApiClient *swagger.APIClient
 }
 
 type Config struct {
@@ -52,7 +55,11 @@ func NewClient(httpClient *http.Client, config Config) (*Client, error) {
 		config.BaseURL = u
 	}
 
-	return &Client{client: httpClient, Config: config}, nil
+	apiConfig := swagger.NewConfiguration()
+	apiConfig.BasePath = config.Host
+	apiClient := swagger.NewAPIClient(apiConfig)
+
+	return &Client{client: httpClient, Config: config, ApiClient: apiClient}, nil
 }
 
 func buildBaseURL(host string) (*url.URL, error) {

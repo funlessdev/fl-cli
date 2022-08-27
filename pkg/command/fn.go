@@ -17,21 +17,91 @@
 package command
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/funlessdev/funless-cli/pkg/client"
 )
 
-type Fn struct {
-	Name string `arg:"" name:"name" help:"name of the function to invoke"`
-}
+// TODO: fix tests
+type (
+	Fn struct {
+		Invoke Invoke `cmd:"" help:"todo fn invoke help"`
+		Create Create `cmd:"" help:"todo fn create help"`
+		Delete Delete `cmd:"" help:"todo fn delete help"`
+	}
 
-func (f *Fn) Run(invoker client.FnHandler) error {
-	res, err := invoker.Invoke(f.Name)
+	Create struct {
+		Name      string `arg:"" name:"name" help:"name of the function to create"`
+		Namespace string `name:"namespace" short:"n" help:"namespace of the function to create"`
+		Source    string `name:"source" required:"" short:"s" help:"path of the source file"`
+		Language  string `name:"language" required:"" short:"l" help:"programming language of the function"`
+	}
+
+	Invoke struct {
+		Name      string            `arg:"" name:"name" help:"name of the function to invoke"`
+		Namespace string            `name:"namespace" short:"n" help:"namespace of the function to invoke"`
+		Args      map[string]string `name:"args" short:"a" help:"arguments of the function to invoke" xor:"args"`
+		JsonArgs  string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
+	}
+
+	Delete struct {
+		Name      string `arg:"" name:"name" help:"name of the function to delete"`
+		Namespace string `name:"namespace" short:"n" help:"namespace of the function to delete"`
+	}
+)
+
+func (f *Invoke) Run(invoker client.FnHandler) error {
+	var args interface{}
+	if f.Args != nil {
+		args = f.Args
+	} else if f.JsonArgs != "" {
+		err := json.Unmarshal([]byte(f.JsonArgs), &args)
+		if err != nil {
+			return err
+		}
+	}
+	res, err := invoker.Invoke(f.Name, f.Namespace, args)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(res.Status)
+	if res.Result != nil {
+		decodedRes, err := json.Marshal(*res.Result)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%+v\n", string(decodedRes))
+	} else {
+		return errors.New("Received nil result")
+	}
+
+	return nil
+}
+
+func (f *Create) Run(invoker client.FnHandler) error {
+	code, err := os.ReadFile(f.Source)
+	if err != nil {
+		return err
+	}
+
+	res, err := invoker.Create(f.Name, f.Namespace, string(code), f.Language)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%+v\n", res.Result)
+	return nil
+}
+
+func (f *Delete) Run(invoker client.FnHandler) error {
+	res, err := invoker.Delete(f.Name, f.Namespace)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%+v\n", res.Result)
 	return nil
 }
