@@ -29,7 +29,6 @@ import (
 	"github.com/funlessdev/funless-cli/pkg/client"
 )
 
-// TODO: fix tests
 type (
 	Fn struct {
 		Invoke Invoke `cmd:"" help:"todo fn invoke help"`

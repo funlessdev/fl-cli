@@ -17,31 +17,159 @@
 package client
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInvoke(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
+	testFn := "test-fn"
+	testNs := "test-ns"
+	var testArgs interface{} = map[string]string{"name": "Some name"}
 
-	c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-	fnService := &FnService{c}
+	testCtx := context.Background()
 
-	t.Run("should send a GET request", func(t *testing.T) {
-		res, _ := fnService.Invoke("test")
-		require.Equal(t, http.MethodGet, res.Request.Method)
+	t.Run("should send invoke request to server", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Equal(t, "/invoke", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			result := map[string]string{"Result": "some result"}
+			jresult, _ := json.Marshal(result)
+			_, _ = w.Write(jresult)
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+		svc := &FnService{Client: c}
+
+		_, err := svc.Invoke(testCtx, testFn, testNs, testArgs)
+
+		require.NoError(t, err)
 	})
 
-	t.Run("should have /_/fn/test as url path when invoking fn named test", func(t *testing.T) {
-		res, _ := fnService.Invoke("test")
-		require.Equal(t, "/_/fn/test", res.Request.URL.Path)
+	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Equal(t, "/invoke", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			result := map[string]string{"error": "some error"}
+			jresult, _ := json.Marshal(result)
+
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintln(w, string(jresult))
+		}))
+		defer server.Close()
+
+		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+		svc := &FnService{Client: c}
+
+		_, err := svc.Invoke(testCtx, testFn, testNs, testArgs)
+
+		require.Error(t, err)
+	})
+}
+
+func TestCreate(t *testing.T) {
+	testFn := "test-fn"
+	testNs := "test-ns"
+	testLanguage := "nodejs"
+	testCode := "console.log('Something')"
+
+	testCtx := context.Background()
+	t.Run("should send create request to server", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Equal(t, "/create", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			result := map[string]string{"Result": "some result"}
+			jresult, _ := json.Marshal(result)
+			_, _ = w.Write(jresult)
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+		svc := &FnService{Client: c}
+
+		_, err := svc.Create(testCtx, testFn, testNs, testCode, testLanguage)
+
+		require.NoError(t, err)
 	})
 
-	// TODO what does invoke should return?
+	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Equal(t, "/create", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			result := map[string]string{"error": "some error"}
+			jresult, _ := json.Marshal(result)
+
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintln(w, string(jresult))
+		}))
+		defer server.Close()
+
+		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+		svc := &FnService{Client: c}
+
+		_, err := svc.Create(testCtx, testFn, testNs, testCode, testLanguage)
+
+		require.Error(t, err)
+	})
+}
+
+func TestDelete(t *testing.T) {
+	testFn := "test-fn"
+	testNs := "test-ns"
+
+	testCtx := context.Background()
+
+	t.Run("should send delete request to server", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Equal(t, "/delete", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			result := map[string]string{"Result": "some result"}
+			jresult, _ := json.Marshal(result)
+			_, _ = w.Write(jresult)
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+		svc := &FnService{Client: c}
+
+		_, err := svc.Delete(testCtx, testFn, testNs)
+
+		require.NoError(t, err)
+	})
+
+	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Equal(t, "/delete", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			result := map[string]string{"error": "some error"}
+			jresult, _ := json.Marshal(result)
+
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintln(w, string(jresult))
+		}))
+		defer server.Close()
+
+		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
+		svc := &FnService{Client: c}
+
+		_, err := svc.Delete(testCtx, testFn, testNs)
+
+		require.Error(t, err)
+	})
 }
