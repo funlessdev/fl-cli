@@ -108,4 +108,3 @@ func NewFnHandler(t mockConstructorTestingTNewFnHandler) *FnHandler {
 
 	return mock
 }
-
