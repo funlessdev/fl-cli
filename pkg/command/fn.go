@@ -17,9 +17,12 @@
 package command
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 
 	"github.com/funlessdev/funless-cli/pkg/client"
@@ -34,10 +37,11 @@ type (
 	}
 
 	Create struct {
-		Name      string `arg:"" name:"name" help:"name of the function to create"`
-		Namespace string `name:"namespace" short:"n" help:"namespace of the function to create"`
-		Source    string `name:"source" required:"" short:"s" help:"path of the source file"`
-		Language  string `name:"language" required:"" short:"l" help:"programming language of the function"`
+		Name      string        `arg:"" name:"name" help:"name of the function to create"`
+		Namespace string        `name:"namespace" short:"n" help:"namespace of the function to create"`
+		Source    string        `name:"source" required:"" short:"s" help:"path of the source file"`
+		Language  string        `name:"language" required:"" short:"l" help:"programming language of the function"`
+		FS        fs.ReadFileFS `kong:"-"`
 	}
 
 	Invoke struct {
@@ -53,7 +57,7 @@ type (
 	}
 )
 
-func (f *Invoke) Run(invoker client.FnHandler) error {
+func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, writer io.Writer) error {
 	var args interface{}
 	if f.Args != nil {
 		args = f.Args
@@ -63,7 +67,7 @@ func (f *Invoke) Run(invoker client.FnHandler) error {
 			return err
 		}
 	}
-	res, err := invoker.Invoke(f.Name, f.Namespace, args)
+	res, err := invoker.Invoke(ctx, f.Name, f.Namespace, args)
 	if err != nil {
 		return err
 	}
@@ -73,7 +77,7 @@ func (f *Invoke) Run(invoker client.FnHandler) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%+v\n", string(decodedRes))
+		fmt.Fprintln(writer, string(decodedRes))
 	} else {
 		return errors.New("Received nil result")
 	}
@@ -81,27 +85,35 @@ func (f *Invoke) Run(invoker client.FnHandler) error {
 	return nil
 }
 
-func (f *Create) Run(invoker client.FnHandler) error {
-	code, err := os.ReadFile(f.Source)
+func (f *Create) Run(ctx context.Context, invoker client.FnHandler, writer io.Writer) error {
+	var code []byte
+	var err error
+
+	if f.FS != nil {
+		code, err = fs.ReadFile(f.FS, f.Source)
+	} else {
+		code, err = os.ReadFile(f.Source)
+	}
+
 	if err != nil {
 		return err
 	}
 
-	res, err := invoker.Create(f.Name, f.Namespace, string(code), f.Language)
+	res, err := invoker.Create(ctx, f.Name, f.Namespace, string(code), f.Language)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%+v\n", res.Result)
+	fmt.Fprintln(writer, res.Result)
 	return nil
 }
 
-func (f *Delete) Run(invoker client.FnHandler) error {
-	res, err := invoker.Delete(f.Name, f.Namespace)
+func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, writer io.Writer) error {
+	res, err := invoker.Delete(ctx, f.Name, f.Namespace)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%+v\n", res.Result)
+	fmt.Fprintln(writer, res.Result)
 	return nil
 }

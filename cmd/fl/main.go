@@ -19,7 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -43,6 +45,8 @@ func main() {
 	ctx := context.Background()
 
 	logger, err := buildLogger()
+
+	writer := os.Stdout
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -69,6 +73,7 @@ func main() {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
+		kong.BindTo(writer, (*io.Writer)(nil)),
 		kong.Vars{
 			"version": FLVersion,
 		},

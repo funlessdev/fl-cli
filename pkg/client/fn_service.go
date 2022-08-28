@@ -28,9 +28,9 @@ import (
 // https://${HOST}/{NAMESPACE}/pkg/{PACKAGE}/fn/hello
 
 type FnHandler interface {
-	Invoke(fnName string, fnNamespace string, fnArgs interface{}) (swagger.FunctionInvocationSuccess, error)
-	Create(fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error)
-	Delete(fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error)
+	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs interface{}) (swagger.FunctionInvocationSuccess, error)
+	Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error)
+	Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error)
 }
 
 type FnService struct {
@@ -39,9 +39,9 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
-func (fn *FnService) Invoke(fnName string, fnNamespace string, fnArgs interface{}) (swagger.FunctionInvocationSuccess, error) {
+func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs interface{}) (swagger.FunctionInvocationSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
-	response, _, err := apiService.InvokePost(context.Background(), swagger.FunctionInvocation{
+	response, _, err := apiService.InvokePost(ctx, swagger.FunctionInvocation{
 		Function:  fnName,
 		Namespace: fnNamespace,
 		Args:      &fnArgs,
@@ -52,9 +52,9 @@ func (fn *FnService) Invoke(fnName string, fnNamespace string, fnArgs interface{
 	return response, err
 }
 
-func (fn *FnService) Create(fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error) {
+func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
-	response, _, err := apiService.CreatePost(context.Background(), swagger.FunctionCreation{
+	response, _, err := apiService.CreatePost(ctx, swagger.FunctionCreation{
 		Name:      fnName,
 		Namespace: fnNamespace,
 		Code:      code,
@@ -66,9 +66,9 @@ func (fn *FnService) Create(fnName string, fnNamespace string, code string, lang
 	return response, err
 }
 
-func (fn *FnService) Delete(fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error) {
+func (fn *FnService) Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
-	response, _, err := apiService.DeletePost(context.Background(), swagger.FunctionDeletion{
+	response, _, err := apiService.DeletePost(ctx, swagger.FunctionDeletion{
 		Name:      fnName,
 		Namespace: fnNamespace,
 	})
