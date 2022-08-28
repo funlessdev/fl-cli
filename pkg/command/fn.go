@@ -25,6 +25,7 @@ import (
 	"io/fs"
 	"os"
 
+	swagger "github.com/funlessdev/fl-client-sdk-go"
 	"github.com/funlessdev/funless-cli/pkg/client"
 )
 
@@ -69,7 +70,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, writer io.Wr
 	}
 	res, err := invoker.Invoke(ctx, f.Name, f.Namespace, args)
 	if err != nil {
-		return err
+		return extractError(err)
 	}
 
 	if res.Result != nil {
@@ -101,7 +102,7 @@ func (f *Create) Run(ctx context.Context, invoker client.FnHandler, writer io.Wr
 
 	res, err := invoker.Create(ctx, f.Name, f.Namespace, string(code), f.Language)
 	if err != nil {
-		return err
+		return extractError(err)
 	}
 
 	fmt.Fprintln(writer, res.Result)
@@ -111,9 +112,27 @@ func (f *Create) Run(ctx context.Context, invoker client.FnHandler, writer io.Wr
 func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, writer io.Writer) error {
 	res, err := invoker.Delete(ctx, f.Name, f.Namespace)
 	if err != nil {
-		return err
+		return extractError(err)
 	}
 
 	fmt.Fprintln(writer, res.Result)
 	return nil
+}
+
+func extractError(err error) error {
+	swaggerError, ok_sw := err.(swagger.GenericSwaggerError)
+	if ok_sw {
+		switch swaggerError.Model().(type) {
+		case swagger.FunctionCreationError:
+			specificError := swaggerError.Model().(swagger.FunctionCreationError)
+			return errors.New(specificError.Error_)
+		case swagger.FunctionDeletionError:
+			specificError := swaggerError.Model().(swagger.FunctionDeletionError)
+			return errors.New(specificError.Error_)
+		case swagger.FunctionInvocationError:
+			specificError := swaggerError.Model().(swagger.FunctionInvocationError)
+			return errors.New(specificError.Error_)
+		}
+	}
+	return err
 }
