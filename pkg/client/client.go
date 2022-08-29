@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	swagger "github.com/funlessdev/fl-client-sdk-go"
 )
 
 const (
@@ -28,8 +30,9 @@ const (
 )
 
 type Client struct {
-	client *http.Client
-	Config Config
+	client    *http.Client
+	Config    Config
+	ApiClient *swagger.APIClient
 }
 
 type Config struct {
@@ -52,7 +55,11 @@ func NewClient(httpClient *http.Client, config Config) (*Client, error) {
 		config.BaseURL = u
 	}
 
-	return &Client{client: httpClient, Config: config}, nil
+	apiConfig := swagger.NewConfiguration()
+	apiConfig.BasePath = config.Host
+	apiClient := swagger.NewAPIClient(apiConfig)
+
+	return &Client{client: httpClient, Config: config, ApiClient: apiClient}, nil
 }
 
 func buildBaseURL(host string) (*url.URL, error) {
@@ -67,76 +74,3 @@ func buildBaseURL(host string) (*url.URL, error) {
 
 	return baseURL, nil
 }
-
-func (c *Client) buildRequestURL(endPoint string) (*url.URL, error) {
-	ns := DefaultNamespace
-	if len(c.Config.Namespace) != 0 { // If namespace not missing
-		ns = c.Config.Namespace
-	}
-	ep := fmt.Sprintf("%s/%s/%s", c.Config.BaseURL.String(), ns, endPoint)
-
-	u, err := url.Parse(ep)
-	if err != nil {
-		// todo Debug "url.Parse(%s) error: %s\n", urlStr, err
-		return nil, fmt.Errorf("invalid endpoint given %s", endPoint)
-	}
-	return u, nil
-}
-
-func (c *Client) CreateGet(urlStr string) (*http.Request, error) {
-	u, err := c.buildRequestURL(urlStr)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
-	if err != nil {
-		// Debug(DbgError, "http.NewRequest(%v, %s, buf) error: %s\n", method, u.String(), err)
-		// errStr := wski18n.T("Error initializing request: {{.err}}", map[string]interface{}{"err": err})
-		// werr := MakeWskError(errors.New(errStr), EXIT_CODE_ERR_GENERAL, DISPLAY_MSG, NO_DISPLAY_USAGE)
-		return nil, errors.New("error initializing request")
-	}
-
-	return req, nil
-}
-
-func (c *Client) Send(request *http.Request) (*http.Response, error) {
-	// Issue the request to the funless server endpoint
-	res, err := c.client.Do(request)
-	if err != nil {
-		// Debug(DbgError, "HTTP Do() [req %s] error: %s\n", req.URL.String(), err)
-		// werr := MakeWskError(err, EXIT_CODE_ERR_NETWORK, DISPLAY_MSG, NO_DISPLAY_USAGE)
-		return nil, fmt.Errorf("error sending request %s", request.URL.String())
-	}
-
-	return res, nil
-}
-
-// func (c *Client) CreatePostRequest(u url.URL, body interface{}) (*http.Request, error) {
-// 	var buf io.ReadWriter
-// 	if body != nil {
-// 		buf = new(bytes.Buffer)
-// 		encoder := json.NewEncoder(buf)
-// 		encoder.SetEscapeHTML(false)
-// 		err := encoder.Encode(body)
-
-// 		if err != nil {
-// 			// Debug(DbgError, "json.Encode(%#v) error: %s\n", body, err)
-// 			// errStr := wski18n.T("Error encoding request body: {{.err}}", map[string]interface{}{"err": err})
-// 			// werr := MakeWskError(errors.New(errStr), EXIT_CODE_ERR_GENERAL, DISPLAY_MSG, NO_DISPLAY_USAGE)
-// 			return nil, errors.New("error encoding request body")
-// 		}
-// 	}
-
-// 	req, err := http.NewRequest(http.MethodPost, u.String(), buf)
-// 	if err != nil {
-// 		// Debug(DbgError, "http.NewRequest(%v, %s, buf) error: %s\n", method, u.String(), err)
-// 		// errStr := wski18n.T("Error initializing request: {{.err}}", map[string]interface{}{"err": err})
-// 		// werr := MakeWskError(errors.New(errStr), EXIT_CODE_ERR_GENERAL, DISPLAY_MSG, NO_DISPLAY_USAGE)
-// 		return nil, errors.New("error initializing request")
-// 	}
-
-// 	req.Header.Add("Content-Type", "application/json")
-
-// 	return req, nil
-// }

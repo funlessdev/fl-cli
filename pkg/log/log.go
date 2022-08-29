@@ -18,6 +18,7 @@ package log
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/theckman/yacspin"
 )
@@ -26,6 +27,7 @@ type FLoggerImpl struct {
 	debug          bool
 	currentMessage string
 	spinner        *yacspin.Spinner
+	writer         io.Writer
 }
 
 func (l *FLoggerImpl) SpinnerSuffix(suffix string) {
@@ -55,23 +57,23 @@ func (l *FLoggerImpl) StopSpinner(err error) error {
 }
 
 func (l *FLoggerImpl) Info(args ...interface{}) {
-	fmt.Println(args...)
+	fmt.Fprintln(l.writer, args...)
 }
 
 func (l *FLoggerImpl) Infof(format string, args ...interface{}) {
-	fmt.Printf(format, args...)
+	fmt.Fprintf(l.writer, format, args...)
 }
 
 func (l *FLoggerImpl) Debug(args ...interface{}) {
 	if l.debug {
-		fmt.Print("DEBUG: ")
-		fmt.Println(args...)
+		fmt.Fprint(l.writer, "DEBUG: ")
+		fmt.Fprintln(l.writer, args...)
 	}
 }
 
 func (l *FLoggerImpl) Debugf(format string, args ...interface{}) {
 	if l.debug {
-		fmt.Print("DEBUG: ")
-		fmt.Printf(format, args...)
+		fmt.Fprint(l.writer, "DEBUG: ")
+		fmt.Fprintf(l.writer, format, args...)
 	}
 }

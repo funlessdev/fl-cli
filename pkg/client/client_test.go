@@ -18,7 +18,6 @@ package client
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -70,43 +69,4 @@ func TestNewClient(t *testing.T) {
 		require.Equal(t, host, client.Config.Host)
 		require.Equal(t, baseUrl, client.Config.BaseURL)
 	})
-}
-
-func Test_buildRequestURL(t *testing.T) {
-	client, _ := NewClient(nil, Config{Host: "test-host.com"})
-	uStr := "fn/hello"
-
-	t.Run("should create {baseURL}/{DefaultNamespace}/{urlStr} when namespace is missing", func(t *testing.T) {
-		u, err := client.buildRequestURL(uStr)
-		require.NoError(t, err)
-		require.Equal(t, client.Config.BaseURL.String()+"/"+DefaultNamespace+"/"+uStr, u.String())
-	})
-
-	t.Run("should create url with custom namespace when not missing", func(t *testing.T) {
-		client.Config.Namespace = "some-ns"
-		u, err := client.buildRequestURL(uStr)
-		require.NoError(t, err)
-		require.Equal(t, client.Config.BaseURL.String()+"/some-ns/"+uStr, u.String())
-	})
-
-	t.Run("should fail with an invalid endpoint", func(t *testing.T) {
-		uStr = "_20_%+off_6"
-		_, err := client.buildRequestURL(uStr)
-		require.Error(t, err)
-		require.Equal(t, err.Error(), "invalid endpoint given "+uStr)
-	})
-}
-
-func TestSend(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/_/hello", r.URL.Path)
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	client, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-	req, _ := client.CreateGet("hello")
-	res, _ := client.Send(req)
-
-	require.Equal(t, http.StatusOK, res.StatusCode)
 }

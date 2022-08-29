@@ -18,6 +18,8 @@ package log
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"github.com/theckman/yacspin"
@@ -27,6 +29,7 @@ type loggerBuilder struct {
 	debug   bool
 	spinCfg yacspin.Config
 	err     error
+	writer  io.Writer
 }
 
 func NewLoggerBuilder() builder {
@@ -38,7 +41,14 @@ func NewLoggerBuilder() builder {
 			StopFailCharacter: "✗",
 			StopFailColors:    []string{"fgRed"},
 		},
+		writer: os.Stdout,
 	}
+}
+
+func (l *loggerBuilder) WithWriter(writer io.Writer) builder {
+	l.writer = writer
+	l.spinCfg.Writer = writer
+	return l
 }
 
 func (l *loggerBuilder) WithDebug(b bool) builder {
@@ -90,6 +100,7 @@ func (l *loggerBuilder) Build() (FLogger, error) {
 		debug:          l.debug,
 		currentMessage: "",
 		spinner:        s,
+		writer:         l.writer,
 	}
 	return logger, nil
 }

@@ -16,7 +16,10 @@
 // under the License.
 package log
 
-import "time"
+import (
+	"io"
+	"time"
+)
 
 type (
 	FLogger interface {
@@ -33,6 +36,7 @@ type (
 	}
 
 	builder interface {
+		WithWriter(io.Writer) builder
 		WithDebug(bool) builder
 		SpinnerFrequency(time.Duration) builder
 		SpinnerCharSet(int) builder

@@ -16,7 +16,11 @@
 // under the License.
 package client
 
-import "net/http"
+import (
+	"context"
+
+	swagger "github.com/funlessdev/fl-client-sdk-go"
+)
 
 //					 default
 // https://${HOST}/{NAMESPACE}/fn/hello
@@ -24,7 +28,9 @@ import "net/http"
 // https://${HOST}/{NAMESPACE}/pkg/{PACKAGE}/fn/hello
 
 type FnHandler interface {
-	Invoke(fnName string) (*http.Response, error)
+	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs interface{}) (swagger.FunctionInvocationSuccess, error)
+	Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error)
+	Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error)
 }
 
 type FnService struct {
@@ -33,11 +39,41 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
-func (fn *FnService) Invoke(fnName string) (*http.Response, error) {
-	// https://${HOST}/{NAMESPACE}/fn/hello
-	req, err := fn.CreateGet("fn/" + fnName)
+func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs interface{}) (swagger.FunctionInvocationSuccess, error) {
+	apiService := fn.Client.ApiClient.DefaultApi
+	response, _, err := apiService.InvokePost(ctx, swagger.FunctionInvocation{
+		Function:  fnName,
+		Namespace: fnNamespace,
+		Args:      &fnArgs,
+	})
 	if err != nil {
-		return nil, err
+		return swagger.FunctionInvocationSuccess{}, err
 	}
-	return fn.Send(req)
+	return response, err
+}
+
+func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error) {
+	apiService := fn.Client.ApiClient.DefaultApi
+	response, _, err := apiService.CreatePost(ctx, swagger.FunctionCreation{
+		Name:      fnName,
+		Namespace: fnNamespace,
+		Code:      code,
+		Image:     language,
+	})
+	if err != nil {
+		return swagger.FunctionCreationSuccess{}, err
+	}
+	return response, err
+}
+
+func (fn *FnService) Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error) {
+	apiService := fn.Client.ApiClient.DefaultApi
+	response, _, err := apiService.DeletePost(ctx, swagger.FunctionDeletion{
+		Name:      fnName,
+		Namespace: fnNamespace,
+	})
+	if err != nil {
+		return swagger.FunctionDeletionSuccess{}, err
+	}
+	return response, err
 }
