@@ -20,13 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"io/fs"
 	"os"
 
 	swagger "github.com/funlessdev/fl-client-sdk-go"
 	"github.com/funlessdev/funless-cli/pkg/client"
+	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
 type (
@@ -57,7 +56,7 @@ type (
 	}
 )
 
-func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, writer io.Writer) error {
+func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
 	var args interface{}
 	if f.Args != nil {
 		args = f.Args
@@ -77,7 +76,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, writer io.Wr
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(writer, string(decodedRes))
+		logger.Info(string(decodedRes))
 	} else {
 		return errors.New("Received nil result")
 	}
@@ -85,7 +84,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, writer io.Wr
 	return nil
 }
 
-func (f *Create) Run(ctx context.Context, invoker client.FnHandler, writer io.Writer) error {
+func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
 	var code []byte
 	var err error
 
@@ -104,17 +103,17 @@ func (f *Create) Run(ctx context.Context, invoker client.FnHandler, writer io.Wr
 		return extractError(err)
 	}
 
-	fmt.Fprintln(writer, res.Result)
+	logger.Info(res.Result)
 	return nil
 }
 
-func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, writer io.Writer) error {
+func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
 	res, err := invoker.Delete(ctx, f.Name, f.Namespace)
 	if err != nil {
 		return extractError(err)
 	}
 
-	fmt.Fprintln(writer, res.Result)
+	logger.Info(res.Result)
 	return nil
 }
 
