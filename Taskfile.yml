@@ -43,7 +43,7 @@ tasks:
 
   install:
     - task: build
-    - sudo install ./fl /usr/bin/nuv
+    - sudo install ./fl /usr/bin/fl
     - fl -v
 
   vendor:
