@@ -24,7 +24,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/funlessdev/funless-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg"
 )
 
 type LocalDeployer struct {

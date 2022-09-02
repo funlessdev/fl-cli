@@ -21,9 +21,9 @@ import (
 	"fmt"
 
 	"github.com/docker/docker/client"
-	"github.com/funlessdev/funless-cli/pkg"
-	"github.com/funlessdev/funless-cli/pkg/admin"
-	"github.com/funlessdev/funless-cli/pkg/log"
+	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/admin"
+	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type (
