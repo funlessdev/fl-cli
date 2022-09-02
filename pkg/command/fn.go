@@ -78,7 +78,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 		}
 		logger.Info(string(decodedRes))
 	} else {
-		return errors.New("Received nil result")
+		return errors.New("received nil result")
 	}
 
 	return nil
