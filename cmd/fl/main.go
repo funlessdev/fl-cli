@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/funlessdev/funless-cli/pkg/client"
-	"github.com/funlessdev/funless-cli/pkg/command"
-	"github.com/funlessdev/funless-cli/pkg/log"
+	"github.com/funlessdev/fl-cli/pkg/client"
+	"github.com/funlessdev/fl-cli/pkg/command"
+	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 // CLIVersion holds the current version, to be set by the build with go build -ldflags "-X main.FLVersion=<version>"

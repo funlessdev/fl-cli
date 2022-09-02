@@ -23,9 +23,9 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/funlessdev/fl-cli/pkg/client"
+	"github.com/funlessdev/fl-cli/pkg/log"
 	swagger "github.com/funlessdev/fl-client-sdk-go"
-	"github.com/funlessdev/funless-cli/pkg/client"
-	"github.com/funlessdev/funless-cli/pkg/log"
 )
 
 type (

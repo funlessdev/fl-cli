@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-module github.com/funlessdev/funless-cli
+module github.com/funlessdev/fl-cli
 
 go 1.18
 

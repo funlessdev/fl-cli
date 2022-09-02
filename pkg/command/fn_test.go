@@ -25,9 +25,9 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/funlessdev/fl-cli/pkg/log"
+	"github.com/funlessdev/fl-cli/test/mocks"
 	swagger "github.com/funlessdev/fl-client-sdk-go"
-	"github.com/funlessdev/funless-cli/pkg/log"
-	"github.com/funlessdev/funless-cli/test/mocks"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 )
