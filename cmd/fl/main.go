@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/funlessdev/fl-cli/internal/command"
 	"github.com/funlessdev/fl-cli/pkg/client"
-	"github.com/funlessdev/fl-cli/pkg/command"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
