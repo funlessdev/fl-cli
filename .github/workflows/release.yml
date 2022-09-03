@@ -46,18 +46,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Release Go Binaries 
-        uses: wangyoucao577/go-release-action@v1.28
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          project_path: "."
-          build_command: |
-            if test -z "$TAG"
-            then TAG="$(git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD)"
-            fi
-            echo "Building $TAG"
-            go build -ldflags "-X main.CLIVersion=$TAG" "$@"
+      uses: wangyoucao577/go-release-action@v1.28
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        project_path: "."
+        build_command: |
+          if test -z "$TAG"
+          then TAG="$(git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD)"
+          fi
+          echo "Building $TAG"
+          go build -ldflags "-X main.CLIVersion=$TAG" "$@"
 
-          binary_name: "fl"
-          extra_files: LICENSE README.md
+        binary_name: "fl"
+        extra_files: LICENSE README.md
