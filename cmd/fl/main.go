@@ -23,7 +23,8 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/funlessdev/fl-cli/internal/command"
+	"github.com/funlessdev/fl-cli/internal/command/admin"
+	"github.com/funlessdev/fl-cli/internal/command/fn"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -32,8 +33,8 @@ import (
 var FLVersion = "vX.Y.Z.build"
 
 type CLI struct {
-	Fn    command.Fn    `cmd:"" help:"todo fn subcommand help"`
-	Admin command.Admin `cmd:"" help:"todo admin subcommand help"`
+	Fn    fn.Fn       `cmd:"" help:"todo fn subcommand help"`
+	Admin admin.Admin `cmd:"" aliases:"a" help:"todo admin subcommand help"`
 
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
