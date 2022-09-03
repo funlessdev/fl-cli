@@ -34,7 +34,7 @@ var FLVersion = "vX.Y.Z.build"
 
 type CLI struct {
 	Fn    fn.Fn       `cmd:"" help:"todo fn subcommand help"`
-	Admin admin.Admin `cmd:"" help:"todo admin subcommand help"`
+	Admin admin.Admin `cmd:"" aliases:"a" help:"todo admin subcommand help"`
 
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
