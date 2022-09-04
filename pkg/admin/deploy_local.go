@@ -56,7 +56,7 @@ func (d *LocalDeployer) Apply(f func(*LocalDeployer) error) error {
 	return nil
 }
 
-func SetupFLNetwork(d *LocalDeployer) error {
+func SetupFLNetworks(d *LocalDeployer) error {
 	// Network for Core + Worker
 	exists, net, err := flNetExists(d.ctx, d.client, d.flNetName)
 	if err != nil {
