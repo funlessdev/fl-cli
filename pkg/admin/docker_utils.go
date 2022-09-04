@@ -94,8 +94,8 @@ func flNetExists(ctx context.Context, client *client.Client, netName string) (bo
 	return true, nets[0], nil
 }
 
-func flNetCreate(ctx context.Context, client *client.Client, netName string) (string, error) {
-	res, err := client.NetworkCreate(ctx, netName, types.NetworkCreate{})
+func flNetCreate(ctx context.Context, client *client.Client, netName string, internal bool) (string, error) {
+	res, err := client.NetworkCreate(ctx, netName, types.NetworkCreate{Internal: internal})
 	if err != nil {
 		return "", err
 	}
@@ -105,10 +105,32 @@ func flNetCreate(ctx context.Context, client *client.Client, netName string) (st
 	return res.ID, nil
 }
 
-func startContainer(ctx context.Context, c *client.Client, configs configuration, containerName string) error {
+func startCoreContainer(ctx context.Context, c *client.Client, configs configuration, containerName string) error {
 	resp, err := c.ContainerCreate(ctx, configs.container, configs.host, configs.networking, nil, containerName)
 
 	if err != nil {
+		return err
+	}
+
+	if err := c.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func startWorkerContainer(ctx context.Context, c *client.Client, configs configuration, containerName, runtimeNetId string) error {
+	resp, err := c.ContainerCreate(ctx, configs.container, configs.host, configs.networking, nil, containerName)
+
+	if err != nil {
+		return err
+	}
+
+	runtimeNetSettings := &network.EndpointSettings{
+		NetworkID: runtimeNetId,
+	}
+
+	if err := c.NetworkConnect(ctx, runtimeNetId, resp.ID, runtimeNetSettings); err != nil {
 		return err
 	}
 

@@ -55,6 +55,11 @@ func (r *reset) Run(ctx context.Context, logger log.FLogger) error {
 		return err
 	}
 
+	logger.StartSpinner("Removing fl_runtime_net network... ✂️")
+	if err := logger.StopSpinner(admin.RemoveFLNetwork(ctx, cli, "fl_runtime_net")); err != nil {
+		return err
+	}
+
 	logger.Info("\nAll clear! 👍")
 
 	return err
