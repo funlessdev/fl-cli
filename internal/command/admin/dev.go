@@ -37,9 +37,9 @@ func (d *dev) Run(ctx context.Context, logger log.FLogger) error {
 	if err != nil {
 		return err
 	}
-	deployer := admin.NewLocalDeployer(ctx, cli, "fl_net")
+	deployer := admin.NewLocalDeployer(ctx, cli, "fl_net", "fl_runtime_net")
 
-	if err := logger.StopSpinner(deployer.Apply(admin.SetupFLNetwork)); err != nil {
+	if err := logger.StopSpinner(deployer.Apply(admin.SetupFLNetworks)); err != nil {
 		return err
 	}
 

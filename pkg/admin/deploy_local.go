@@ -28,17 +28,20 @@ import (
 )
 
 type LocalDeployer struct {
-	ctx       context.Context
-	client    *client.Client
-	flNetId   string
-	flNetName string
+	ctx              context.Context
+	client           *client.Client
+	flNetId          string
+	flRuntimeNetId   string
+	flNetName        string
+	flRuntimeNetName string
 }
 
-func NewLocalDeployer(ctx context.Context, client *client.Client, flNetName string) *LocalDeployer {
+func NewLocalDeployer(ctx context.Context, client *client.Client, flNetName string, flRuntimeNetName string) *LocalDeployer {
 	return &LocalDeployer{
-		ctx:       ctx,
-		client:    client,
-		flNetName: flNetName,
+		ctx:              ctx,
+		client:           client,
+		flNetName:        flNetName,
+		flRuntimeNetName: flRuntimeNetName,
 	}
 }
 
@@ -53,9 +56,9 @@ func (d *LocalDeployer) Apply(f func(*LocalDeployer) error) error {
 	return nil
 }
 
-func SetupFLNetwork(d *LocalDeployer) error {
+func SetupFLNetworks(d *LocalDeployer) error {
+	// Network for Core + Worker
 	exists, net, err := flNetExists(d.ctx, d.client, d.flNetName)
-
 	if err != nil {
 		return err
 	}
@@ -64,8 +67,25 @@ func SetupFLNetwork(d *LocalDeployer) error {
 		d.flNetId = net.ID
 		return nil
 	}
-	id, err := flNetCreate(d.ctx, d.client, d.flNetName)
+	id, err := flNetCreate(d.ctx, d.client, d.flNetName, false)
+	if err != nil {
+		return err
+	}
 	d.flNetId = id
+
+	// Network for Worker + Runtimes
+	exists, net, err = flNetExists(d.ctx, d.client, d.flRuntimeNetName)
+	if err != nil {
+		return err
+	}
+	if exists {
+
+		d.flRuntimeNetId = net.ID
+		return nil
+	}
+	runtimeId, err := flNetCreate(d.ctx, d.client, d.flRuntimeNetName, true)
+	d.flRuntimeNetId = runtimeId
+
 	return err
 }
 
@@ -104,7 +124,7 @@ func StartCoreContainer(d *LocalDeployer) error {
 		networking: &netConf,
 	}
 
-	return startContainer(d.ctx, d.client, configs, "fl-core")
+	return startCoreContainer(d.ctx, d.client, configs, "fl-core")
 }
 
 func StartWorkerContainer(d *LocalDeployer) error {
@@ -133,5 +153,5 @@ func StartWorkerContainer(d *LocalDeployer) error {
 		host:       hostConf,
 		networking: &netConf,
 	}
-	return startContainer(d.ctx, d.client, configs, "fl-worker")
+	return startWorkerContainer(d.ctx, d.client, configs, "fl-worker", d.flRuntimeNetId)
 }
