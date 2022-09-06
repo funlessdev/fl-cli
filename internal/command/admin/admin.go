@@ -17,11 +17,6 @@
 package admin
 
 type Admin struct {
-	Dev dev `cmd:"" help:"deploy locally with 1 core and 1 worker docker containers"`
-
-	Init  coreInit `cmd:"" help:"todo init subcommand help"`
-	Join  join     `cmd:"" help:"todo join subcommand help"`
-	Token token    `cmd:"" help:"todo token subcommand help"`
-
+	Dev   dev   `cmd:"" help:"deploy locally with 1 core and 1 worker docker containers"`
 	Reset reset `cmd:"" help:"removes the deployment of local containers"`
 }

@@ -36,3 +36,5 @@ fl
 vendor/
 bin/
 config/
+
+hello.js
