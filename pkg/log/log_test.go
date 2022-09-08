@@ -17,7 +17,9 @@
 package log
 
 import (
+	"bytes"
 	"errors"
+	"os"
 	"testing"
 	"time"
 
@@ -53,6 +55,21 @@ func TestBuilder(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, logger)
 		assert.True(t, logger.(*FLoggerImpl).debug)
+	})
+
+	t.Run("WithWriter sets the writer in logger", func(t *testing.T) {
+
+		var outbuf bytes.Buffer
+		logger, err := NewLoggerBuilder().WithWriter(&outbuf).Build()
+		assert.NoError(t, err)
+		assert.NotNil(t, logger)
+		assert.Equal(t, &outbuf, logger.(*FLoggerImpl).writer)
+	})
+	t.Run("Not using WithWriter keeps default os.Stdout", func(t *testing.T) {
+		logger, err := NewLoggerBuilder().Build()
+		assert.NoError(t, err)
+		assert.NotNil(t, logger)
+		assert.Equal(t, os.Stdout, logger.(*FLoggerImpl).writer)
 	})
 
 	t.Run("SpinnerFrequency generates error if input is less or equal to 0", func(t *testing.T) {
