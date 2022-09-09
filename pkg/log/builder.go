@@ -57,7 +57,6 @@ func (l *loggerBuilder) WithDebug(b bool) builder {
 }
 
 func (l *loggerBuilder) SpinnerFrequency(freq time.Duration) builder {
-
 	if freq <= time.Duration(0) {
 		l.err = fmt.Errorf("spinner frequency must be greater than 0, %w", l.err)
 		return l
@@ -86,7 +85,6 @@ func (l *loggerBuilder) SpinnerCharSet(charset int) builder {
 
 // // Build returns a new logger instance.
 func (l *loggerBuilder) Build() (FLogger, error) {
-
 	if l.err != nil {
 		return nil, l.err
 	}

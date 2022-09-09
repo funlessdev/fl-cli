@@ -17,11 +17,14 @@
 package log
 
 import (
+	"bytes"
 	"errors"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/theckman/yacspin"
 )
 
 func TestBuilder(t *testing.T) {
@@ -55,13 +58,27 @@ func TestBuilder(t *testing.T) {
 		assert.True(t, logger.(*FLoggerImpl).debug)
 	})
 
+	t.Run("WithWriter sets the writer in logger", func(t *testing.T) {
+		var outbuf bytes.Buffer
+		logger, err := NewLoggerBuilder().WithWriter(&outbuf).Build()
+		assert.NoError(t, err)
+		assert.NotNil(t, logger)
+		assert.Equal(t, &outbuf, logger.(*FLoggerImpl).writer)
+	})
+	t.Run("Not using WithWriter keeps default os.Stdout", func(t *testing.T) {
+		logger, err := NewLoggerBuilder().Build()
+		assert.NoError(t, err)
+		assert.NotNil(t, logger)
+		assert.Equal(t, os.Stdout, logger.(*FLoggerImpl).writer)
+	})
+
 	t.Run("SpinnerFrequency generates error if input is less or equal to 0", func(t *testing.T) {
 		logger, err := NewLoggerBuilder().SpinnerFrequency(0 * time.Millisecond).Build()
 		assert.Error(t, err)
 		assert.Nil(t, logger)
 	})
 
-	t.Run("SpinnerFrequency appends err if err is found", func(t *testing.T) {
+	t.Run("SpinnerFrequency appends err if err in builder already present", func(t *testing.T) {
 		builder := NewLoggerBuilder()
 		builder.(*loggerBuilder).err = errors.New("test err")
 		_, err := builder.SpinnerFrequency(0 * time.Millisecond).Build()
@@ -74,4 +91,132 @@ func TestBuilder(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, logger)
 	})
+
+}
+
+func setupWriterLogger(disableAnimation bool) (FLogger, *bytes.Buffer) {
+	var outbuf bytes.Buffer
+	logger, _ := NewLoggerBuilder().WithWriter(&outbuf).Build()
+	logger.(*FLoggerImpl).disableAnimation = disableAnimation
+	return logger, &outbuf
+}
+func TestSpinner(t *testing.T) {
+
+	t.Run("StartSpinner starts spinner and saves message", func(t *testing.T) {
+		logger, _ := setupWriterLogger(false)
+
+		_ = logger.StartSpinner("test")
+
+		assert.Equal(t, "test", logger.(*FLoggerImpl).currentMessage)
+		assert.Equal(t, yacspin.SpinnerRunning, logger.(*FLoggerImpl).spinner.Status())
+	})
+
+	t.Run("StartSpinner called when spinner is already running returns error", func(t *testing.T) {
+		logger, _ := setupWriterLogger(false)
+
+		_ = logger.StartSpinner("test")
+		err := logger.StartSpinner("test")
+
+		assert.Error(t, err)
+	})
+
+	t.Run("StopSpinner stops spinner with success and returns nil when given nil", func(t *testing.T) {
+		logger, _ := setupWriterLogger(false)
+
+		_ = logger.StartSpinner("test")
+		err := logger.StopSpinner(nil)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "", logger.(*FLoggerImpl).currentMessage)
+		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
+	})
+
+	t.Run("StopSpinner stops spinner and returns error when given error", func(t *testing.T) {
+		logger, _ := setupWriterLogger(false)
+
+		_ = logger.StartSpinner("test")
+
+		inputErr := errors.New("test err")
+		err := logger.StopSpinner(inputErr)
+
+		assert.EqualError(t, err, "test err")
+		assert.Equal(t, "", logger.(*FLoggerImpl).currentMessage)
+		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
+	})
+
+	t.Run("StopSpinner called when spinner is not running returns error", func(t *testing.T) {
+		logger, _ := setupWriterLogger(false)
+
+		err := logger.StopSpinner(nil)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("SpinnerMessage sets currentMessage", func(t *testing.T) {
+		logger, _ := setupWriterLogger(false)
+
+		logger.SpinnerMessage("test")
+
+		assert.Equal(t, "test", logger.(*FLoggerImpl).currentMessage)
+	})
+
+	t.Run("StartSpinner with disableAnimation does not start the spinner", func(t *testing.T) {
+		logger, _ := setupWriterLogger(true)
+		_ = logger.StartSpinner("test")
+		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
+	})
+
+	t.Run("StartSpinner with disableAnimation does a simple print", func(t *testing.T) {
+		logger, outbuf := setupWriterLogger(true)
+		_ = logger.StartSpinner("test")
+		assert.Equal(t, "test\n", outbuf.String())
+	})
+
+	t.Run("StopSpinner with disableAnimation prints done if no error occured and failed if err", func(t *testing.T) {
+		logger, outbuf := setupWriterLogger(true)
+
+		_ = logger.StopSpinner(nil)
+		assert.Equal(t, "done\n", outbuf.String())
+		outbuf.Reset()
+
+		_ = logger.StopSpinner(errors.New("test err"))
+		assert.Equal(t, "failed\n", outbuf.String())
+	})
+
+}
+
+func ExampleFLoggerImpl_Info() {
+	logger, _ := NewLoggerBuilder().Build()
+	logger.Info("test info log")
+	// Output: test info log
+}
+
+func ExampleFLoggerImpl_Infof() {
+	logger, _ := NewLoggerBuilder().Build()
+	logger.Infof("test info log %s", "with format")
+	// Output: test info log with format
+}
+
+func ExampleFLoggerImpl_Debug() {
+	logger, _ := NewLoggerBuilder().Build()
+	logger.Debug("test debug log with debug disabled")
+	// Output:
+}
+
+func ExampleFLoggerImpl_Debugf() {
+	logger, _ := NewLoggerBuilder().Build()
+	logger.Debugf("test debug log %s with debug disabled", "with format")
+	// Output:
+}
+
+func ExampleFLoggerImpl_Debug_withDebugEnabled() {
+	logger, _ := NewLoggerBuilder().WithDebug(true).Build()
+	logger.Debug("test debug log with debug enabled")
+	// Output: DEBUG: test debug log with debug enabled
+}
+
+func ExampleFLoggerImpl_Debugf_withDebugEnabled() {
+	logger, _ := NewLoggerBuilder().WithDebug(true).Build()
+	logger.Debugf("test debug log %s with debug enabled", "with format")
+	// Output: DEBUG: test debug log with format with debug enabled
 }

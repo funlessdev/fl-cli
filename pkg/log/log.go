@@ -24,14 +24,11 @@ import (
 )
 
 type FLoggerImpl struct {
-	debug          bool
-	currentMessage string
-	spinner        *yacspin.Spinner
-	writer         io.Writer
-}
-
-func (l *FLoggerImpl) SpinnerSuffix(suffix string) {
-	l.spinner.Suffix(suffix)
+	disableAnimation bool // used mostly for testing
+	debug            bool
+	currentMessage   string
+	spinner          *yacspin.Spinner
+	writer           io.Writer
 }
 
 func (l *FLoggerImpl) SpinnerMessage(msg string) {
@@ -39,13 +36,29 @@ func (l *FLoggerImpl) SpinnerMessage(msg string) {
 	l.spinner.Message(msg)
 }
 
-func (l *FLoggerImpl) StartSpinner(msg string) {
+func (l *FLoggerImpl) StartSpinner(msg string) error {
 	l.currentMessage = msg
+
+	if l.disableAnimation {
+		l.Info(msg)
+		return nil
+	}
 	l.spinner.Message(msg)
-	_ = l.spinner.Start()
+	return l.spinner.Start()
 }
 
 func (l *FLoggerImpl) StopSpinner(err error) error {
+	l.currentMessage = ""
+
+	if l.disableAnimation {
+		if err == nil {
+			l.Info("done")
+		} else {
+			l.Info("failed")
+		}
+		return err
+	}
+
 	if err == nil {
 		l.spinner.StopMessage(l.currentMessage)
 		return l.spinner.Stop()
