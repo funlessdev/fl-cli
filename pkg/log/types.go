@@ -23,9 +23,8 @@ import (
 
 type (
 	FLogger interface {
-		SpinnerSuffix(string)
 		SpinnerMessage(string)
-		StartSpinner(string)
+		StartSpinner(string) error
 		StopSpinner(error) error
 
 		Info(args ...interface{})
