@@ -105,7 +105,7 @@ func TestSpinner(t *testing.T) {
 	t.Run("StartSpinner starts spinner and saves message", func(t *testing.T) {
 		logger, _ := setupWriterLogger(false)
 
-		logger.StartSpinner("test")
+		_ = logger.StartSpinner("test")
 
 		assert.Equal(t, "test", logger.(*FLoggerImpl).currentMessage)
 		assert.Equal(t, yacspin.SpinnerRunning, logger.(*FLoggerImpl).spinner.Status())
@@ -114,7 +114,7 @@ func TestSpinner(t *testing.T) {
 	t.Run("StartSpinner called when spinner is already running returns error", func(t *testing.T) {
 		logger, _ := setupWriterLogger(false)
 
-		logger.StartSpinner("test")
+		_ = logger.StartSpinner("test")
 		err := logger.StartSpinner("test")
 
 		assert.Error(t, err)
@@ -123,7 +123,7 @@ func TestSpinner(t *testing.T) {
 	t.Run("StopSpinner stops spinner with success and returns nil when given nil", func(t *testing.T) {
 		logger, _ := setupWriterLogger(false)
 
-		logger.StartSpinner("test")
+		_ = logger.StartSpinner("test")
 		err := logger.StopSpinner(nil)
 
 		assert.NoError(t, err)
@@ -134,7 +134,7 @@ func TestSpinner(t *testing.T) {
 	t.Run("StopSpinner stops spinner and returns error when given error", func(t *testing.T) {
 		logger, _ := setupWriterLogger(false)
 
-		logger.StartSpinner("test")
+		_ = logger.StartSpinner("test")
 
 		inputErr := errors.New("test err")
 		err := logger.StopSpinner(inputErr)
@@ -162,24 +162,24 @@ func TestSpinner(t *testing.T) {
 
 	t.Run("StartSpinner with disableAnimation does not start the spinner", func(t *testing.T) {
 		logger, _ := setupWriterLogger(true)
-		logger.StartSpinner("test")
+		_ = logger.StartSpinner("test")
 		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
 	})
 
 	t.Run("StartSpinner with disableAnimation does a simple print", func(t *testing.T) {
 		logger, outbuf := setupWriterLogger(true)
-		logger.StartSpinner("test")
+		_ = logger.StartSpinner("test")
 		assert.Equal(t, "test\n", outbuf.String())
 	})
 
 	t.Run("StopSpinner with disableAnimation prints done if no error occured and failed if err", func(t *testing.T) {
 		logger, outbuf := setupWriterLogger(true)
 
-		logger.StopSpinner(nil)
+		_ = logger.StopSpinner(nil)
 		assert.Equal(t, "done\n", outbuf.String())
 		outbuf.Reset()
 
-		logger.StopSpinner(errors.New("test err"))
+		_ = logger.StopSpinner(errors.New("test err"))
 		assert.Equal(t, "failed\n", outbuf.String())
 	})
 
