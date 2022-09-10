@@ -47,7 +47,6 @@ func (l *FLoggerImpl) StartSpinner(msg string) error {
 }
 
 func (l *FLoggerImpl) StopSpinner(err error) error {
-	l.currentMessage = ""
 	if l.disableAnimation {
 		if err == nil {
 			l.Info("done")

@@ -135,7 +135,6 @@ func TestSpinner(t *testing.T) {
 		err := logger.StopSpinner(nil)
 
 		assert.NoError(t, err)
-		assert.Equal(t, "", logger.(*FLoggerImpl).currentMessage)
 		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
 	})
 
@@ -148,7 +147,6 @@ func TestSpinner(t *testing.T) {
 		err := logger.StopSpinner(inputErr)
 
 		assert.EqualError(t, err, "test err")
-		assert.Equal(t, "", logger.(*FLoggerImpl).currentMessage)
 		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
 	})
 
