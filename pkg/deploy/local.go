@@ -136,7 +136,7 @@ func (d *LocalDeployer) StartCore(ctx context.Context) error {
 		networking: &netConf,
 	}
 
-	return startCoreContainer(ctx, d.client, configs, "fl-core")
+	return startCoreContainer(ctx, d.client, configs, d.coreContainerName)
 }
 
 func (d *LocalDeployer) StartWorker(ctx context.Context) error {
@@ -170,14 +170,13 @@ func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 		host:       hostConf,
 		networking: &netConf,
 	}
-	return startWorkerContainer(ctx, d.client, configs, "fl-worker", d.flRuntimeNetId)
+	return startWorkerContainer(ctx, d.client, configs, d.workerContainerName, d.flRuntimeNetId)
 }
 
-func (d *LocalDeployer) RemoveFLMainNetwork(ctx context.Context) error {
-	return removeNetwork(ctx, d.client, d.flNetName)
-}
-
-func (d *LocalDeployer) RemoveFLRuntimeNetwork(ctx context.Context) error {
+func (d *LocalDeployer) RemoveFLNetworks(ctx context.Context) error {
+	if err := removeNetwork(ctx, d.client, d.flNetName); err != nil {
+		return err
+	}
 	return removeNetwork(ctx, d.client, d.flRuntimeNetName)
 }
 

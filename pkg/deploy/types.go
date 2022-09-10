@@ -28,8 +28,7 @@ type DockerDeployer interface {
 	StartCore(ctx context.Context) error
 	StartWorker(ctx context.Context) error
 
-	RemoveFLMainNetwork(ctx context.Context) error
-	RemoveFLRuntimeNetwork(ctx context.Context) error
+	RemoveFLNetworks(ctx context.Context) error
 	RemoveCoreContainer(context.Context) error
 	RemoveWorkerContainer(context.Context) error
 	RemoveFunctionContainers(ctx context.Context) error
