@@ -42,6 +42,8 @@ func TestBuilder(t *testing.T) {
 		assert.Equal(t, []string{"fgGreen"}, builder.(*loggerBuilder).spinCfg.StopColors)
 		assert.Equal(t, "✗", builder.(*loggerBuilder).spinCfg.StopFailCharacter)
 		assert.Equal(t, []string{"fgRed"}, builder.(*loggerBuilder).spinCfg.StopFailColors)
+		assert.Equal(t, os.Stdout, builder.(*loggerBuilder).writer)
+		assert.Equal(t, false, builder.(*loggerBuilder).disableAnimation)
 	})
 
 	t.Run("Build returns new logger", func(t *testing.T) {
@@ -92,6 +94,12 @@ func TestBuilder(t *testing.T) {
 		assert.Nil(t, logger)
 	})
 
+	t.Run("DisableAnimation disables animation in logger", func(t *testing.T) {
+		logger, err := NewLoggerBuilder().DisableAnimation().Build()
+		assert.NoError(t, err)
+		assert.NotNil(t, logger)
+		assert.True(t, logger.(*FLoggerImpl).disableAnimation)
+	})
 }
 
 func setupWriterLogger(disableAnimation bool) (FLogger, *bytes.Buffer) {
@@ -127,7 +135,6 @@ func TestSpinner(t *testing.T) {
 		err := logger.StopSpinner(nil)
 
 		assert.NoError(t, err)
-		assert.Equal(t, "", logger.(*FLoggerImpl).currentMessage)
 		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
 	})
 
@@ -140,7 +147,6 @@ func TestSpinner(t *testing.T) {
 		err := logger.StopSpinner(inputErr)
 
 		assert.EqualError(t, err, "test err")
-		assert.Equal(t, "", logger.(*FLoggerImpl).currentMessage)
 		assert.Equal(t, yacspin.SpinnerStopped, logger.(*FLoggerImpl).spinner.Status())
 	})
 

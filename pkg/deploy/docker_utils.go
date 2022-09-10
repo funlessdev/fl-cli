@@ -6,7 +6,7 @@
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -14,7 +14,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package admin
+
+package deploy
 
 import (
 	"context"
@@ -38,13 +39,6 @@ type configuration struct {
 }
 
 func pullFLImage(ctx context.Context, c *client.Client, image string) error {
-	if err := pullImage(ctx, c, image); err != nil {
-		return err
-	}
-	return nil
-}
-
-func pullImage(ctx context.Context, c *client.Client, image string) error {
 	out, err := c.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return err
@@ -193,4 +187,25 @@ func functionContainersList(ctx context.Context, c *client.Client) ([]types.Cont
 	}
 
 	return containers, nil
+}
+func removeContainer(ctx context.Context, c *client.Client, name string) error {
+	exists, container, err := flContainerExists(ctx, c, name)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	return c.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{Force: true})
+}
+
+func removeNetwork(ctx context.Context, c *client.Client, netName string) error {
+	exists, net, err := flNetExists(ctx, c, netName)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	return c.NetworkRemove(ctx, net.ID)
 }
