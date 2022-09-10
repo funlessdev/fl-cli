@@ -42,7 +42,7 @@ func TestRun_WhenSuccessful(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		dev.Run(ctx, deployer, testLogger)
+		_ = dev.Run(ctx, deployer, testLogger)
 
 		expectedOutput := []string{
 			"Deploying funless locally...\n",
@@ -63,7 +63,7 @@ func TestRun_WhenSuccessful(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		dev.Run(ctx, deployer, testLogger)
+		_ = dev.Run(ctx, deployer, testLogger)
 
 		expectedOutput := []string{
 			"Deploying funless locally...\n",
@@ -84,7 +84,7 @@ func TestRun_WhenSuccessful(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		dev.Run(ctx, deployer, testLogger)
+		_ = dev.Run(ctx, deployer, testLogger)
 
 		expectedOutput := []string{
 			"Deploying funless locally...\n",
@@ -107,7 +107,7 @@ func TestRun_WhenSuccessful(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		dev.Run(ctx, deployer, testLogger)
+		_ = dev.Run(ctx, deployer, testLogger)
 
 		expectedOutput := []string{
 			"Deploying funless locally...\n",
@@ -132,7 +132,7 @@ func TestRun_WhenSuccessful(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		dev.Run(ctx, deployer, testLogger)
+		_ = dev.Run(ctx, deployer, testLogger)
 
 		expectedOutput := []string{
 			"Deploying funless locally...\n",
@@ -159,7 +159,7 @@ func TestRun_WhenSuccessful(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		dev.Run(ctx, deployer, testLogger)
+		_ = dev.Run(ctx, deployer, testLogger)
 
 		expectedOutput := []string{
 			"Deploying funless locally...\n",
@@ -180,12 +180,12 @@ func TestRun_WhenSuccessful(t *testing.T) {
 		assertOutput(t, expectedOutput, &outbuf)
 	})
 
-	t.Run("success prints when everything goes well", func(t *testing.T) {
+	t.Run("successful prints when everything goes well", func(t *testing.T) {
 		deployer.On("StartWorker", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
 
-		dev.Run(ctx, deployer, testLogger)
+		_ = dev.Run(ctx, deployer, testLogger)
 
 		expectedOutput := []string{
 			"Deploying funless locally...\n",
