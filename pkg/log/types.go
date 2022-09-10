@@ -39,6 +39,7 @@ type (
 		WithDebug(bool) builder
 		SpinnerFrequency(time.Duration) builder
 		SpinnerCharSet(int) builder
+		DisableAnimation() builder
 		Build() (FLogger, error)
 	}
 )

@@ -38,7 +38,6 @@ func (l *FLoggerImpl) SpinnerMessage(msg string) {
 
 func (l *FLoggerImpl) StartSpinner(msg string) error {
 	l.currentMessage = msg
-
 	if l.disableAnimation {
 		l.Info(msg)
 		return nil
@@ -49,7 +48,6 @@ func (l *FLoggerImpl) StartSpinner(msg string) error {
 
 func (l *FLoggerImpl) StopSpinner(err error) error {
 	l.currentMessage = ""
-
 	if l.disableAnimation {
 		if err == nil {
 			l.Info("done")

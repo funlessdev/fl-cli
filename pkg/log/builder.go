@@ -26,10 +26,11 @@ import (
 )
 
 type loggerBuilder struct {
-	debug   bool
-	spinCfg yacspin.Config
-	err     error
-	writer  io.Writer
+	debug            bool
+	spinCfg          yacspin.Config
+	err              error
+	writer           io.Writer
+	disableAnimation bool
 }
 
 func NewLoggerBuilder() builder {
@@ -41,7 +42,8 @@ func NewLoggerBuilder() builder {
 			StopFailCharacter: "✗",
 			StopFailColors:    []string{"fgRed"},
 		},
-		writer: os.Stdout,
+		writer:           os.Stdout,
+		disableAnimation: false,
 	}
 }
 
@@ -70,7 +72,7 @@ func (l *loggerBuilder) SpinnerFrequency(freq time.Duration) builder {
 	return l
 }
 
-// // SpinnerCharSet sets the character set to use for the spinner animation [0 to 90].
+// SpinnerCharSet sets the character set to use for the spinner animation [0 to 90].
 func (l *loggerBuilder) SpinnerCharSet(charset int) builder {
 	if charset < 0 || charset > 90 {
 		l.err = fmt.Errorf("spinner character set must be between 0 and 90, %w", l.err)
@@ -83,7 +85,13 @@ func (l *loggerBuilder) SpinnerCharSet(charset int) builder {
 	return l
 }
 
-// // Build returns a new logger instance.
+// DisableAnimation disables the animation.
+func (l *loggerBuilder) DisableAnimation() builder {
+	l.disableAnimation = true
+	return l
+}
+
+// Build returns a new logger instance.
 func (l *loggerBuilder) Build() (FLogger, error) {
 	if l.err != nil {
 		return nil, l.err
@@ -95,10 +103,11 @@ func (l *loggerBuilder) Build() (FLogger, error) {
 	}
 
 	logger := &FLoggerImpl{
-		debug:          l.debug,
-		currentMessage: "",
-		spinner:        s,
-		writer:         l.writer,
+		debug:            l.debug,
+		currentMessage:   "",
+		spinner:          s,
+		writer:           l.writer,
+		disableAnimation: l.disableAnimation,
 	}
 	return logger, nil
 }
