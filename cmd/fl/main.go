@@ -46,7 +46,7 @@ func main() {
 
 	logger, err := buildLogger()
 
-	localDeployer := deploy.NewLocalDeployer("fl-net", "fl-runtime-net")
+	localDeployer := deploy.NewLocalDeployer("fl-core", "fl-worker", "fl-net", "fl-runtime-net")
 
 	if err != nil {
 		fmt.Println(err.Error())

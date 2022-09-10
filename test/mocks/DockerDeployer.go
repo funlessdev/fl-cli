@@ -58,6 +58,76 @@ func (_m *DockerDeployer) PullWorkerImage(ctx context.Context) error {
 	return r0
 }
 
+// RemoveCoreContainer provides a mock function with given fields: _a0
+func (_m *DockerDeployer) RemoveCoreContainer(_a0 context.Context) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveFLMainNetwork provides a mock function with given fields: ctx
+func (_m *DockerDeployer) RemoveFLMainNetwork(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveFLRuntimeNetwork provides a mock function with given fields: ctx
+func (_m *DockerDeployer) RemoveFLRuntimeNetwork(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveFunctionContainers provides a mock function with given fields: ctx
+func (_m *DockerDeployer) RemoveFunctionContainers(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveWorkerContainer provides a mock function with given fields: _a0
+func (_m *DockerDeployer) RemoveWorkerContainer(_a0 context.Context) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SetupClient provides a mock function with given fields: ctx
 func (_m *DockerDeployer) SetupClient(ctx context.Context) error {
 	ret := _m.Called(ctx)

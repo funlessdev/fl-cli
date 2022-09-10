@@ -18,34 +18,35 @@ package deploy
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"os"
-	"regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/funlessdev/fl-cli/pkg"
 )
 
 type LocalDeployer struct {
-	client           *client.Client
-	flNetId          string
+	client *client.Client
+
+	flNetId   string
+	flNetName string
+
 	flRuntimeNetId   string
-	flNetName        string
 	flRuntimeNetName string
+
+	coreContainerName   string
+	workerContainerName string
 }
 
-func NewLocalDeployer(flNetName string, flRuntimeNetName string) *LocalDeployer {
+func NewLocalDeployer(coreContainerName, workerContainerName, flNetName, flRuntimeNetName string) *LocalDeployer {
 	return &LocalDeployer{
 		flNetName:        flNetName,
 		flRuntimeNetName: flRuntimeNetName,
+
+		coreContainerName:   coreContainerName,
+		workerContainerName: workerContainerName,
 	}
 }
 
@@ -172,159 +173,33 @@ func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 	return startWorkerContainer(ctx, d.client, configs, "fl-worker", d.flRuntimeNetId)
 }
 
-type configuration struct {
-	container  *container.Config
-	host       *container.HostConfig
-	networking *network.NetworkingConfig
+func (d *LocalDeployer) RemoveFLMainNetwork(ctx context.Context) error {
+	return removeNetwork(ctx, d.client, d.flNetName)
 }
 
-func pullFLImage(ctx context.Context, c *client.Client, image string) error {
-	out, err := c.ImagePull(ctx, image, types.ImagePullOptions{})
+func (d *LocalDeployer) RemoveFLRuntimeNetwork(ctx context.Context) error {
+	return removeNetwork(ctx, d.client, d.flRuntimeNetName)
+}
+
+func (d *LocalDeployer) RemoveCoreContainer(ctx context.Context) error {
+	return removeContainer(ctx, d.client, d.coreContainerName)
+}
+
+func (d *LocalDeployer) RemoveWorkerContainer(ctx context.Context) error {
+	return removeContainer(ctx, d.client, d.workerContainerName)
+}
+
+func (d *LocalDeployer) RemoveFunctionContainers(ctx context.Context) error {
+	containers, err := functionContainersList(ctx, d.client)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
-	d := json.NewDecoder(out)
-
-	type Event struct {
-		Status         string `json:"status"`
-		Error          string `json:"error"`
-		Progress       string `json:"progress"`
-		ProgressDetail struct {
-			Current int `json:"current"`
-			Total   int `json:"total"`
-		} `json:"progressDetail"`
-	}
-
-	var event *Event
-	for {
-		if err := d.Decode(&event); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return err
-		}
-
-		if event.Error != "" {
-			return fmt.Errorf("pulling image: %s", event.Error)
+	var removalErr error = nil
+	for _, container := range containers {
+		if err := d.client.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+			removalErr = err
 		}
 	}
-	return nil
-}
-
-func flNetExists(ctx context.Context, client *client.Client, netName string) (bool, types.NetworkResource, error) {
-	nets, err := client.NetworkList(ctx, types.NetworkListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: netName}),
-	})
-	if err != nil {
-		return false, types.NetworkResource{}, err
-	}
-
-	if len(nets) == 0 {
-		return false, types.NetworkResource{}, nil
-	}
-
-	return true, nets[0], nil
-}
-
-func flNetCreate(ctx context.Context, client *client.Client, netName string, internal bool) (string, error) {
-	res, err := client.NetworkCreate(ctx, netName, types.NetworkCreate{Internal: internal})
-	if err != nil {
-		return "", err
-	}
-	if res.Warning != "" {
-		fmt.Printf("Warning creating fl_net network: %s\n", res.Warning)
-	}
-	return res.ID, nil
-}
-
-func startCoreContainer(ctx context.Context, c *client.Client, configs configuration, containerName string) error {
-	resp, err := c.ContainerCreate(ctx, configs.container, configs.host, configs.networking, nil, containerName)
-
-	if err != nil {
-		return err
-	}
-
-	if err := c.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func startWorkerContainer(ctx context.Context, c *client.Client, configs configuration, containerName, runtimeNetId string) error {
-	resp, err := c.ContainerCreate(ctx, configs.container, configs.host, configs.networking, nil, containerName)
-
-	if err != nil {
-		return err
-	}
-
-	runtimeNetSettings := &network.EndpointSettings{
-		NetworkID: runtimeNetId,
-	}
-
-	if err := c.NetworkConnect(ctx, runtimeNetId, resp.ID, runtimeNetSettings); err != nil {
-		return err
-	}
-
-	if err := c.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func buildNetworkConfig(networkName, networkID string) network.NetworkingConfig {
-	endpoints := make(map[string]*network.EndpointSettings, 1)
-	endpoints[networkName] = &network.EndpointSettings{
-		NetworkID: networkID,
-	}
-
-	return network.NetworkingConfig{
-		EndpointsConfig: endpoints,
-	}
-}
-
-func getDockerHost() string {
-	dockerHost, exists := os.LookupEnv("DOCKER_HOST")
-	if !exists || dockerHost == "" {
-		dockerHost = "/var/run/docker.sock"
-	} else {
-		r, _ := regexp.Compile("^((unix|tcp|http)://)")
-		dockerHost = r.ReplaceAllString(dockerHost, "")
-	}
-	return dockerHost
-}
-
-func flContainerExists(ctx context.Context, c *client.Client, containerName string) (bool, types.Container, error) {
-	containers, err := c.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: containerName}),
-	})
-	if err != nil {
-		return false, types.Container{}, err
-	}
-
-	if len(containers) == 0 {
-		return false, types.Container{}, nil
-	}
-
-	return true, containers[0], nil
-}
-
-func functionContainersList(ctx context.Context, c *client.Client) ([]types.Container, error) {
-
-	// match all containers name containing funless suffix
-	filter := filters.NewArgs(filters.KeyValuePair{Key: "name", Value: "funless"})
-	filter.Contains("funless")
-
-	containers, err := c.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filter,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return containers, nil
+	return removalErr
 }
