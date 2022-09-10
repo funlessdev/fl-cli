@@ -21,7 +21,7 @@ import (
 	"context"
 
 	"github.com/docker/docker/client"
-	"github.com/funlessdev/fl-cli/pkg/admin"
+	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
@@ -35,28 +35,28 @@ func (r *reset) Run(ctx context.Context, logger log.FLogger) error {
 		return err
 	}
 
-	logger.StartSpinner("Removing Core container... ☠️")
-	if err := logger.StopSpinner(admin.RemoveFLContainer(ctx, cli, "fl-core")); err != nil {
+	_ = logger.StartSpinner("Removing Core container... ☠️")
+	if err := logger.StopSpinner(deploy.RemoveFLContainer(ctx, cli, "fl-core")); err != nil {
 		return err
 	}
 
-	logger.StartSpinner("Removing Worker container... 🔪")
-	if err := logger.StopSpinner(admin.RemoveFLContainer(ctx, cli, "fl-worker")); err != nil {
+	_ = logger.StartSpinner("Removing Worker container... 🔪")
+	if err := logger.StopSpinner(deploy.RemoveFLContainer(ctx, cli, "fl-worker")); err != nil {
 		return err
 	}
 
-	logger.StartSpinner("Removing the function containers... 🔫")
-	if err := logger.StopSpinner(admin.RemoveFunctionContainers(ctx, cli)); err != nil {
+	_ = logger.StartSpinner("Removing the function containers... 🔫")
+	if err := logger.StopSpinner(deploy.RemoveFunctionContainers(ctx, cli)); err != nil {
 		return err
 	}
 
-	logger.StartSpinner("Removing fl_net network... ✂️")
-	if err := logger.StopSpinner(admin.RemoveFLNetwork(ctx, cli, "fl_net")); err != nil {
+	_ = logger.StartSpinner("Removing fl_net network... ✂️")
+	if err := logger.StopSpinner(deploy.RemoveFLNetwork(ctx, cli, "fl_net")); err != nil {
 		return err
 	}
 
-	logger.StartSpinner("Removing fl_runtime_net network... ✂️")
-	if err := logger.StopSpinner(admin.RemoveFLNetwork(ctx, cli, "fl_runtime_net")); err != nil {
+	_ = logger.StartSpinner("Removing fl_runtime_net network... ✂️")
+	if err := logger.StopSpinner(deploy.RemoveFLNetwork(ctx, cli, "fl_runtime_net")); err != nil {
 		return err
 	}
 

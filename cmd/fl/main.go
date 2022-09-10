@@ -26,6 +26,7 @@ import (
 	"github.com/funlessdev/fl-cli/internal/command/admin"
 	"github.com/funlessdev/fl-cli/internal/command/fn"
 	"github.com/funlessdev/fl-cli/pkg/client"
+	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
@@ -44,6 +45,8 @@ func main() {
 	ctx := context.Background()
 
 	logger, err := buildLogger()
+
+	localDeployer := deploy.NewLocalDeployer("fl-net", "fl-runtime-net")
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -70,6 +73,7 @@ func main() {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
+		kong.BindTo(localDeployer, (*deploy.DockerDeployer)(nil)),
 		kong.Vars{
 			"version": FLVersion,
 		},

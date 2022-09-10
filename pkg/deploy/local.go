@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package admin
+package deploy
 
 import (
 	"context"
@@ -27,9 +27,150 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
+	"github.com/funlessdev/fl-cli/pkg"
 )
+
+type LocalDeployer struct {
+	client           *client.Client
+	flNetId          string
+	flRuntimeNetId   string
+	flNetName        string
+	flRuntimeNetName string
+}
+
+func NewLocalDeployer(flNetName string, flRuntimeNetName string) *LocalDeployer {
+	return &LocalDeployer{
+		flNetName:        flNetName,
+		flRuntimeNetName: flRuntimeNetName,
+	}
+}
+
+func (d *LocalDeployer) SetupClient(ctx context.Context) error {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+	if err != nil {
+		return err
+	}
+	d.client = cli
+	return nil
+}
+
+func (d *LocalDeployer) SetupFLNetworks(ctx context.Context) error {
+	// Network for Core + Worker
+	exists, net, err := flNetExists(ctx, d.client, d.flNetName)
+	if err != nil {
+		return err
+	}
+	if exists {
+
+		d.flNetId = net.ID
+		return nil
+	}
+	id, err := flNetCreate(ctx, d.client, d.flNetName, false)
+	if err != nil {
+		return err
+	}
+	d.flNetId = id
+
+	// Network for Worker + Runtimes
+	exists, net, err = flNetExists(ctx, d.client, d.flRuntimeNetName)
+	if err != nil {
+		return err
+	}
+	if exists {
+
+		d.flRuntimeNetId = net.ID
+		return nil
+	}
+	runtimeId, err := flNetCreate(ctx, d.client, d.flRuntimeNetName, true)
+	d.flRuntimeNetId = runtimeId
+
+	return err
+}
+
+func (d *LocalDeployer) PullCoreImage(ctx context.Context) error {
+	return pullFLImage(ctx, d.client, pkg.FLCore)
+}
+
+func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
+	return pullFLImage(ctx, d.client, pkg.FLWorker)
+}
+
+func (d *LocalDeployer) StartCore(ctx context.Context) error {
+
+	containerConfig := &container.Config{
+		Image: pkg.FLCore,
+		ExposedPorts: nat.PortSet{
+			"4001/tcp": struct{}{},
+		},
+		Volumes: map[string]struct{}{},
+	}
+
+	hostConfig := &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"4001/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "4001",
+				},
+			},
+		},
+		Mounts: []mount.Mount{
+			{
+				Source: "/home/giusdp/funless-logs/",
+				Target: "/tmp/funless",
+				Type:   mount.TypeBind,
+			},
+		},
+	}
+
+	netConf := buildNetworkConfig(d.flNetName, d.flNetId)
+
+	configs := configuration{
+		container:  containerConfig,
+		host:       hostConfig,
+		networking: &netConf,
+	}
+
+	return startCoreContainer(ctx, d.client, configs, "fl-core")
+}
+
+func (d *LocalDeployer) StartWorker(ctx context.Context) error {
+
+	dockerHost := getDockerHost()
+
+	containerConfig := &container.Config{
+		Image: pkg.FLWorker,
+		Env:   []string{"RUNTIME_NETWORK=" + d.flNetName},
+	}
+
+	hostConf := &container.HostConfig{
+		Mounts: []mount.Mount{
+			{
+				Source: dockerHost,
+				Target: "/var/run/docker-host.sock",
+				Type:   mount.TypeBind,
+			},
+			{
+				Source: "/home/giusdp/funless-logs/",
+				Target: "/tmp/funless",
+				Type:   mount.TypeBind,
+			},
+		},
+	}
+
+	netConf := buildNetworkConfig(d.flNetName, d.flNetId)
+
+	configs := configuration{
+		container:  containerConfig,
+		host:       hostConf,
+		networking: &netConf,
+	}
+	return startWorkerContainer(ctx, d.client, configs, "fl-worker", d.flRuntimeNetId)
+}
 
 type configuration struct {
 	container  *container.Config
