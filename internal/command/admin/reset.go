@@ -20,43 +20,42 @@ package admin
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type reset struct{}
 
-func (r *reset) Run(ctx context.Context, logger log.FLogger) error {
+func (r *reset) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
 	logger.Info("Removing local funless deployment...\n")
 
-	// cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
-	// if err != nil {
-	// 	return err
-	// }
+	if err := deployer.SetupClient(ctx); err != nil {
+		return err
+	}
 
-	// _ = logger.StartSpinner("Removing Core container... ☠️")
-	// if err := logger.StopSpinner(deploy.RemoveFLContainer(ctx, cli, "fl-core")); err != nil {
-	// 	return err
-	// }
+	_ = logger.StartSpinner("Removing Core container... ☠️")
+	if err := logger.StopSpinner(deployer.RemoveCoreContainer(ctx)); err != nil {
+		return err
+	}
 
-	// _ = logger.StartSpinner("Removing Worker container... 🔪")
-	// if err := logger.StopSpinner(deploy.RemoveFLContainer(ctx, cli, "fl-worker")); err != nil {
-	// 	return err
-	// }
+	_ = logger.StartSpinner("Removing Worker container... 🔪")
+	if err := logger.StopSpinner(deployer.RemoveWorkerContainer(ctx)); err != nil {
+		return err
+	}
 
-	// _ = logger.StartSpinner("Removing the function containers... 🔫")
-	// if err := logger.StopSpinner(deploy.RemoveFunctionContainers(ctx, cli)); err != nil {
-	// 	return err
-	// }
+	_ = logger.StartSpinner("Removing the function containers... 🔫")
+	if err := logger.StopSpinner(deployer.RemoveFunctionContainers(ctx)); err != nil {
+		return err
+	}
 
-	// _ = logger.StartSpinner("Removing fl_net network... ✂️")
-	// if err := logger.StopSpinner(deploy.RemoveFLNetwork(ctx, cli, "fl_net")); err != nil {
-	// 	return err
-	// }
-
-	// _ = logger.StartSpinner("Removing fl_runtime_net network... ✂️")
-	// if err := logger.StopSpinner(deploy.RemoveFLNetwork(ctx, cli, "fl_runtime_net")); err != nil {
-	// 	return err
-	// }
+	_ = logger.StartSpinner("Removing fl_net network... ✂️")
+	if err := logger.StopSpinner(deployer.RemoveFLMainNetwork(ctx)); err != nil {
+		return err
+	}
+	_ = logger.StartSpinner("Removing fl_runtime_net network... ✂️")
+	if err := logger.StopSpinner(deployer.RemoveFLRuntimeNetwork(ctx)); err != nil {
+		return err
+	}
 
 	logger.Info("\nAll clear! 👍")
 
