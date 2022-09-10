@@ -179,13 +179,6 @@ type configuration struct {
 }
 
 func pullFLImage(ctx context.Context, c *client.Client, image string) error {
-	if err := pullImage(ctx, c, image); err != nil {
-		return err
-	}
-	return nil
-}
-
-func pullImage(ctx context.Context, c *client.Client, image string) error {
 	out, err := c.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return err
