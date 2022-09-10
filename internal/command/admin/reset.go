@@ -48,12 +48,8 @@ func (r *reset) Run(ctx context.Context, deployer deploy.DockerDeployer, logger 
 		return err
 	}
 
-	_ = logger.StartSpinner("Removing fl_net network... ✂️")
-	if err := logger.StopSpinner(deployer.RemoveFLMainNetwork(ctx)); err != nil {
-		return err
-	}
-	_ = logger.StartSpinner("Removing fl_runtime_net network... ✂️")
-	if err := logger.StopSpinner(deployer.RemoveFLRuntimeNetwork(ctx)); err != nil {
+	_ = logger.StartSpinner("Removing fl networks... ✂️")
+	if err := logger.StopSpinner(deployer.RemoveFLNetworks(ctx)); err != nil {
 		return err
 	}
 
