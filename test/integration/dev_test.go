@@ -29,6 +29,7 @@ import (
 	"github.com/funlessdev/fl-cli/internal/command/admin"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -106,24 +107,26 @@ func TestAdminDevRun(t *testing.T) {
 	})
 
 	t.Run("should create ~/funless-logs folder when successfully deployed", func(t *testing.T) {
-		err := admCmd.Dev.Run(ctx, localDeployer, logger)
-
+		logFolder, err := homedir.Expand("~/funless-logs")
 		assert.NoError(t, err)
 
-		info, err := os.Stat("~/funless-logs")
-		assert.NoError(t, err)
-		assert.True(t, info.IsDir())
+		os.RemoveAll(logFolder) // cleanup folder from previous test runs
 
-		files, err := os.ReadDir("~/funless-logs")
+		err = admCmd.Dev.Run(ctx, localDeployer, logger)
 		assert.NoError(t, err)
-		assert.GreaterOrEqual(t, len(files), 1)
+
+		assert.DirExists(t, logFolder)
+		files, err := os.ReadDir(logFolder)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(files), 0)
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveWorkerContainer(ctx)
 		_ = localDeployer.RemoveFLNetworks(ctx)
 
-		err = os.RemoveAll("~/funless-logs")
+		err = os.RemoveAll(logFolder)
 		assert.NoError(t, err)
+		assert.NoDirExists(t, logFolder)
 	})
 }
 
