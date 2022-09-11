@@ -71,8 +71,8 @@ func TestAdminDevRun(t *testing.T) {
 		_ = localDeployer.RemoveFLNetworks(ctx)
 	})
 
-	t.Run("should successfully deploy without creating networks if they already exist", func(t *testing.T) {
-		_ = localDeployer.SetupFLNetworks(ctx)
+	t.Run("should successfully deploy without creating networks when they already exist", func(t *testing.T) {
+		_ = localDeployer.CreateFLNetworks(ctx)
 
 		err := admCmd.Dev.Run(ctx, localDeployer, logger)
 
@@ -92,8 +92,8 @@ func TestAdminDevRun(t *testing.T) {
 		_ = localDeployer.RemoveFLNetworks(ctx)
 	})
 
-	t.Run("should fail if core is already running", func(t *testing.T) {
-		_ = localDeployer.SetupFLNetworks(ctx)
+	t.Run("should fail when core is already running", func(t *testing.T) {
+		_ = localDeployer.CreateFLNetworks(ctx)
 		_ = localDeployer.PullCoreImage(ctx)
 		_ = localDeployer.StartCore(ctx)
 
@@ -103,6 +103,27 @@ func TestAdminDevRun(t *testing.T) {
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveFLNetworks(ctx)
+	})
+
+	t.Run("should create ~/funless-logs folder when successfully deployed", func(t *testing.T) {
+		err := admCmd.Dev.Run(ctx, localDeployer, logger)
+
+		assert.NoError(t, err)
+
+		info, err := os.Stat("~/funless-logs")
+		assert.NoError(t, err)
+		assert.True(t, info.IsDir())
+
+		files, err := os.ReadDir("~/funless-logs")
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(files), 1)
+
+		_ = localDeployer.RemoveCoreContainer(ctx)
+		_ = localDeployer.RemoveWorkerContainer(ctx)
+		_ = localDeployer.RemoveFLNetworks(ctx)
+
+		err = os.RemoveAll("~/funless-logs")
+		assert.NoError(t, err)
 	})
 }
 
