@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRun_WhenSuccessful(t *testing.T) {
+func TestRun(t *testing.T) {
 	dev := dev{}
 	ctx := context.TODO()
 
