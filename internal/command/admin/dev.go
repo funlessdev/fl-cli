@@ -32,11 +32,12 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger lo
 	logger.Info("Deploying funless locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
-	if err := deployer.SetupClient(ctx); err != nil {
+
+	if err := deployer.Setup(ctx); err != nil {
 		return logger.StopSpinner(err)
 	}
 
-	if err := logger.StopSpinner(deployer.SetupFLNetworks(ctx)); err != nil {
+	if err := logger.StopSpinner(deployer.CreateFLNetworks(ctx)); err != nil {
 		return err
 	}
 

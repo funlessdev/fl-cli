@@ -18,6 +18,8 @@ package deploy
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -25,10 +27,12 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/mitchellh/go-homedir"
 )
 
 type LocalDeployer struct {
-	client *client.Client
+	client   *client.Client
+	logsPath string
 
 	flNetId   string
 	flNetName string
@@ -50,16 +54,27 @@ func NewLocalDeployer(coreContainerName, workerContainerName, flNetName, flRunti
 	}
 }
 
-func (d *LocalDeployer) SetupClient(ctx context.Context) error {
+func (d *LocalDeployer) Setup(ctx context.Context) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	if err != nil {
 		return err
 	}
 	d.client = cli
+
+	h, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+	logsPath := filepath.Join(h, "funless-logs")
+	if err := os.MkdirAll(logsPath, 0755); err != nil {
+		return err
+	}
+
+	d.logsPath = logsPath
 	return nil
 }
 
-func (d *LocalDeployer) SetupFLNetworks(ctx context.Context) error {
+func (d *LocalDeployer) CreateFLNetworks(ctx context.Context) error {
 	// Network for Core + Worker
 	exists, net, err := flNetExists(ctx, d.client, d.flNetName)
 	if err != nil {
@@ -121,7 +136,7 @@ func (d *LocalDeployer) StartCore(ctx context.Context) error {
 		},
 		Mounts: []mount.Mount{
 			{
-				Source: "/home/giusdp/funless-logs/",
+				Source: d.logsPath,
 				Target: "/tmp/funless",
 				Type:   mount.TypeBind,
 			},
@@ -156,7 +171,7 @@ func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 				Type:   mount.TypeBind,
 			},
 			{
-				Source: "/home/giusdp/funless-logs/",
+				Source: d.logsPath,
 				Target: "/tmp/funless",
 				Type:   mount.TypeBind,
 			},

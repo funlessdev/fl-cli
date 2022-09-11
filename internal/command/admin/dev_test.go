@@ -38,7 +38,7 @@ func TestRun(t *testing.T) {
 	deployer := mocks.NewDockerDeployer(t)
 
 	t.Run("print error when setup client fails", func(t *testing.T) {
-		deployer.On("SetupClient", ctx).Return(func(ctx context.Context) error {
+		deployer.On("Setup", ctx).Return(func(ctx context.Context) error {
 			return errors.New("error")
 		}).Once()
 
@@ -56,10 +56,10 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("print error when docker networks setup fails", func(t *testing.T) {
-		deployer.On("SetupClient", ctx).Return(func(ctx context.Context) error {
+		deployer.On("Setup", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
-		deployer.On("SetupFLNetworks", ctx).Return(func(ctx context.Context) error {
+		deployer.On("CreateFLNetworks", ctx).Return(func(ctx context.Context) error {
 			return errors.New("error")
 		}).Once()
 
@@ -77,7 +77,7 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("print error when pulling core image fails", func(t *testing.T) {
-		deployer.On("SetupFLNetworks", ctx).Return(func(ctx context.Context) error {
+		deployer.On("CreateFLNetworks", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
 		deployer.On("PullCoreImage", ctx).Return(func(ctx context.Context) error {
