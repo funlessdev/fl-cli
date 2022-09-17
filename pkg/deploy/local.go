@@ -160,7 +160,7 @@ func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 
 	containerConfig := &container.Config{
 		Image: pkg.FLWorker,
-		Env:   []string{"RUNTIME_NETWORK=" + d.flNetName},
+		Env:   []string{"RUNTIME_NETWORK=" + d.flRuntimeNetName},
 	}
 
 	hostConf := &container.HostConfig{
