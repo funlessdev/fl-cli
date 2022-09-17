@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         # build and publish in parallel: linux/amd64, linux/arm64, windows/amd64, darwin/amd64, darwin/arm64
-        goos: [linux]
+        goos: [linux, windows, darwin]
         goarch: [amd64, arm64]
         exclude:
           - goarch: arm64
@@ -51,13 +51,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        project_path: "."
-        build_command: |
-          if test -z "$TAG"
-          then TAG="$(git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD)"
-          fi
-          echo "Building $TAG"
-          go build -ldflags "-X main.CLIVersion=$TAG" "$@"
-
+        ldflags: "-X main.CLIVersion=${{github.ref_name}}"
+        project_path: "./cmd/fl"
         binary_name: "fl"
         extra_files: LICENSE README.md
