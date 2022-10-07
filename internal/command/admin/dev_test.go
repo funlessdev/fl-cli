@@ -20,6 +20,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	"github.com/stretchr/testify/assert"
@@ -77,7 +78,7 @@ func TestRun(t *testing.T) {
 		deployer.On("CreateFLNetworks", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
-		deployer.On("PullCoreImage", ctx).Return(func(ctx context.Context) error {
+		deployer.On("PullCoreImage", ctx, pkg.FLCore).Return(func(ctx context.Context, image string) error {
 			return errors.New("error")
 		}).Once()
 
@@ -97,10 +98,10 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("print error when pulling worker image fails", func(t *testing.T) {
-		deployer.On("PullCoreImage", ctx).Return(func(ctx context.Context) error {
+		deployer.On("PullCoreImage", ctx, pkg.FLCore).Return(func(ctx context.Context, image string) error {
 			return nil
 		})
-		deployer.On("PullWorkerImage", ctx).Return(func(ctx context.Context) error {
+		deployer.On("PullWorkerImage", ctx, pkg.FLWorker).Return(func(ctx context.Context, image string) error {
 			return errors.New("error")
 		}).Once()
 
@@ -122,10 +123,10 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("print error when starting core fails", func(t *testing.T) {
-		deployer.On("PullWorkerImage", ctx).Return(func(ctx context.Context) error {
+		deployer.On("PullWorkerImage", ctx, pkg.FLWorker).Return(func(ctx context.Context, image string) error {
 			return nil
 		})
-		deployer.On("StartCore", ctx).Return(func(ctx context.Context) error {
+		deployer.On("StartCore", ctx, pkg.FLCore).Return(func(ctx context.Context, image string) error {
 			return errors.New("error")
 		}).Once()
 
@@ -149,10 +150,10 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("print error when starting worker fails", func(t *testing.T) {
-		deployer.On("StartCore", ctx).Return(func(ctx context.Context) error {
+		deployer.On("StartCore", ctx, pkg.FLCore).Return(func(ctx context.Context, image string) error {
 			return nil
 		})
-		deployer.On("StartWorker", ctx).Return(func(ctx context.Context) error {
+		deployer.On("StartWorker", ctx, pkg.FLWorker).Return(func(ctx context.Context, image string) error {
 			return errors.New("error")
 		}).Once()
 
@@ -178,7 +179,7 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("successful prints when everything goes well", func(t *testing.T) {
-		deployer.On("StartWorker", ctx).Return(func(ctx context.Context) error {
+		deployer.On("StartWorker", ctx, pkg.FLWorker).Return(func(ctx context.Context, image string) error {
 			return nil
 		})
 
