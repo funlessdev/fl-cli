@@ -40,11 +40,11 @@ func imageExistsLocally(ctx context.Context, c *client.Client, image string) (bo
 	notFound := client.IsErrNotFound(err)
 
 	/* notFound being false means the error is something else; we still return false as we can't be sure the image actually exists */
-	if err != nil && notFound == false {
+	if err != nil && !notFound {
 		return false, err
 	}
 
-	if notFound == true {
+	if notFound {
 		return false, nil
 	}
 
