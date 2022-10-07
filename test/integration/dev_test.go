@@ -95,8 +95,8 @@ func TestAdminDevRun(t *testing.T) {
 
 	t.Run("should fail when core is already running", func(t *testing.T) {
 		_ = localDeployer.CreateFLNetworks(ctx)
-		_ = localDeployer.PullCoreImage(ctx, admCmd.Dev.CoreImage)
-		_ = localDeployer.StartCore(ctx, admCmd.Dev.CoreImage)
+		_ = localDeployer.PullCoreImage(ctx)
+		_ = localDeployer.StartCore(ctx)
 
 		err := admCmd.Dev.Run(ctx, localDeployer, logger)
 

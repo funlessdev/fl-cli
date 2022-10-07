@@ -24,6 +24,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/stretchr/testify/assert"
@@ -36,6 +37,8 @@ func TestAdminResetRun(t *testing.T) {
 	}
 
 	admCmd := admin.Admin{Reset: struct{}{}}
+	admCmd.Dev.CoreImage = pkg.FLCore
+	admCmd.Dev.WorkerImage = pkg.FLWorker
 
 	coreName := "fl-core-test"
 	workerName := "fl-worker-test"

@@ -37,7 +37,9 @@ type LocalDeployer struct {
 	flRuntimeNetId   string
 	flRuntimeNetName string
 
+	coreImg             string
 	coreContainerName   string
+	workerImg           string
 	workerContainerName string
 }
 
@@ -51,7 +53,10 @@ func NewLocalDeployer(coreContainerName, workerContainerName, flNetName, flRunti
 	}
 }
 
-func (d *LocalDeployer) Setup(ctx context.Context) error {
+func (d *LocalDeployer) Setup(ctx context.Context, coreImg, workerImg string) error {
+	d.coreImg = coreImg
+	d.workerImg = workerImg
+
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	if err != nil {
 		return err
@@ -104,18 +109,18 @@ func (d *LocalDeployer) CreateFLNetworks(ctx context.Context) error {
 	return err
 }
 
-func (d *LocalDeployer) PullCoreImage(ctx context.Context, image string) error {
-	return pullFLImage(ctx, d.client, image)
+func (d *LocalDeployer) PullCoreImage(ctx context.Context) error {
+	return pullFLImage(ctx, d.client, d.coreImg)
 }
 
-func (d *LocalDeployer) PullWorkerImage(ctx context.Context, image string) error {
-	return pullFLImage(ctx, d.client, image)
+func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
+	return pullFLImage(ctx, d.client, d.workerImg)
 }
 
-func (d *LocalDeployer) StartCore(ctx context.Context, image string) error {
+func (d *LocalDeployer) StartCore(ctx context.Context) error {
 
 	containerConfig := &container.Config{
-		Image: image,
+		Image: d.coreImg,
 		ExposedPorts: nat.PortSet{
 			"4001/tcp": struct{}{},
 		},
@@ -151,12 +156,12 @@ func (d *LocalDeployer) StartCore(ctx context.Context, image string) error {
 	return startCoreContainer(ctx, d.client, configs, d.coreContainerName)
 }
 
-func (d *LocalDeployer) StartWorker(ctx context.Context, image string) error {
+func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 
 	dockerHost := getDockerHost()
 
 	containerConfig := &container.Config{
-		Image: image,
+		Image: d.workerImg,
 		Env:   []string{"RUNTIME_NETWORK=" + d.flRuntimeNetName},
 	}
 

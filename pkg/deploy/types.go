@@ -17,13 +17,13 @@ package deploy
 import "context"
 
 type DockerDeployer interface {
-	Setup(ctx context.Context) error
+	Setup(ctx context.Context, coreImg, workerImg string) error
 
 	CreateFLNetworks(ctx context.Context) error
-	PullCoreImage(ctx context.Context, image string) error
-	PullWorkerImage(ctx context.Context, image string) error
-	StartCore(ctx context.Context, image string) error
-	StartWorker(ctx context.Context, image string) error
+	PullCoreImage(ctx context.Context) error
+	PullWorkerImage(ctx context.Context) error
+	StartCore(ctx context.Context) error
+	StartWorker(ctx context.Context) error
 
 	RemoveFLNetworks(ctx context.Context) error
 	RemoveCoreContainer(context.Context) error

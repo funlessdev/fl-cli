@@ -26,7 +26,7 @@ type reset struct{}
 func (r *reset) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
 	logger.Info("Removing local funless deployment...\n")
 
-	if err := deployer.Setup(ctx); err != nil {
+	if err := deployer.Setup(ctx, "", ""); err != nil {
 		return err
 	}
 
