@@ -35,7 +35,7 @@ func TestAdminResetRun(t *testing.T) {
 		t.Skip("set INTEGRATION_TESTS (optionally with DOCKER_HOST) to run this test")
 	}
 
-	admCmd := admin.Admin{Dev: struct{}{}, Reset: struct{}{}}
+	admCmd := admin.Admin{Reset: struct{}{}}
 
 	coreName := "fl-core-test"
 	workerName := "fl-worker-test"

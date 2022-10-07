@@ -41,13 +41,13 @@ func (_m *DockerDeployer) CreateFLNetworks(ctx context.Context) error {
 	return r0
 }
 
-// PullCoreImage provides a mock function with given fields: ctx
-func (_m *DockerDeployer) PullCoreImage(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// PullCoreImage provides a mock function with given fields: ctx, image
+func (_m *DockerDeployer) PullCoreImage(ctx context.Context, image string) error {
+	ret := _m.Called(ctx, image)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, image)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -55,13 +55,13 @@ func (_m *DockerDeployer) PullCoreImage(ctx context.Context) error {
 	return r0
 }
 
-// PullWorkerImage provides a mock function with given fields: ctx
-func (_m *DockerDeployer) PullWorkerImage(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// PullWorkerImage provides a mock function with given fields: ctx, image
+func (_m *DockerDeployer) PullWorkerImage(ctx context.Context, image string) error {
+	ret := _m.Called(ctx, image)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, image)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -139,13 +139,13 @@ func (_m *DockerDeployer) Setup(ctx context.Context) error {
 	return r0
 }
 
-// StartCore provides a mock function with given fields: ctx
-func (_m *DockerDeployer) StartCore(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// StartCore provides a mock function with given fields: ctx, image
+func (_m *DockerDeployer) StartCore(ctx context.Context, image string) error {
+	ret := _m.Called(ctx, image)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, image)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -153,13 +153,13 @@ func (_m *DockerDeployer) StartCore(ctx context.Context) error {
 	return r0
 }
 
-// StartWorker provides a mock function with given fields: ctx
-func (_m *DockerDeployer) StartWorker(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// StartWorker provides a mock function with given fields: ctx, image
+func (_m *DockerDeployer) StartWorker(ctx context.Context, image string) error {
+	ret := _m.Called(ctx, image)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, image)
 	} else {
 		r0 = ret.Error(0)
 	}

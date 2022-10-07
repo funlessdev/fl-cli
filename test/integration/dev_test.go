@@ -24,6 +24,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/mitchellh/go-homedir"
@@ -36,7 +37,9 @@ func TestAdminDevRun(t *testing.T) {
 		t.Skip("set INTEGRATION_TESTS (optionally with DOCKER_HOST) to run this test")
 	}
 
-	admCmd := admin.Admin{Dev: struct{}{}}
+	admCmd := admin.Admin{}
+	admCmd.Dev.CoreImage = pkg.FLCore
+	admCmd.Dev.WorkerImage = pkg.FLWorker
 
 	coreName := "fl-core-test"
 	workerName := "fl-worker-test"
@@ -92,8 +95,8 @@ func TestAdminDevRun(t *testing.T) {
 
 	t.Run("should fail when core is already running", func(t *testing.T) {
 		_ = localDeployer.CreateFLNetworks(ctx)
-		_ = localDeployer.PullCoreImage(ctx)
-		_ = localDeployer.StartCore(ctx)
+		_ = localDeployer.PullCoreImage(ctx, admCmd.Dev.CoreImage)
+		_ = localDeployer.StartCore(ctx, admCmd.Dev.CoreImage)
 
 		err := admCmd.Dev.Run(ctx, localDeployer, logger)
 
