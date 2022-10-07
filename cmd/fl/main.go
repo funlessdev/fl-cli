@@ -23,6 +23,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
 	"github.com/funlessdev/fl-cli/internal/command/fn"
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -73,7 +74,9 @@ func main() {
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.BindTo(localDeployer, (*deploy.DockerDeployer)(nil)),
 		kong.Vars{
-			"version": FLVersion,
+			"version":              FLVersion,
+			"default_core_image":   pkg.FLCore,
+			"default_worker_image": pkg.FLWorker,
 		},
 		kong.UsageOnError(),
 	)

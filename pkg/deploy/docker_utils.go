@@ -35,7 +35,31 @@ type configuration struct {
 	networking *network.NetworkingConfig
 }
 
+func imageExistsLocally(ctx context.Context, c *client.Client, image string) (bool, error) {
+	_, _, err := c.ImageInspectWithRaw(ctx, image)
+	notFound := client.IsErrNotFound(err)
+
+	/* notFound being false means the error is something else; we still return false as we can't be sure the image actually exists */
+	if err != nil && !notFound {
+		return false, err
+	}
+
+	if notFound {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func pullFLImage(ctx context.Context, c *client.Client, image string) error {
+	exists, err := imageExistsLocally(ctx, c, image)
+	if exists {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
 	out, err := c.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return err
@@ -122,6 +146,7 @@ func startWorkerContainer(ctx context.Context, c *client.Client, configs configu
 	}
 
 	if err := c.NetworkConnect(ctx, runtimeNetId, resp.ID, runtimeNetSettings); err != nil {
+		fmt.Println(err)
 		return err
 	}
 

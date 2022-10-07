@@ -22,6 +22,7 @@ import (
 
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestResetRun(t *testing.T) {
@@ -34,9 +35,10 @@ func TestResetRun(t *testing.T) {
 	deployer := mocks.NewDockerDeployer(t)
 
 	t.Run("print error when setup client fails", func(t *testing.T) {
-		deployer.On("Setup", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		deployer.On("Setup", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
+			Return(func(ctx context.Context, coreImg string, workerImg string) error {
+				return errors.New("error")
+			}).Once()
 
 		_ = reset.Run(ctx, deployer, testLogger)
 
@@ -50,9 +52,10 @@ func TestResetRun(t *testing.T) {
 	})
 
 	t.Run("print error when docker networks setup fails", func(t *testing.T) {
-		deployer.On("Setup", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
+		deployer.On("Setup", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
+			Return(func(ctx context.Context, coreImg string, workerImg string) error {
+				return nil
+			})
 		deployer.On("RemoveCoreContainer", ctx).Return(func(ctx context.Context) error {
 			return errors.New("error")
 		}).Once()

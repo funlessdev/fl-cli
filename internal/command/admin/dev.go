@@ -18,19 +18,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type dev struct{}
+type dev struct {
+	CoreImage   string `name:"core" short:"c" help:"core docker image to deploy" default:"${default_core_image}"`
+	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
+}
 
 func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
 	logger.Info("Deploying funless locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	if err := deployer.Setup(ctx); err != nil {
+	if err := deployer.Setup(ctx, d.CoreImage, d.WorkerImage); err != nil {
 		return logger.StopSpinner(err)
 	}
 
@@ -38,12 +40,12 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger lo
 		return err
 	}
 
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Core image (%s) 📦", pkg.FLCore))
+	_ = logger.StartSpinner(fmt.Sprintf("pulling Core image (%s) 📦", d.CoreImage))
 	if err := logger.StopSpinner(deployer.PullCoreImage(ctx)); err != nil {
 		return err
 	}
 
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Worker image (%s) 🗃", pkg.FLWorker))
+	_ = logger.StartSpinner(fmt.Sprintf("pulling Worker image (%s) 🗃", d.WorkerImage))
 	if err := logger.StopSpinner(deployer.PullWorkerImage(ctx)); err != nil {
 		return err
 	}

@@ -125,13 +125,13 @@ func (_m *DockerDeployer) RemoveWorkerContainer(_a0 context.Context) error {
 	return r0
 }
 
-// Setup provides a mock function with given fields: ctx
-func (_m *DockerDeployer) Setup(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// Setup provides a mock function with given fields: ctx, coreImg, workerImg
+func (_m *DockerDeployer) Setup(ctx context.Context, coreImg string, workerImg string) error {
+	ret := _m.Called(ctx, coreImg, workerImg)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, coreImg, workerImg)
 	} else {
 		r0 = ret.Error(0)
 	}

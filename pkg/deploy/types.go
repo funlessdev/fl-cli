@@ -17,7 +17,7 @@ package deploy
 import "context"
 
 type DockerDeployer interface {
-	Setup(ctx context.Context) error
+	Setup(ctx context.Context, coreImg, workerImg string) error
 
 	CreateFLNetworks(ctx context.Context) error
 	PullCoreImage(ctx context.Context) error

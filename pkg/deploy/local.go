@@ -24,7 +24,6 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -38,7 +37,9 @@ type LocalDeployer struct {
 	flRuntimeNetId   string
 	flRuntimeNetName string
 
+	coreImg             string
 	coreContainerName   string
+	workerImg           string
 	workerContainerName string
 }
 
@@ -52,7 +53,10 @@ func NewLocalDeployer(coreContainerName, workerContainerName, flNetName, flRunti
 	}
 }
 
-func (d *LocalDeployer) Setup(ctx context.Context) error {
+func (d *LocalDeployer) Setup(ctx context.Context, coreImg, workerImg string) error {
+	d.coreImg = coreImg
+	d.workerImg = workerImg
+
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	if err != nil {
 		return err
@@ -106,17 +110,17 @@ func (d *LocalDeployer) CreateFLNetworks(ctx context.Context) error {
 }
 
 func (d *LocalDeployer) PullCoreImage(ctx context.Context) error {
-	return pullFLImage(ctx, d.client, pkg.FLCore)
+	return pullFLImage(ctx, d.client, d.coreImg)
 }
 
 func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
-	return pullFLImage(ctx, d.client, pkg.FLWorker)
+	return pullFLImage(ctx, d.client, d.workerImg)
 }
 
 func (d *LocalDeployer) StartCore(ctx context.Context) error {
 
 	containerConfig := &container.Config{
-		Image: pkg.FLCore,
+		Image: d.coreImg,
 		ExposedPorts: nat.PortSet{
 			"4001/tcp": struct{}{},
 		},
@@ -157,7 +161,7 @@ func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 	dockerHost := getDockerHost()
 
 	containerConfig := &container.Config{
-		Image: pkg.FLWorker,
+		Image: d.workerImg,
 		Env:   []string{"RUNTIME_NETWORK=" + d.flRuntimeNetName},
 	}
 

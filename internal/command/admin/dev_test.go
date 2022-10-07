@@ -23,6 +23,7 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestRun(t *testing.T) {
@@ -35,9 +36,11 @@ func TestRun(t *testing.T) {
 	deployer := mocks.NewDockerDeployer(t)
 
 	t.Run("print error when setup client fails", func(t *testing.T) {
-		deployer.On("Setup", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		deployer.On("Setup", ctx, mock.Anything, mock.Anything).Return(
+			func(ctx context.Context, coreImg string, workerImg string) error {
+				return errors.New("error")
+			},
+		).Once()
 
 		_ = dev.Run(ctx, deployer, testLogger)
 
@@ -53,9 +56,11 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("print error when docker networks setup fails", func(t *testing.T) {
-		deployer.On("Setup", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
+		deployer.On("Setup", ctx, mock.Anything, mock.Anything).Return(
+			func(ctx context.Context, coreImg string, workerImg string) error {
+				return nil
+			},
+		)
 		deployer.On("CreateFLNetworks", ctx).Return(func(ctx context.Context) error {
 			return errors.New("error")
 		}).Once()
@@ -88,7 +93,7 @@ func TestRun(t *testing.T) {
 			"\n",
 			"Setting things up...\n",
 			"done\n",
-			"pulling Core image (ghcr.io/funlessdev/fl-core:latest) 📦\n",
+			"pulling Core image () 📦\n",
 			"failed\n",
 			"",
 		}
@@ -111,9 +116,9 @@ func TestRun(t *testing.T) {
 			"\n",
 			"Setting things up...\n",
 			"done\n",
-			"pulling Core image (ghcr.io/funlessdev/fl-core:latest) 📦\n",
+			"pulling Core image () 📦\n",
 			"done\n",
-			"pulling Worker image (ghcr.io/funlessdev/fl-worker:latest) 🗃\n",
+			"pulling Worker image () 🗃\n",
 			"failed\n",
 			"",
 		}
@@ -136,9 +141,9 @@ func TestRun(t *testing.T) {
 			"\n",
 			"Setting things up...\n",
 			"done\n",
-			"pulling Core image (ghcr.io/funlessdev/fl-core:latest) 📦\n",
+			"pulling Core image () 📦\n",
 			"done\n",
-			"pulling Worker image (ghcr.io/funlessdev/fl-worker:latest) 🗃\n",
+			"pulling Worker image () 🗃\n",
 			"done\n",
 			"starting Core container 🎛️\n",
 			"failed\n",
@@ -163,9 +168,9 @@ func TestRun(t *testing.T) {
 			"\n",
 			"Setting things up...\n",
 			"done\n",
-			"pulling Core image (ghcr.io/funlessdev/fl-core:latest) 📦\n",
+			"pulling Core image () 📦\n",
 			"done\n",
-			"pulling Worker image (ghcr.io/funlessdev/fl-worker:latest) 🗃\n",
+			"pulling Worker image () 🗃\n",
 			"done\n",
 			"starting Core container 🎛️\n",
 			"done\n",
@@ -189,9 +194,9 @@ func TestRun(t *testing.T) {
 			"\n",
 			"Setting things up...\n",
 			"done\n",
-			"pulling Core image (ghcr.io/funlessdev/fl-core:latest) 📦\n",
+			"pulling Core image () 📦\n",
 			"done\n",
-			"pulling Worker image (ghcr.io/funlessdev/fl-worker:latest) 🗃\n",
+			"pulling Worker image () 🗃\n",
 			"done\n",
 			"starting Core container 🎛️\n",
 			"done\n",
