@@ -19,7 +19,7 @@ package mocks
 import (
 	context "context"
 
-	swagger "github.com/funlessdev/fl-client-sdk-go"
+	openapi "github.com/funlessdev/fl-client-sdk-go"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -29,14 +29,14 @@ type FnHandler struct {
 }
 
 // Create provides a mock function with given fields: ctx, fnName, fnNamespace, code, language
-func (_m *FnHandler) Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error) {
+func (_m *FnHandler) Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (openapi.FunctionCreationSuccess, error) {
 	ret := _m.Called(ctx, fnName, fnNamespace, code, language)
 
-	var r0 swagger.FunctionCreationSuccess
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) swagger.FunctionCreationSuccess); ok {
+	var r0 openapi.FunctionCreationSuccess
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) openapi.FunctionCreationSuccess); ok {
 		r0 = rf(ctx, fnName, fnNamespace, code, language)
 	} else {
-		r0 = ret.Get(0).(swagger.FunctionCreationSuccess)
+		r0 = ret.Get(0).(openapi.FunctionCreationSuccess)
 	}
 
 	var r1 error
@@ -50,14 +50,14 @@ func (_m *FnHandler) Create(ctx context.Context, fnName string, fnNamespace stri
 }
 
 // Delete provides a mock function with given fields: ctx, fnName, fnNamespace
-func (_m *FnHandler) Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error) {
+func (_m *FnHandler) Delete(ctx context.Context, fnName string, fnNamespace string) (openapi.FunctionDeletionSuccess, error) {
 	ret := _m.Called(ctx, fnName, fnNamespace)
 
-	var r0 swagger.FunctionDeletionSuccess
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) swagger.FunctionDeletionSuccess); ok {
+	var r0 openapi.FunctionDeletionSuccess
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) openapi.FunctionDeletionSuccess); ok {
 		r0 = rf(ctx, fnName, fnNamespace)
 	} else {
-		r0 = ret.Get(0).(swagger.FunctionDeletionSuccess)
+		r0 = ret.Get(0).(openapi.FunctionDeletionSuccess)
 	}
 
 	var r1 error
@@ -71,18 +71,18 @@ func (_m *FnHandler) Delete(ctx context.Context, fnName string, fnNamespace stri
 }
 
 // Invoke provides a mock function with given fields: ctx, fnName, fnNamespace, fnArgs
-func (_m *FnHandler) Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs interface{}) (swagger.FunctionInvocationSuccess, error) {
+func (_m *FnHandler) Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (openapi.FunctionInvocationSuccess, error) {
 	ret := _m.Called(ctx, fnName, fnNamespace, fnArgs)
 
-	var r0 swagger.FunctionInvocationSuccess
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, interface{}) swagger.FunctionInvocationSuccess); ok {
+	var r0 openapi.FunctionInvocationSuccess
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, map[string]interface{}) openapi.FunctionInvocationSuccess); ok {
 		r0 = rf(ctx, fnName, fnNamespace, fnArgs)
 	} else {
-		r0 = ret.Get(0).(swagger.FunctionInvocationSuccess)
+		r0 = ret.Get(0).(openapi.FunctionInvocationSuccess)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, interface{}) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, map[string]interface{}) error); ok {
 		r1 = rf(ctx, fnName, fnNamespace, fnArgs)
 	} else {
 		r1 = ret.Error(1)
