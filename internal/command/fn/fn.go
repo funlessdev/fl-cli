@@ -55,9 +55,11 @@ type (
 )
 
 func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	var args interface{}
+	var args map[string]interface{} = make(map[string]interface{}, len(f.Args))
 	if f.Args != nil {
-		args = f.Args
+		for k, v := range f.Args {
+			args[k] = v
+		}
 	} else if f.JsonArgs != "" {
 		err := json.Unmarshal([]byte(f.JsonArgs), &args)
 		if err != nil {
@@ -70,7 +72,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	}
 
 	if res.Result != nil {
-		decodedRes, err := json.Marshal(*res.Result)
+		decodedRes, err := json.Marshal(res.Result)
 		if err != nil {
 			return err
 		}
@@ -101,7 +103,7 @@ func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 		return extractError(err)
 	}
 
-	logger.Info(res.Result)
+	logger.Info(*res.Result)
 	return nil
 }
 
@@ -111,23 +113,23 @@ func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 		return extractError(err)
 	}
 
-	logger.Info(res.Result)
+	logger.Info(*res.Result)
 	return nil
 }
 
 func extractError(err error) error {
-	swaggerError, ok_sw := err.(swagger.GenericSwaggerError)
+	swaggerError, ok_sw := err.(swagger.GenericOpenAPIError)
 	if ok_sw {
 		switch swaggerError.Model().(type) {
 		case swagger.FunctionCreationError:
 			specificError := swaggerError.Model().(swagger.FunctionCreationError)
-			return errors.New(specificError.Error_)
+			return errors.New(*specificError.Error)
 		case swagger.FunctionDeletionError:
 			specificError := swaggerError.Model().(swagger.FunctionDeletionError)
-			return errors.New(specificError.Error_)
+			return errors.New(*specificError.Error)
 		case swagger.FunctionInvocationError:
 			specificError := swaggerError.Model().(swagger.FunctionInvocationError)
-			return errors.New(specificError.Error_)
+			return errors.New(*specificError.Error)
 		}
 	}
 	return err
