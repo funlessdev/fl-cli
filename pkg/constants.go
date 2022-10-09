@@ -14,6 +14,7 @@
 
 package pkg
 
+const FLCoreDevSecretKey = "dev-secret-key"
 const FLCore = "ghcr.io/funlessdev/fl-core:latest"
 
 const FLWorker = "ghcr.io/funlessdev/fl-worker:latest"

@@ -24,6 +24,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -124,6 +125,7 @@ func (d *LocalDeployer) StartCore(ctx context.Context) error {
 		ExposedPorts: nat.PortSet{
 			"4001/tcp": struct{}{},
 		},
+		Env:     []string{"SECRET_KEY_BASE=" + pkg.FLCoreDevSecretKey},
 		Volumes: map[string]struct{}{},
 	}
 
