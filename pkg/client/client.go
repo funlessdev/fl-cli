@@ -54,7 +54,7 @@ func NewClient(httpClient *http.Client, config Config) (*Client, error) {
 	}
 
 	apiConfig := swagger.NewConfiguration()
-	apiConfig.BasePath = config.Host
+	apiConfig.Servers[0].URL = config.Host
 	apiClient := swagger.NewAPIClient(apiConfig)
 
 	return &Client{client: httpClient, Config: config, ApiClient: apiClient}, nil
