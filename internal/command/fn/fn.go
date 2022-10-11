@@ -37,7 +37,7 @@ type (
 		Name      string        `arg:"" name:"name" help:"name of the function to create"`
 		Namespace string        `name:"namespace" short:"n" help:"namespace of the function to create"`
 		Source    string        `name:"source" required:"" short:"s" help:"path of the source file"`
-		Language  string        `name:"language" required:"" short:"l" help:"programming language of the function"`
+		Language  string        `name:"language" short:"l" help:"programming language of the function"`
 		FS        fs.ReadFileFS `kong:"-"`
 	}
 
@@ -93,7 +93,6 @@ func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	} else {
 		code, err = os.ReadFile(f.Source)
 	}
-
 	if err != nil {
 		return err
 	}
