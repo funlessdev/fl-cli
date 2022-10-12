@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -78,7 +80,8 @@ func TestCreate(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testLanguage := "nodejs"
-	testCode := "console.log('Something')"
+	testSource, _ := filepath.Abs("../../test/resources/test_code.txt")
+	testCode, _ := os.Open(testSource)
 
 	testCtx := context.Background()
 	t.Run("should send create request to server", func(t *testing.T) {
