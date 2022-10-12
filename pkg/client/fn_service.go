@@ -16,6 +16,7 @@ package client
 
 import (
 	"context"
+	"os"
 
 	swagger "github.com/funlessdev/fl-client-sdk-go"
 )
@@ -27,7 +28,7 @@ import (
 
 type FnHandler interface {
 	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (swagger.FunctionInvocationSuccess, error)
-	Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error)
+	Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (swagger.FunctionCreationSuccess, error)
 	Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error)
 }
 
@@ -52,14 +53,9 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace stri
 	return *response, err
 }
 
-func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code string, language string) (swagger.FunctionCreationSuccess, error) {
+func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (swagger.FunctionCreationSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
-	requestBody := swagger.FunctionCreation{
-		Name:      &fnName,
-		Namespace: &fnNamespace,
-		Code:      &code,
-	}
-	request := apiService.V1FnCreatePost(ctx).FunctionCreation(requestBody)
+	request := apiService.V1FnCreatePost(ctx).Name(fnName).Namespace(fnNamespace).Code(code)
 	response, _, err := apiService.V1FnCreatePostExecute(request)
 
 	if err != nil {

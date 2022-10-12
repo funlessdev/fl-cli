@@ -20,7 +20,7 @@ require (
 	github.com/alecthomas/kong v0.6.1
 	github.com/docker/docker v20.10.18+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/funlessdev/fl-client-sdk-go v0.0.0-20221009132538-b9f77a8ce9c6
+	github.com/funlessdev/fl-client-sdk-go v0.0.0-20221012084904-8fae708f3c8a
 	github.com/theckman/yacspin v0.13.12
 	gotest.tools/v3 v3.2.0
 )
@@ -49,7 +49,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1 // indirect
-	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875 // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
