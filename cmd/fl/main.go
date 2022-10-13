@@ -52,7 +52,7 @@ func main() {
 		return
 	}
 
-	flConfig := client.Config{Host: "http://localhost:4001"}
+	flConfig := client.Config{Host: "http://localhost:4000"}
 	flClient, err := client.NewClient(http.DefaultClient, flConfig)
 	if err != nil {
 		fmt.Println(err.Error())

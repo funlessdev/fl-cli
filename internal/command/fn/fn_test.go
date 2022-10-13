@@ -20,18 +20,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
-	"testing/fstest"
 
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	swagger "github.com/funlessdev/fl-client-sdk-go"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 )
 
 func TestFnInvoke(t *testing.T) {
-	var testResult interface{} = "Hi"
+	testResult := map[string]interface{}{"payload": "Hi"}
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testArgs := map[string]string{"name": "Some name"}
@@ -48,11 +49,11 @@ func TestFnInvoke(t *testing.T) {
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]string{}).Return(swagger.FunctionInvocationSuccess{Result: &testResult}, nil)
+		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(swagger.FunctionInvocationSuccess{Result: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockInvoker, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, map[string]string{})
+		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, map[string]interface{}{})
 		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
 		mockInvoker.AssertExpectations(t)
 	})
@@ -65,7 +66,7 @@ func TestFnInvoke(t *testing.T) {
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]string{}).Return(swagger.FunctionInvocationSuccess{Result: &testResult}, nil)
+		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(swagger.FunctionInvocationSuccess{Result: testResult}, nil)
 
 		var outbuf bytes.Buffer
 		var testOutput, _ = json.Marshal(testResult)
@@ -86,11 +87,15 @@ func TestFnInvoke(t *testing.T) {
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, testArgs).Return(swagger.FunctionInvocationSuccess{Result: &testResult}, nil)
+		mockArgs := make(map[string]interface{}, len(testArgs))
+		for k, v := range testArgs {
+			mockArgs[k] = v
+		}
+		mockInvoker.On("Invoke", testCtx, testFn, testNs, mockArgs).Return(swagger.FunctionInvocationSuccess{Result: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockInvoker, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, testArgs)
+		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, mockArgs)
 		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
 		mockInvoker.AssertExpectations(t)
 	})
@@ -103,7 +108,7 @@ func TestFnInvoke(t *testing.T) {
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, testParsedJArgs).Return(swagger.FunctionInvocationSuccess{Result: &testResult}, nil)
+		mockInvoker.On("Invoke", testCtx, testFn, testNs, testParsedJArgs).Return(swagger.FunctionInvocationSuccess{Result: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockInvoker, testLogger)
 		require.NoError(t, err)
@@ -117,7 +122,7 @@ func TestFnInvoke(t *testing.T) {
 			Name: testFn,
 		}
 		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, "", nil).Return(swagger.FunctionInvocationSuccess{}, fmt.Errorf("some error in FnService.Invoke"))
+		mockInvoker.On("Invoke", testCtx, testFn, "", map[string]interface{}{}).Return(swagger.FunctionInvocationSuccess{}, fmt.Errorf("some error in FnService.Invoke"))
 
 		err := cmd.Run(testCtx, mockInvoker, testLogger)
 		require.Error(t, err)
@@ -129,14 +134,8 @@ func TestFnCreate(t *testing.T) {
 	testResult := "test-fn"
 	testFn := "test-fn"
 	testNs := "test-ns"
-	testSource := "test.js"
 	testLanguage := "nodejs"
-	testCode := []byte("console.log('Something')")
-	testFS := fstest.MapFS{
-		"test.js": {
-			Data: testCode,
-		},
-	}
+	testSource, _ := filepath.Abs("../../../test/fixtures/test_code.txt")
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
 
@@ -146,15 +145,14 @@ func TestFnCreate(t *testing.T) {
 			Namespace: testNs,
 			Source:    testSource,
 			Language:  testLanguage,
-			FS:        testFS,
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Create", testCtx, testFn, testNs, string(testCode), testLanguage).Return(swagger.FunctionCreationSuccess{Result: testResult}, nil)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(swagger.FunctionCreationSuccess{Result: &testResult}, nil)
 
 		err := cmd.Run(testCtx, mockInvoker, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Create", testCtx, testFn, testNs, string(testCode), testLanguage)
+		mockInvoker.AssertCalled(t, "Create", testCtx, testFn, testNs, mock.AnythingOfType("*os.File"), testLanguage)
 		mockInvoker.AssertNumberOfCalls(t, "Create", 1)
 		mockInvoker.AssertExpectations(t)
 	})
@@ -165,11 +163,10 @@ func TestFnCreate(t *testing.T) {
 			Namespace: testNs,
 			Source:    testSource,
 			Language:  testLanguage,
-			FS:        testFS,
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Create", testCtx, testFn, testNs, string(testCode), testLanguage).Return(swagger.FunctionCreationSuccess{Result: testResult}, nil)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(swagger.FunctionCreationSuccess{Result: &testResult}, nil)
 
 		var outbuf bytes.Buffer
 
@@ -188,10 +185,9 @@ func TestFnCreate(t *testing.T) {
 			Namespace: testNs,
 			Source:    testSource,
 			Language:  testLanguage,
-			FS:        testFS,
 		}
 		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, string(testCode), testLanguage).Return(swagger.FunctionCreationSuccess{}, fmt.Errorf("some error in FnService.Invoke"))
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(swagger.FunctionCreationSuccess{}, fmt.Errorf("some error in FnService.Invoke"))
 
 		err := cmd.Run(testCtx, mockInvoker, testLogger)
 		require.Error(t, err)
@@ -203,7 +199,6 @@ func TestFnCreate(t *testing.T) {
 			Namespace: testNs,
 			Source:    "no_file",
 			Language:  testLanguage,
-			FS:        testFS,
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
@@ -227,7 +222,7 @@ func TestFnDelete(t *testing.T) {
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(swagger.FunctionDeletionSuccess{Result: testResult}, nil)
+		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(swagger.FunctionDeletionSuccess{Result: &testResult}, nil)
 
 		err := cmd.Run(testCtx, mockInvoker, testLogger)
 		require.NoError(t, err)
@@ -242,7 +237,7 @@ func TestFnDelete(t *testing.T) {
 		}
 		mockInvoker := mocks.NewFnHandler(t)
 
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(swagger.FunctionDeletionSuccess{Result: testResult}, nil)
+		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(swagger.FunctionDeletionSuccess{Result: &testResult}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()

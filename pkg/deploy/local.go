@@ -24,6 +24,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -122,17 +123,18 @@ func (d *LocalDeployer) StartCore(ctx context.Context) error {
 	containerConfig := &container.Config{
 		Image: d.coreImg,
 		ExposedPorts: nat.PortSet{
-			"4001/tcp": struct{}{},
+			"4000/tcp": struct{}{},
 		},
+		Env:     []string{"SECRET_KEY_BASE=" + pkg.FLCoreDevSecretKey},
 		Volumes: map[string]struct{}{},
 	}
 
 	hostConfig := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			"4001/tcp": []nat.PortBinding{
+			"4000/tcp": []nat.PortBinding{
 				{
 					HostIP:   "0.0.0.0",
-					HostPort: "4001",
+					HostPort: "4000",
 				},
 			},
 		},

@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,19 +31,18 @@ import (
 func TestInvoke(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
-	var testArgs interface{} = map[string]string{"name": "Some name"}
+	var testArgs map[string]interface{} = map[string]interface{}{"name": "Some name"}
 
 	testCtx := context.Background()
 
 	t.Run("should send invoke request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/invoke", r.URL.Path)
+			assert.Equal(t, "/v1/fn/invoke", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
-			result := map[string]string{"Result": "some result"}
+			result := map[string]map[string]string{"Result": {"payload": "some result"}}
 			jresult, _ := json.Marshal(result)
 			_, _ = w.Write(jresult)
-			w.WriteHeader(http.StatusOK)
 		}))
 		defer server.Close()
 
@@ -56,7 +57,7 @@ func TestInvoke(t *testing.T) {
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/invoke", r.URL.Path)
+			assert.Equal(t, "/v1/fn/invoke", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"error": "some error"}
 			jresult, _ := json.Marshal(result)
@@ -79,18 +80,18 @@ func TestCreate(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testLanguage := "nodejs"
-	testCode := "console.log('Something')"
+	testSource, _ := filepath.Abs("../../test/fixtures/test_code.txt")
+	testCode, _ := os.Open(testSource)
 
 	testCtx := context.Background()
 	t.Run("should send create request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/create", r.URL.Path)
+			assert.Equal(t, "/v1/fn/create", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"Result": "some result"}
 			jresult, _ := json.Marshal(result)
 			_, _ = w.Write(jresult)
-			w.WriteHeader(http.StatusOK)
 		}))
 		defer server.Close()
 
@@ -105,7 +106,7 @@ func TestCreate(t *testing.T) {
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/create", r.URL.Path)
+			assert.Equal(t, "/v1/fn/create", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"error": "some error"}
 			jresult, _ := json.Marshal(result)
@@ -132,13 +133,12 @@ func TestDelete(t *testing.T) {
 
 	t.Run("should send delete request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/delete", r.URL.Path)
+			assert.Equal(t, http.MethodDelete, r.Method)
+			assert.Equal(t, "/v1/fn/delete", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"Result": "some result"}
 			jresult, _ := json.Marshal(result)
 			_, _ = w.Write(jresult)
-			w.WriteHeader(http.StatusOK)
 		}))
 		defer server.Close()
 
@@ -152,8 +152,8 @@ func TestDelete(t *testing.T) {
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/delete", r.URL.Path)
+			assert.Equal(t, http.MethodDelete, r.Method)
+			assert.Equal(t, "/v1/fn/delete", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"error": "some error"}
 			jresult, _ := json.Marshal(result)

@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/fs"
 	"os"
 
 	"github.com/funlessdev/fl-cli/pkg/client"
@@ -34,11 +33,10 @@ type (
 	}
 
 	Create struct {
-		Name      string        `arg:"" name:"name" help:"name of the function to create"`
-		Namespace string        `name:"namespace" short:"n" help:"namespace of the function to create"`
-		Source    string        `name:"source" required:"" short:"s" help:"path of the source file"`
-		Language  string        `name:"language" required:"" short:"l" help:"programming language of the function"`
-		FS        fs.ReadFileFS `kong:"-"`
+		Name      string `arg:"" name:"name" help:"name of the function to create"`
+		Namespace string `name:"namespace" short:"n" help:"namespace of the function to create"`
+		Source    string `name:"source" required:"" short:"s" type:"existingFile" help:"path of the source file"`
+		Language  string `name:"language" short:"l" help:"programming language of the function"`
 	}
 
 	Invoke struct {
@@ -55,9 +53,11 @@ type (
 )
 
 func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	var args interface{}
+	args := make(map[string]interface{}, len(f.Args))
 	if f.Args != nil {
-		args = f.Args
+		for k, v := range f.Args {
+			args[k] = v
+		}
 	} else if f.JsonArgs != "" {
 		err := json.Unmarshal([]byte(f.JsonArgs), &args)
 		if err != nil {
@@ -70,7 +70,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	}
 
 	if res.Result != nil {
-		decodedRes, err := json.Marshal(*res.Result)
+		decodedRes, err := json.Marshal(res.Result)
 		if err != nil {
 			return err
 		}
@@ -83,25 +83,17 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 }
 
 func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	var code []byte
-	var err error
-
-	if f.FS != nil {
-		code, err = fs.ReadFile(f.FS, f.Source)
-	} else {
-		code, err = os.ReadFile(f.Source)
-	}
-
+	code, err := os.Open(f.Source)
 	if err != nil {
 		return err
 	}
 
-	res, err := invoker.Create(ctx, f.Name, f.Namespace, string(code), f.Language)
+	res, err := invoker.Create(ctx, f.Name, f.Namespace, code, f.Language)
 	if err != nil {
 		return extractError(err)
 	}
 
-	logger.Info(res.Result)
+	logger.Info(*res.Result)
 	return nil
 }
 
@@ -111,23 +103,23 @@ func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 		return extractError(err)
 	}
 
-	logger.Info(res.Result)
+	logger.Info(*res.Result)
 	return nil
 }
 
 func extractError(err error) error {
-	swaggerError, ok_sw := err.(swagger.GenericSwaggerError)
+	openApiError, ok_sw := err.(swagger.GenericOpenAPIError)
 	if ok_sw {
-		switch swaggerError.Model().(type) {
+		switch openApiError.Model().(type) {
 		case swagger.FunctionCreationError:
-			specificError := swaggerError.Model().(swagger.FunctionCreationError)
-			return errors.New(specificError.Error_)
+			specificError := openApiError.Model().(swagger.FunctionCreationError)
+			return errors.New(*specificError.Error)
 		case swagger.FunctionDeletionError:
-			specificError := swaggerError.Model().(swagger.FunctionDeletionError)
-			return errors.New(specificError.Error_)
+			specificError := openApiError.Model().(swagger.FunctionDeletionError)
+			return errors.New(*specificError.Error)
 		case swagger.FunctionInvocationError:
-			specificError := swaggerError.Model().(swagger.FunctionInvocationError)
-			return errors.New(specificError.Error_)
+			specificError := openApiError.Model().(swagger.FunctionInvocationError)
+			return errors.New(*specificError.Error)
 		}
 	}
 	return err
