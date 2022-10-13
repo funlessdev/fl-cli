@@ -35,7 +35,7 @@ type (
 	Create struct {
 		Name      string `arg:"" name:"name" help:"name of the function to create"`
 		Namespace string `name:"namespace" short:"n" help:"namespace of the function to create"`
-		Source    string `name:"source" required:"" short:"s" help:"path of the source file"`
+		Source    string `name:"source" required:"" short:"s" type:"existingFile" help:"path of the source file"`
 		Language  string `name:"language" short:"l" help:"programming language of the function"`
 	}
 
@@ -53,7 +53,7 @@ type (
 )
 
 func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	var args map[string]interface{} = make(map[string]interface{}, len(f.Args))
+	args := make(map[string]interface{}, len(f.Args))
 	if f.Args != nil {
 		for k, v := range f.Args {
 			args[k] = v
@@ -83,10 +83,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 }
 
 func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	var code *os.File
-	var err error
-
-	code, err = os.Open(f.Source)
+	code, err := os.Open(f.Source)
 	if err != nil {
 		return err
 	}
@@ -111,17 +108,17 @@ func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 }
 
 func extractError(err error) error {
-	swaggerError, ok_sw := err.(swagger.GenericOpenAPIError)
+	openApiError, ok_sw := err.(swagger.GenericOpenAPIError)
 	if ok_sw {
-		switch swaggerError.Model().(type) {
+		switch openApiError.Model().(type) {
 		case swagger.FunctionCreationError:
-			specificError := swaggerError.Model().(swagger.FunctionCreationError)
+			specificError := openApiError.Model().(swagger.FunctionCreationError)
 			return errors.New(*specificError.Error)
 		case swagger.FunctionDeletionError:
-			specificError := swaggerError.Model().(swagger.FunctionDeletionError)
+			specificError := openApiError.Model().(swagger.FunctionDeletionError)
 			return errors.New(*specificError.Error)
 		case swagger.FunctionInvocationError:
-			specificError := swaggerError.Model().(swagger.FunctionInvocationError)
+			specificError := openApiError.Model().(swagger.FunctionInvocationError)
 			return errors.New(*specificError.Error)
 		}
 	}

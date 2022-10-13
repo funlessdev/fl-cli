@@ -80,7 +80,7 @@ func TestCreate(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testLanguage := "nodejs"
-	testSource, _ := filepath.Abs("../../test/resources/test_code.txt")
+	testSource, _ := filepath.Abs("../../test/fixtures/test_code.txt")
 	testCode, _ := os.Open(testSource)
 
 	testCtx := context.Background()
