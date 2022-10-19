@@ -18,3 +18,13 @@ const FLCoreDevSecretKey = "dev-secret-key"
 const FLCore = "ghcr.io/funlessdev/fl-core:latest"
 
 const FLWorker = "ghcr.io/funlessdev/fl-worker:latest"
+
+var FLRuntimes = map[string]string{
+	"js":   "ghcr.io/funlessdev/fl-js-builder:latest",
+	"rust": "ghcr.io/funlessdev/fl-rust-builder:latest",
+}
+
+var FLRuntimeNames = map[string]string{
+	"js":   "fl-js-builder",
+	"rust": "fl-rust-builder",
+}
