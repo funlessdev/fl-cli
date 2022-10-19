@@ -18,8 +18,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 
+	docker_client "github.com/docker/docker/client"
+	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	swagger "github.com/funlessdev/fl-client-sdk-go"
@@ -33,10 +36,12 @@ type (
 	}
 
 	Create struct {
-		Name      string `arg:"" name:"name" help:"name of the function to create"`
-		Namespace string `name:"namespace" short:"n" help:"namespace of the function to create"`
-		Source    string `name:"source" required:"" short:"s" type:"existingFile" help:"path of the source file"`
-		Language  string `name:"language" short:"l" help:"programming language of the function"`
+		Name       string `arg:"" name:"name" help:"name of the function to create"`
+		Namespace  string `name:"namespace" short:"n" help:"namespace of the function to create"`
+		SourceDir  string `name:"source-dir" short:"d" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
+		SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
+		NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build" help:"upload the file as-is, without building it"`
+		Language   string `name:"language" short:"l" required:"" enum:"js,rust" help:"programming language of the function"`
 	}
 
 	Invoke struct {
@@ -83,7 +88,36 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 }
 
 func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	code, err := os.Open(f.Source)
+	var code *os.File
+	var err error
+
+	if f.SourceDir != "" {
+		//TODO: this should all be associated to something similar to LocalDeployer, to avoid repetition as much as possible
+		_ = logger.StartSpinner("Building the given function using fl-runtimes...\n")
+		cli, build_err := docker_client.NewClientWithOpts(docker_client.FromEnv, docker_client.WithVersion("1.41"))
+		if build_err != nil {
+			return logger.StopSpinner(err)
+		}
+
+		_ = logger.StartSpinner(fmt.Sprintf("pulling builder image for %s 📦", f.Language))
+		if build_err := logger.StopSpinner(build.GetBuilderImage(ctx, cli, f.Language)); build_err != nil {
+			return build_err
+		}
+		_ = logger.StartSpinner("building source using builder image 🛠️")
+		if build_err := logger.StopSpinner(build.BuildSource(ctx, cli, f.SourceDir, f.Language)); build_err != nil {
+			return build_err
+		}
+
+		//TODO: log success message
+		code, err = os.Open("./out_wasm/code.wasm")
+
+	} else if f.NoBuild {
+		code, err = os.Open(f.SourceFile)
+	} else {
+		//build single file => not implemented
+		return errors.New("Building from a single file is not yet implemented")
+	}
+
 	if err != nil {
 		return err
 	}
