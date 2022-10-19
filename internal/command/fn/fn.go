@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	docker_client "github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -87,24 +86,24 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	return nil
 }
 
-func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
+func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker client.FnHandler, logger log.FLogger) error {
 	var code *os.File
 	var err error
 
 	if f.SourceDir != "" {
-		//TODO: this should all be associated to something similar to LocalDeployer, to avoid repetition as much as possible
-		_ = logger.StartSpinner("Building the given function using fl-runtimes...\n")
-		cli, build_err := docker_client.NewClientWithOpts(docker_client.FromEnv, docker_client.WithVersion("1.41"))
-		if build_err != nil {
-			return logger.StopSpinner(err)
+		logger.Info("Building the given function using fl-runtimes...\n")
+
+		_ = logger.StartSpinner("Setting up...")
+		if build_err := logger.StopSpinner(builder.Setup(ctx, f.Language)); build_err != nil {
+			return build_err
 		}
 
 		_ = logger.StartSpinner(fmt.Sprintf("pulling builder image for %s 📦", f.Language))
-		if build_err := logger.StopSpinner(build.GetBuilderImage(ctx, cli, f.Language)); build_err != nil {
+		if build_err := logger.StopSpinner(builder.PullBuilderImage(ctx)); build_err != nil {
 			return build_err
 		}
 		_ = logger.StartSpinner("building source using builder image 🛠️")
-		if build_err := logger.StopSpinner(build.BuildSource(ctx, cli, f.SourceDir, f.Language)); build_err != nil {
+		if build_err := logger.StopSpinner(builder.BuildSource(ctx, f.SourceDir)); build_err != nil {
 			return build_err
 		}
 
@@ -114,7 +113,7 @@ func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	} else if f.NoBuild {
 		code, err = os.Open(f.SourceFile)
 	} else {
-		//build single file => not implemented
+		//NOTE: build single file => not implemented
 		return errors.New("Building from a single file is not yet implemented")
 	}
 
