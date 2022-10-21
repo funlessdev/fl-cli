@@ -55,13 +55,13 @@ func (_m *DockerBuilder) PullBuilderImage(ctx context.Context) error {
 	return r0
 }
 
-// Setup provides a mock function with given fields: ctx, language
-func (_m *DockerBuilder) Setup(ctx context.Context, language string) error {
-	ret := _m.Called(ctx, language)
+// Setup provides a mock function with given fields: ctx, language, outDir
+func (_m *DockerBuilder) Setup(ctx context.Context, language string, outDir string) error {
+	ret := _m.Called(ctx, language, outDir)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, language)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, language, outDir)
 	} else {
 		r0 = ret.Error(0)
 	}
