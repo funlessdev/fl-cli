@@ -26,5 +26,6 @@ header:
     - '**/target/**'
     - '**/task/**'
     - '**/vendor/**'
+    - '**/*.wasm'
     - 'workspace.code-workspace'
     - CODEOWNERS
