@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
@@ -39,7 +40,8 @@ type (
 		Namespace  string `name:"namespace" short:"n" help:"namespace of the function to create"`
 		SourceDir  string `name:"source-dir" short:"d" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
 		SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
-		NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build" help:"upload the file as-is, without building it"`
+		OutDir     string `name:"out-dir" short:"o" xor:"out-build" default:"./out_wasm/" type:"existingdir" help:"path where the compiled code file will be saved"`
+		NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build,out-build" help:"upload the file as-is, without building it"`
 		Language   string `name:"language" short:"l" required:"" enum:"js,rust" help:"programming language of the function"`
 	}
 
@@ -94,21 +96,20 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker c
 		logger.Info("Building the given function using fl-runtimes...\n")
 
 		_ = logger.StartSpinner("Setting up...")
-		if build_err := logger.StopSpinner(builder.Setup(ctx, f.Language)); build_err != nil {
+		if build_err := logger.StopSpinner(builder.Setup(ctx, f.Language, f.OutDir)); build_err != nil {
 			return build_err
 		}
 
-		_ = logger.StartSpinner(fmt.Sprintf("pulling builder image for %s 📦", f.Language))
+		_ = logger.StartSpinner(fmt.Sprintf("Pulling builder image for %s 📦", f.Language))
 		if build_err := logger.StopSpinner(builder.PullBuilderImage(ctx)); build_err != nil {
 			return build_err
 		}
-		_ = logger.StartSpinner("building source using builder image 🛠️")
+		_ = logger.StartSpinner("Building source using builder image 🛠️")
 		if build_err := logger.StopSpinner(builder.BuildSource(ctx, f.SourceDir)); build_err != nil {
 			return build_err
 		}
 
-		//TODO: log success message
-		code, err = os.Open("./out_wasm/code.wasm")
+		code, err = os.Open(path.Join(f.OutDir, "./code.wasm"))
 
 	} else if f.NoBuild {
 		code, err = os.Open(f.SourceFile)

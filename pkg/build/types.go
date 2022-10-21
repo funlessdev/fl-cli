@@ -17,7 +17,7 @@ package build
 import "context"
 
 type DockerBuilder interface {
-	Setup(ctx context.Context, language string) error
+	Setup(ctx context.Context, language string, outDir string) error
 	PullBuilderImage(ctx context.Context) error
 	BuildSource(ctx context.Context, srcPath string) error
 }

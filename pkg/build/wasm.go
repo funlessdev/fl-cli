@@ -39,7 +39,7 @@ func NewWasmBuilder() *WasmBuilder {
 	return &WasmBuilder{}
 }
 
-func (b *WasmBuilder) Setup(ctx context.Context, language string) error {
+func (b *WasmBuilder) Setup(ctx context.Context, language string, outDir string) error {
 	image, exists := pkg.FLRuntimes[language]
 	if !exists {
 		return errors.New("No corresponding builder image found for the given language")
@@ -58,7 +58,7 @@ func (b *WasmBuilder) Setup(ctx context.Context, language string) error {
 	}
 	b.client = cli
 
-	outPath, _ := filepath.Abs("./out_wasm")
+	outPath, _ := filepath.Abs(b.outPath)
 	b.outPath = outPath
 
 	err = os.MkdirAll(outPath, 0700)
