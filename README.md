@@ -14,4 +14,41 @@
   ~ limitations under the License.
 -->
 
-# funless-cli
+# fl
+
+This is the repository for the CLI of the Funless (FL) platform, a new generation research-driven serverless platform.
+
+The CLI can be used both to deploy the platform and to create, delete and invoke functions on it.
+
+## Using the CLI
+
+The CLI currently exposes two sets of commands, `fn` and `admin`, for function manipulation and deployment respectively.
+### fn
+
+The `fn` commands are used to create, delete and invoke functions.
+
+#### `fn create`
+
+#### `fn delete`
+
+#### `fn invoke`
+
+### admin
+
+#### `admin dev`
+
+#### `admin reset`
+
+## Contributing
+
+Anyone is welcome to contribute to this project or any other Funless project. 
+
+You can contribute by testing the projects, opening tickets, writing documentation, sharing new ideas for future works and, of course,
+by contributing code. 
+
+You can pick an issue or create a new one, comment on it that you will take priority and then fork the repo so you're free to work on it.
+Once you feel ready open a Pull Request to send your code to us.
+
+## License
+
+This project is under the Apache 2.0 license.
