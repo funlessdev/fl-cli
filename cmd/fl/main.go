@@ -24,6 +24,7 @@ import (
 	"github.com/funlessdev/fl-cli/internal/command/admin"
 	"github.com/funlessdev/fl-cli/internal/command/fn"
 	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -46,6 +47,7 @@ func main() {
 	logger, err := buildLogger()
 
 	localDeployer := deploy.NewLocalDeployer("fl-core", "fl-worker", "fl-net", "fl-runtime-net")
+	wasmBuilder := build.NewWasmBuilder()
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -73,6 +75,7 @@ func main() {
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.BindTo(localDeployer, (*deploy.DockerDeployer)(nil)),
+		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
 			"version":              FLVersion,
 			"default_core_image":   pkg.FLCore,

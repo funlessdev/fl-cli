@@ -18,8 +18,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
+	"path"
 
+	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	swagger "github.com/funlessdev/fl-client-sdk-go"
@@ -33,10 +36,13 @@ type (
 	}
 
 	Create struct {
-		Name      string `arg:"" name:"name" help:"name of the function to create"`
-		Namespace string `name:"namespace" short:"n" help:"namespace of the function to create"`
-		Source    string `name:"source" required:"" short:"s" type:"existingFile" help:"path of the source file"`
-		Language  string `name:"language" short:"l" help:"programming language of the function"`
+		Name       string `arg:"" name:"name" help:"name of the function to create"`
+		Namespace  string `name:"namespace" short:"n" help:"namespace of the function to create"`
+		SourceDir  string `name:"source-dir" short:"d" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
+		SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
+		OutDir     string `name:"out-dir" short:"o" xor:"out-build" default:"./out_wasm/" type:"existingdir" help:"path where the compiled code file will be saved"`
+		NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build,out-build" help:"upload the file as-is, without building it"`
+		Language   string `name:"language" short:"l" required:"" enum:"js,rust" help:"programming language of the function"`
 	}
 
 	Invoke struct {
@@ -82,8 +88,36 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	return nil
 }
 
-func (f *Create) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	code, err := os.Open(f.Source)
+func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker client.FnHandler, logger log.FLogger) error {
+	var code *os.File
+	var err error
+
+	if f.SourceDir != "" {
+		logger.Info("Building the given function using fl-runtimes...\n")
+
+		_ = logger.StartSpinner("Setting up...")
+		if build_err := logger.StopSpinner(builder.Setup(ctx, f.Language, f.OutDir)); build_err != nil {
+			return build_err
+		}
+
+		_ = logger.StartSpinner(fmt.Sprintf("Pulling builder image for %s 📦", f.Language))
+		if build_err := logger.StopSpinner(builder.PullBuilderImage(ctx)); build_err != nil {
+			return build_err
+		}
+		_ = logger.StartSpinner("Building source using builder image 🛠️")
+		if build_err := logger.StopSpinner(builder.BuildSource(ctx, f.SourceDir)); build_err != nil {
+			return build_err
+		}
+
+		code, err = os.Open(path.Join(f.OutDir, "./code.wasm"))
+
+	} else if f.NoBuild {
+		code, err = os.Open(f.SourceFile)
+	} else {
+		//NOTE: build single file => not implemented
+		return errors.New("Building from a single file is not yet implemented")
+	}
+
 	if err != nil {
 		return err
 	}

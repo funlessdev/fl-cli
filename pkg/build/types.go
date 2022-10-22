@@ -12,19 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package build
 
-const FLCoreDevSecretKey = "dev-secret-key"
-const FLCore = "ghcr.io/funlessdev/fl-core:latest"
+import "context"
 
-const FLWorker = "ghcr.io/funlessdev/fl-worker:latest"
-
-var FLRuntimes = map[string]string{
-	"js":   "ghcr.io/funlessdev/fl-js-builder:latest",
-	"rust": "ghcr.io/funlessdev/fl-rust-builder:latest",
-}
-
-var FLRuntimeNames = map[string]string{
-	"js":   "fl-js-builder",
-	"rust": "fl-rust-builder",
+type DockerBuilder interface {
+	Setup(ctx context.Context, language string, outDir string) error
+	PullBuilderImage(ctx context.Context) error
+	BuildSource(ctx context.Context, srcPath string) error
 }
