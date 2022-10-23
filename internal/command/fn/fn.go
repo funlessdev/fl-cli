@@ -40,7 +40,7 @@ type (
 		Namespace  string `name:"namespace" short:"n" help:"namespace of the function to create"`
 		SourceDir  string `name:"source-dir" short:"d" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
 		SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
-		OutDir     string `name:"out-dir" short:"o" xor:"out-build" default:"./out_wasm/" type:"existingdir" help:"path where the compiled code file will be saved"`
+		OutDir     string `name:"out-dir" short:"o" xor:"out-build" type:"existingdir" help:"path where the compiled code file will be saved"`
 		NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build,out-build" help:"upload the file as-is, without building it"`
 		Language   string `name:"language" short:"l" required:"" enum:"js,rust" help:"programming language of the function"`
 	}
@@ -93,6 +93,10 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker c
 	var err error
 
 	if f.SourceDir != "" {
+		if f.OutDir == "" {
+			/* can't use default, as outDir is also in a xor group */
+			f.OutDir = "./out_wasm/"
+		}
 		logger.Info("Building the given function using fl-runtimes...\n")
 
 		_ = logger.StartSpinner("Setting up...")
