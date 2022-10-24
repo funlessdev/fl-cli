@@ -30,9 +30,9 @@ import (
 
 type (
 	Fn struct {
-		Invoke Invoke `cmd:"" help:"todo fn invoke help"`
-		Create Create `cmd:"" help:"todo fn create help"`
-		Delete Delete `cmd:"" help:"todo fn delete help"`
+		Invoke Invoke `cmd:"" help:"run a function on an instance of the platform"`
+		Create Create `cmd:"" help:"create a function and upload it to the platform"`
+		Delete Delete `cmd:"" help:"delete an existing function from the platform"`
 	}
 
 	Create struct {

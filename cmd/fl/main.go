@@ -34,8 +34,8 @@ import (
 var FLVersion = "vX.Y.Z.build"
 
 type CLI struct {
-	Fn    fn.Fn       `cmd:"" help:"todo fn subcommand help"`
-	Admin admin.Admin `cmd:"" aliases:"a" help:"todo admin subcommand help"`
+	Fn    fn.Fn       `cmd:"" help:"create, delete and invoke functions using an instance of the platform"`
+	Admin admin.Admin `cmd:"" aliases:"a" help:"deploy and remove instances of the platform"`
 
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
