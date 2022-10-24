@@ -25,13 +25,14 @@ The CLI can be used both to deploy the platform and to create, delete and invoke
 The CLI currently exposes two sets of commands, `fn` and `admin`, for function manipulation and deployment respectively.
 ### fn
 
-The `fn` commands are used to create, delete and invoke functions.
+The `fn` commands are used to create, delete and invoke functions. All commands require the function's name, and allow an additional `--namespace` parameter for the function.
 
 #### `fn create`
 
 The `fn create` command is used to create functions and store them in the platform's permanent storage.
 
-It takes a mandatory argument (the function's name) and requires either a `--source-file` or a `--source-dir` additional parameter, for the function's source.
+It takes a mandatory argument (the function's name) and requires either a `--source-file` or a `--source-dir` additional parameter, for the function's source, along with a `--language` parameter 
+(either `js` or `rust`).
 
 In case a source directory is passed, a suitable container from [fl-runtimes](https://github.com/funlessdev/fl-runtimes) is pulled and used to build the source.
 
@@ -45,7 +46,7 @@ The `fn delete` command is used to remove functions from the platform's permanen
 
 #### `fn invoke`
 
-The `fn invoke` command is used to run functions on the platform. Both keyword arguments and json arguments can be passed using the `-a` or the `-j` flag.
+The `fn invoke` command is used to run functions on the platform. Both keyword arguments and json arguments can be passed using the `-a` or the `-j` flag respectively.
 
 
 
