@@ -30,31 +30,31 @@ import (
 
 type (
 	Fn struct {
-		Invoke Invoke `cmd:"" help:"todo fn invoke help"`
-		Create Create `cmd:"" help:"todo fn create help"`
-		Delete Delete `cmd:"" help:"todo fn delete help"`
+		Invoke Invoke `cmd:"" help:"run a function on an instance of the platform"`
+		Create Create `cmd:"" help:"create a function and upload it to the platform"`
+		Delete Delete `cmd:"" help:"delete an existing function from the platform"`
 	}
 
 	Create struct {
 		Name       string `arg:"" name:"name" help:"name of the function to create"`
-		Namespace  string `name:"namespace" short:"n" help:"namespace of the function to create"`
+		Namespace  string `name:"namespace" short:"n" default:"_" help:"namespace of the function to create"`
 		SourceDir  string `name:"source-dir" short:"d" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
 		SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
-		OutDir     string `name:"out-dir" short:"o" xor:"out-build" default:"./out_wasm/" type:"existingdir" help:"path where the compiled code file will be saved"`
+		OutDir     string `name:"out-dir" short:"o" xor:"out-build" type:"existingdir" help:"path where the compiled code file will be saved"`
 		NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build,out-build" help:"upload the file as-is, without building it"`
 		Language   string `name:"language" short:"l" required:"" enum:"js,rust" help:"programming language of the function"`
 	}
 
 	Invoke struct {
 		Name      string            `arg:"" name:"name" help:"name of the function to invoke"`
-		Namespace string            `name:"namespace" short:"n" help:"namespace of the function to invoke"`
+		Namespace string            `name:"namespace" short:"n" default:"_" help:"namespace of the function to invoke"`
 		Args      map[string]string `name:"args" short:"a" help:"arguments of the function to invoke" xor:"args"`
 		JsonArgs  string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
 	}
 
 	Delete struct {
 		Name      string `arg:"" name:"name" help:"name of the function to delete"`
-		Namespace string `name:"namespace" short:"n" help:"namespace of the function to delete"`
+		Namespace string `name:"namespace" short:"n" default:"_" help:"namespace of the function to delete"`
 	}
 )
 
@@ -93,6 +93,10 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker c
 	var err error
 
 	if f.SourceDir != "" {
+		if f.OutDir == "" {
+			/* can't use default, as outDir is also in a xor group */
+			f.OutDir = "./out_wasm/"
+		}
 		logger.Info("Building the given function using fl-runtimes...\n")
 
 		_ = logger.StartSpinner("Setting up...")
