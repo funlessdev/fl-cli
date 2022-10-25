@@ -37,7 +37,7 @@ type (
 
 	Create struct {
 		Name       string `arg:"" name:"name" help:"name of the function to create"`
-		Namespace  string `name:"namespace" short:"n" help:"namespace of the function to create"`
+		Namespace  string `name:"namespace" short:"n" default:"_" help:"namespace of the function to create"`
 		SourceDir  string `name:"source-dir" short:"d" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
 		SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
 		OutDir     string `name:"out-dir" short:"o" xor:"out-build" type:"existingdir" help:"path where the compiled code file will be saved"`
@@ -47,14 +47,14 @@ type (
 
 	Invoke struct {
 		Name      string            `arg:"" name:"name" help:"name of the function to invoke"`
-		Namespace string            `name:"namespace" short:"n" help:"namespace of the function to invoke"`
+		Namespace string            `name:"namespace" short:"n" default:"_" help:"namespace of the function to invoke"`
 		Args      map[string]string `name:"args" short:"a" help:"arguments of the function to invoke" xor:"args"`
 		JsonArgs  string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
 	}
 
 	Delete struct {
 		Name      string `arg:"" name:"name" help:"name of the function to delete"`
-		Namespace string `name:"namespace" short:"n" help:"namespace of the function to delete"`
+		Namespace string `name:"namespace" short:"n" default:"_" help:"namespace of the function to delete"`
 	}
 )
 
