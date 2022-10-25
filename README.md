@@ -34,11 +34,11 @@ The `fn create` command is used to create functions and store them in the platfo
 It takes a mandatory argument (the function's name) and requires either a `--source-file` or a `--source-dir` additional parameter, for the function's source, along with a `--language` parameter 
 (either `js` or `rust`).
 
-![](img/fl_create_file.gif)
+![](assets/img/fl_create_file.gif)
 
 In case a source directory is passed, a suitable container from [fl-runtimes](https://github.com/funlessdev/fl-runtimes) is pulled and used to build the source.
 
-![](img/fl_create_dir.gif)
+![](assets/img/fl_create_dir.gif)
 
 
 #### `fn delete`
@@ -51,7 +51,7 @@ The `fn delete` command is used to remove functions from the platform's permanen
 
 The `fn invoke` command is used to run functions on the platform. Both keyword arguments and json arguments can be passed using the `-a` or the `-j` flag respectively.
 
-![](img/fl_invoke.gif)
+![](assets/img/fl_invoke.gif)
 
 ### admin
 
@@ -65,13 +65,13 @@ The `admin dev` command is used to spin up a development version of the platform
 
 Custom images for Core and Worker can be used with the `--core` and `--worker` flags.
 
-![](img/fl_admin_dev.gif)
+![](assets/img/fl_admin_dev.gif)
 
 #### `admin reset`
 
 The `admin reset` command is used to delete all containers of the development installation of the platform; pulled images will not be deleted.
 
-![](img/fl_admin_reset.gif)
+![](assets/img/fl_admin_reset.gif)
 
 ## Contributing
 
