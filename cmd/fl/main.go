@@ -14,9 +14,11 @@
 
 package main
 
+import "github.com/funlessdev/fl-cli/cmd/fl/app"
+
 // CLIVersion holds the current version, to be set by the build with go build -ldflags "-X main.FLVersion=<version>"
 var FLVersion = "vX.Y.Z.build"
 
 func main() {
-	Run()
+	app.Run(FLVersion)
 }

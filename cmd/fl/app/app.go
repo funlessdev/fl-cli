@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package app
 
 import (
 	"context"
@@ -37,7 +37,7 @@ type CLI struct {
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
 
-func Run() {
+func Run(version string) {
 	cli := CLI{}
 	ctx := context.Background()
 
@@ -74,7 +74,7 @@ func Run() {
 		kong.BindTo(localDeployer, (*deploy.DockerDeployer)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
-			"version":              FLVersion,
+			"version":              version,
 			"default_core_image":   pkg.FLCore,
 			"default_worker_image": pkg.FLWorker,
 		},
