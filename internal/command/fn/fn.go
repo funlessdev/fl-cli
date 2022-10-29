@@ -154,7 +154,10 @@ type FnError struct {
 
 func extractError(err error) error {
 	var e FnError
-	openApiError := err.(*openapi.GenericOpenAPIError)
+	openApiError, castOk := err.(*openapi.GenericOpenAPIError)
+	if !castOk {
+		return err
+	}
 	if err := json.Unmarshal(openApiError.Body(), &e); err != nil {
 		return err
 	}
