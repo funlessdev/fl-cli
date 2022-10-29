@@ -58,7 +58,7 @@ func (b *WasmBuilder) Setup(ctx context.Context, language string, outDir string)
 	}
 	b.client = cli
 
-	outPath, _ := filepath.Abs(b.outPath)
+	outPath, _ := filepath.Abs(outDir)
 	b.outPath = outPath
 
 	err = os.MkdirAll(outPath, 0700)
