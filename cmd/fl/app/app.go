@@ -16,7 +16,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -37,7 +36,7 @@ type CLI struct {
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
 
-func Run(version string) {
+func ParseCMD(version string) (*kong.Context, error) {
 	cli := CLI{}
 	ctx := context.Background()
 
@@ -47,15 +46,13 @@ func Run(version string) {
 	wasmBuilder := build.NewWasmBuilder()
 
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return nil, err
 	}
 
 	flConfig := client.Config{Host: "http://localhost:4000"}
 	flClient, err := client.NewClient(http.DefaultClient, flConfig)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return nil, err
 	}
 	fnSvc := &client.FnService{Client: flClient}
 
@@ -80,8 +77,11 @@ func Run(version string) {
 		},
 		kong.UsageOnError(),
 	)
+	return kong_ctx, nil
+}
 
-	kong_ctx.FatalIfErrorf(kong_ctx.Run())
+func Run(kong_ctx *kong.Context) error {
+	return kong_ctx.Run()
 }
 
 func buildLogger() (log.FLogger, error) {
