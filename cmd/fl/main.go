@@ -14,11 +14,21 @@
 
 package main
 
-import "github.com/funlessdev/fl-cli/cmd/fl/app"
+import (
+	"fmt"
+	"os"
+
+	"github.com/funlessdev/fl-cli/cmd/fl/app"
+)
 
 // CLIVersion holds the current version, to be set by the build with go build -ldflags "-X main.FLVersion=<version>"
 var FLVersion = "vX.Y.Z.build"
 
 func main() {
-	app.Run(FLVersion)
+	if ctx, err := app.ParseCMD(FLVersion); err == nil {
+		ctx.FatalIfErrorf(app.Run(ctx))
+	} else {
+		fmt.Println("Error parsing command line arguments:", err.Error())
+		os.Exit(1)
+	}
 }
