@@ -26,6 +26,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 func TestInvoke(t *testing.T) {
@@ -49,9 +51,11 @@ func TestInvoke(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		_, err := svc.Invoke(testCtx, testFn, testNs, testArgs)
+		result, err := svc.Invoke(testCtx, testFn, testNs, testArgs)
 
 		require.NoError(t, err)
+		expected := map[string]interface{}{"payload": "some result"}
+		assert.Equal(t, expected, result.GetResult())
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -73,6 +77,8 @@ func TestInvoke(t *testing.T) {
 		_, err := svc.Invoke(testCtx, testFn, testNs, testArgs)
 
 		require.Error(t, err)
+		openApiError := err.(*openapi.GenericOpenAPIError)
+		assert.Equal(t, "{\"error\":\"some error\"}\n", string(openApiError.Body()))
 	})
 }
 
@@ -98,9 +104,10 @@ func TestCreate(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		_, err := svc.Create(testCtx, testFn, testNs, testCode, testLanguage)
+		result, err := svc.Create(testCtx, testFn, testNs, testCode, testLanguage)
 
 		require.NoError(t, err)
+		assert.Equal(t, "some result", result.GetResult())
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -122,6 +129,8 @@ func TestCreate(t *testing.T) {
 		_, err := svc.Create(testCtx, testFn, testNs, testCode, testLanguage)
 
 		require.Error(t, err)
+		openApiError := err.(*openapi.GenericOpenAPIError)
+		assert.Equal(t, "{\"error\":\"some error\"}\n", string(openApiError.Body()))
 	})
 }
 
@@ -145,9 +154,10 @@ func TestDelete(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		_, err := svc.Delete(testCtx, testFn, testNs)
+		result, err := svc.Delete(testCtx, testFn, testNs)
 
 		require.NoError(t, err)
+		assert.Equal(t, "some result", result.GetResult())
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -169,5 +179,7 @@ func TestDelete(t *testing.T) {
 		_, err := svc.Delete(testCtx, testFn, testNs)
 
 		require.Error(t, err)
+		openApiError := err.(*openapi.GenericOpenAPIError)
+		assert.Equal(t, "{\"error\":\"some error\"}\n", string(openApiError.Body()))
 	})
 }

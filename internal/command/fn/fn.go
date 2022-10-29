@@ -25,7 +25,8 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
-	swagger "github.com/funlessdev/fl-client-sdk-go"
+
+	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 type (
@@ -119,7 +120,7 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker c
 		code, err = os.Open(f.SourceFile)
 	} else {
 		//NOTE: build single file => not implemented
-		return errors.New("Building from a single file is not yet implemented")
+		return errors.New("building from a single file is not yet implemented")
 	}
 
 	if err != nil {
@@ -145,20 +146,17 @@ func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	return nil
 }
 
+type FnError struct {
+	Errors struct {
+		Detail string `json:"detail"`
+	} `json:"errors"`
+}
+
 func extractError(err error) error {
-	openApiError, ok_sw := err.(swagger.GenericOpenAPIError)
-	if ok_sw {
-		switch openApiError.Model().(type) {
-		case swagger.FunctionCreationError:
-			specificError := openApiError.Model().(swagger.FunctionCreationError)
-			return errors.New(*specificError.Error)
-		case swagger.FunctionDeletionError:
-			specificError := openApiError.Model().(swagger.FunctionDeletionError)
-			return errors.New(*specificError.Error)
-		case swagger.FunctionInvocationError:
-			specificError := openApiError.Model().(swagger.FunctionInvocationError)
-			return errors.New(*specificError.Error)
-		}
+	var e FnError
+	openApiError := err.(*openapi.GenericOpenAPIError)
+	if err := json.Unmarshal(openApiError.Body(), &e); err != nil {
+		return err
 	}
-	return err
+	return errors.New(e.Errors.Detail)
 }

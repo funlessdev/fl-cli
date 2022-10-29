@@ -18,18 +18,13 @@ import (
 	"context"
 	"os"
 
-	swagger "github.com/funlessdev/fl-client-sdk-go"
+	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
-//					 default
-// https://${HOST}/{NAMESPACE}/fn/hello
-// https://${HOST}/{NAMESPACE}/ev/event1
-// https://${HOST}/{NAMESPACE}/pkg/{PACKAGE}/fn/hello
-
 type FnHandler interface {
-	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (swagger.FunctionInvocationSuccess, error)
-	Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (swagger.FunctionCreationSuccess, error)
-	Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error)
+	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (openapi.FunctionInvocationSuccess, error)
+	Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (openapi.FunctionCreationSuccess, error)
+	Delete(ctx context.Context, fnName string, fnNamespace string) (openapi.FunctionDeletionSuccess, error)
 }
 
 type FnService struct {
@@ -38,9 +33,9 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
-func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (swagger.FunctionInvocationSuccess, error) {
+func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (openapi.FunctionInvocationSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
-	requestBody := swagger.FunctionInvocation{
+	requestBody := openapi.FunctionInvocation{
 		Function:  &fnName,
 		Namespace: &fnNamespace,
 		Args:      fnArgs,
@@ -48,32 +43,32 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace stri
 	request := apiService.V1FnInvokePost(ctx).FunctionInvocation(requestBody)
 	response, _, err := apiService.V1FnInvokePostExecute(request)
 	if err != nil {
-		return swagger.FunctionInvocationSuccess{}, err
+		return openapi.FunctionInvocationSuccess{}, err
 	}
 	return *response, err
 }
 
-func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (swagger.FunctionCreationSuccess, error) {
+func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (openapi.FunctionCreationSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
 	request := apiService.V1FnCreatePost(ctx).Name(fnName).Namespace(fnNamespace).Code(code)
 	response, _, err := apiService.V1FnCreatePostExecute(request)
 
 	if err != nil {
-		return swagger.FunctionCreationSuccess{}, err
+		return openapi.FunctionCreationSuccess{}, err
 	}
 	return *response, err
 }
 
-func (fn *FnService) Delete(ctx context.Context, fnName string, fnNamespace string) (swagger.FunctionDeletionSuccess, error) {
+func (fn *FnService) Delete(ctx context.Context, fnName string, fnNamespace string) (openapi.FunctionDeletionSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
-	requestBody := swagger.FunctionDeletion{
+	requestBody := openapi.FunctionDeletion{
 		Name:      &fnName,
 		Namespace: &fnNamespace,
 	}
 	request := apiService.V1FnDeleteDelete(ctx).FunctionDeletion(requestBody)
 	response, _, err := apiService.V1FnDeleteDeleteExecute(request)
 	if err != nil {
-		return swagger.FunctionDeletionSuccess{}, err
+		return openapi.FunctionDeletionSuccess{}, err
 	}
 	return *response, err
 }
