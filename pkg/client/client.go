@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"net/url"
 
-	swagger "github.com/funlessdev/fl-client-sdk-go"
+	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 const (
@@ -30,7 +30,7 @@ const (
 type Client struct {
 	client    *http.Client
 	Config    Config
-	ApiClient *swagger.APIClient
+	ApiClient *openapi.APIClient
 }
 
 type Config struct {
@@ -53,9 +53,9 @@ func NewClient(httpClient *http.Client, config Config) (*Client, error) {
 		config.BaseURL = u
 	}
 
-	apiConfig := swagger.NewConfiguration()
+	apiConfig := openapi.NewConfiguration()
 	apiConfig.Servers[0].URL = config.Host
-	apiClient := swagger.NewAPIClient(apiConfig)
+	apiClient := openapi.NewAPIClient(apiConfig)
 
 	return &Client{client: httpClient, Config: config, ApiClient: apiClient}, nil
 }
