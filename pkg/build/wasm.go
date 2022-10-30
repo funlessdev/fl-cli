@@ -24,7 +24,14 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/docker_utils"
 )
+
+type DockerBuilder interface {
+	Setup(ctx context.Context, language string, outDir string) error
+	PullBuilderImage(ctx context.Context) error
+	BuildSource(ctx context.Context, srcPath string) error
+}
 
 type WasmBuilder struct {
 	client               *client.Client
@@ -42,13 +49,13 @@ func NewWasmBuilder() *WasmBuilder {
 func (b *WasmBuilder) Setup(ctx context.Context, language string, outDir string) error {
 	image, exists := pkg.FLRuntimes[language]
 	if !exists {
-		return errors.New("No corresponding builder image found for the given language")
+		return errors.New("no corresponding builder image found for the given language")
 	}
 	b.builderImg = image
 
 	containerName, exists := pkg.FLRuntimeNames[language]
 	if !exists {
-		return errors.New("No corresponding container name found for the given language")
+		return errors.New("no corresponding container name found for the given language")
 	}
 	b.builderContainerName = containerName
 
@@ -68,18 +75,39 @@ func (b *WasmBuilder) Setup(ctx context.Context, language string, outDir string)
 
 	return nil
 }
+
 func (b *WasmBuilder) BuildSource(ctx context.Context, srcPath string) error {
 	absPath, err := filepath.Abs(srcPath)
 	if err != nil {
 		return err
 	}
 
-	containerConfig := &container.Config{
-		Image:   b.builderImg,
-		Volumes: map[string]struct{}{},
+	containerConfig := builderContainerConfig(b.builderImg)
+	hostConfig := builderHostConfig(absPath, b.outPath)
+
+	configs := docker_utils.ContainerConfigs{
+		ContName:   b.builderContainerName,
+		Container:  containerConfig,
+		Host:       hostConfig,
+		Networking: nil,
 	}
 
-	hostConfig := &container.HostConfig{
+	return docker_utils.RunAndWaitContainer(ctx, b.client, configs)
+}
+
+func (b *WasmBuilder) PullBuilderImage(ctx context.Context) error {
+	return docker_utils.PullImage(ctx, b.client, b.builderImg)
+}
+
+func builderContainerConfig(builderImg string) *container.Config {
+	return &container.Config{
+		Image:   builderImg,
+		Volumes: map[string]struct{}{},
+	}
+}
+
+func builderHostConfig(absPath, outPath string) *container.HostConfig {
+	return &container.HostConfig{
 		Mounts: []mount.Mount{
 			{
 				Source:   absPath,
@@ -88,16 +116,11 @@ func (b *WasmBuilder) BuildSource(ctx context.Context, srcPath string) error {
 				Type:     mount.TypeBind,
 			},
 			{
-				Source: b.outPath,
+				Source: outPath,
 				Target: "/out_wasm",
 				Type:   mount.TypeBind,
 			},
 		},
 		AutoRemove: true,
 	}
-	return runContainer(ctx, b.client, hostConfig, containerConfig, b.builderContainerName)
-}
-
-func (b *WasmBuilder) PullBuilderImage(ctx context.Context) error {
-	return pullImage(ctx, b.client, b.builderImg)
 }

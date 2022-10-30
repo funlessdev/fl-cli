@@ -44,8 +44,7 @@ func TestAdminDevRun(t *testing.T) {
 	coreName := "fl-core-test"
 	workerName := "fl-worker-test"
 	flNetName := "fl-net-test"
-	flRuntimeName := "fl-runtime-net-test"
-	localDeployer := deploy.NewLocalDeployer(coreName, workerName, flNetName, flRuntimeName)
+	localDeployer := deploy.NewDevDeployer(coreName, workerName, flNetName)
 
 	b := log.NewLoggerBuilder()
 	var outbuf bytes.Buffer
@@ -65,36 +64,33 @@ func TestAdminDevRun(t *testing.T) {
 		assertContainer(t, ctx, cli, workerName)
 
 		assertNetwork(t, ctx, cli, flNetName)
-		assertNetwork(t, ctx, cli, flRuntimeName)
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveWorkerContainer(ctx)
-		_ = localDeployer.RemoveFLNetworks(ctx)
+		_ = localDeployer.RemoveFLNetwork(ctx)
 	})
 
 	t.Run("should successfully deploy without creating networks when they already exist", func(t *testing.T) {
-		_ = localDeployer.CreateFLNetworks(ctx)
-
-		err := admCmd.Dev.Run(ctx, localDeployer, logger)
-
+		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 		assert.NoError(t, err)
 
-		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+		_ = localDeployer.CreateFLNetwork(ctx)
+		assertNetwork(t, ctx, cli, flNetName)
+
+		err = admCmd.Dev.Run(ctx, localDeployer, logger)
 		assert.NoError(t, err)
 
 		assertContainer(t, ctx, cli, coreName)
 		assertContainer(t, ctx, cli, workerName)
-
 		assertNetwork(t, ctx, cli, flNetName)
-		assertNetwork(t, ctx, cli, flRuntimeName)
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveWorkerContainer(ctx)
-		_ = localDeployer.RemoveFLNetworks(ctx)
+		_ = localDeployer.RemoveFLNetwork(ctx)
 	})
 
 	t.Run("should fail when core is already running", func(t *testing.T) {
-		_ = localDeployer.CreateFLNetworks(ctx)
+		_ = localDeployer.CreateFLNetwork(ctx)
 		_ = localDeployer.PullCoreImage(ctx)
 		_ = localDeployer.StartCore(ctx)
 
@@ -103,7 +99,7 @@ func TestAdminDevRun(t *testing.T) {
 		assert.Error(t, err)
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
-		_ = localDeployer.RemoveFLNetworks(ctx)
+		_ = localDeployer.RemoveFLNetwork(ctx)
 	})
 
 	t.Run("should create ~/funless-logs folder when successfully deployed", func(t *testing.T) {
@@ -122,7 +118,7 @@ func TestAdminDevRun(t *testing.T) {
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveWorkerContainer(ctx)
-		_ = localDeployer.RemoveFLNetworks(ctx)
+		_ = localDeployer.RemoveFLNetwork(ctx)
 
 		err = os.RemoveAll(logFolder)
 		assert.NoError(t, err)

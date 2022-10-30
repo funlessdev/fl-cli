@@ -32,7 +32,7 @@ func TestResetRun(t *testing.T) {
 	var outbuf bytes.Buffer
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
 
-	deployer := mocks.NewDockerDeployer(t)
+	deployer := mocks.NewDevDeployer(t)
 
 	t.Run("print error when setup client fails", func(t *testing.T) {
 		deployer.On("Setup", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
@@ -100,7 +100,7 @@ func TestResetRun(t *testing.T) {
 		deployer.On("RemoveWorkerContainer", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
-		deployer.On("RemoveFunctionContainers", ctx).Return(func(ctx context.Context) error {
+		deployer.On("RemoveFLNetwork", ctx).Return(func(ctx context.Context) error {
 			return errors.New("error")
 		}).Once()
 
@@ -113,34 +113,7 @@ func TestResetRun(t *testing.T) {
 			"done\n",
 			"Removing Worker container... 🔪\n",
 			"done\n",
-			"Removing the function containers... 🔫\n",
-			"failed\n",
-			"",
-		}
-
-		assertOutput(t, expectedOutput, &outbuf)
-	})
-
-	t.Run("print error when starting core fails", func(t *testing.T) {
-		deployer.On("RemoveFunctionContainers", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("RemoveFLNetworks", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
-
-		_ = reset.Run(ctx, deployer, testLogger)
-
-		expectedOutput := []string{
-			"Removing local funless deployment...\n",
-			"\n",
-			"Removing Core container... ☠️\n",
-			"done\n",
-			"Removing Worker container... 🔪\n",
-			"done\n",
-			"Removing the function containers... 🔫\n",
-			"done\n",
-			"Removing fl networks... ✂️\n",
+			"Removing fl network... ✂️\n",
 			"failed\n",
 			"",
 		}
@@ -149,7 +122,7 @@ func TestResetRun(t *testing.T) {
 	})
 
 	t.Run("successful prints when everything goes well", func(t *testing.T) {
-		deployer.On("RemoveFLNetworks", ctx).Return(func(ctx context.Context) error {
+		deployer.On("RemoveFLNetwork", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
 
@@ -162,9 +135,7 @@ func TestResetRun(t *testing.T) {
 			"done\n",
 			"Removing Worker container... 🔪\n",
 			"done\n",
-			"Removing the function containers... 🔫\n",
-			"done\n",
-			"Removing fl networks... ✂️\n",
+			"Removing fl network... ✂️\n",
 			"done\n",
 			"\n",
 			"All clear! 👍\n",

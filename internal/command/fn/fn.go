@@ -59,7 +59,7 @@ type (
 	}
 )
 
-func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
+func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
 	args := make(map[string]interface{}, len(f.Args))
 	if f.Args != nil {
 		for k, v := range f.Args {
@@ -71,7 +71,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 			return err
 		}
 	}
-	res, err := invoker.Invoke(ctx, f.Name, f.Namespace, args)
+	res, err := fnHandler.Invoke(ctx, f.Name, f.Namespace, args)
 	if err != nil {
 		return extractError(err)
 	}
@@ -89,7 +89,7 @@ func (f *Invoke) Run(ctx context.Context, invoker client.FnHandler, logger log.F
 	return nil
 }
 
-func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker client.FnHandler, logger log.FLogger) error {
+func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
 	var code *os.File
 	var err error
 
@@ -127,7 +127,7 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker c
 		return err
 	}
 
-	res, err := invoker.Create(ctx, f.Name, f.Namespace, code, f.Language)
+	res, err := fnHandler.Create(ctx, f.Name, f.Namespace, code, f.Language)
 	if err != nil {
 		return extractError(err)
 	}
@@ -136,8 +136,8 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, invoker c
 	return nil
 }
 
-func (f *Delete) Run(ctx context.Context, invoker client.FnHandler, logger log.FLogger) error {
-	res, err := invoker.Delete(ctx, f.Name, f.Namespace)
+func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
+	res, err := fnHandler.Delete(ctx, f.Name, f.Namespace)
 	if err != nil {
 		return extractError(err)
 	}

@@ -27,7 +27,7 @@ type dev struct {
 	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
 }
 
-func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
+func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.FLogger) error {
 	logger.Info("Deploying funless locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
@@ -36,7 +36,7 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger lo
 		return logger.StopSpinner(err)
 	}
 
-	if err := logger.StopSpinner(deployer.CreateFLNetworks(ctx)); err != nil {
+	if err := logger.StopSpinner(deployer.CreateFLNetwork(ctx)); err != nil {
 		return err
 	}
 

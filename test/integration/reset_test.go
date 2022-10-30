@@ -44,7 +44,7 @@ func TestAdminResetRun(t *testing.T) {
 	workerName := "fl-worker-test"
 	flNetName := "fl-net-test"
 	flRuntimeName := "fl-runtime-net-test"
-	localDeployer := deploy.NewLocalDeployer(coreName, workerName, flNetName, flRuntimeName)
+	localDeployer := deploy.NewDevDeployer(coreName, workerName, flNetName)
 
 	b := log.NewLoggerBuilder()
 	var outbuf bytes.Buffer

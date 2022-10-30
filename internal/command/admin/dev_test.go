@@ -33,7 +33,7 @@ func TestRun(t *testing.T) {
 	var outbuf bytes.Buffer
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
 
-	deployer := mocks.NewDockerDeployer(t)
+	deployer := mocks.NewDevDeployer(t)
 
 	t.Run("print error when setup client fails", func(t *testing.T) {
 		deployer.On("Setup", ctx, mock.Anything, mock.Anything).Return(
@@ -61,7 +61,7 @@ func TestRun(t *testing.T) {
 				return nil
 			},
 		)
-		deployer.On("CreateFLNetworks", ctx).Return(func(ctx context.Context) error {
+		deployer.On("CreateFLNetwork", ctx).Return(func(ctx context.Context) error {
 			return errors.New("error")
 		}).Once()
 
@@ -79,7 +79,7 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("print error when pulling core image fails", func(t *testing.T) {
-		deployer.On("CreateFLNetworks", ctx).Return(func(ctx context.Context) error {
+		deployer.On("CreateFLNetwork", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
 		deployer.On("PullCoreImage", ctx).Return(func(ctx context.Context) error {

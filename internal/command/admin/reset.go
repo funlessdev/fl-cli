@@ -23,7 +23,7 @@ import (
 
 type reset struct{}
 
-func (r *reset) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
+func (r *reset) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.FLogger) error {
 	logger.Info("Removing local funless deployment...\n")
 
 	if err := deployer.Setup(ctx, "", ""); err != nil {
@@ -40,13 +40,8 @@ func (r *reset) Run(ctx context.Context, deployer deploy.DockerDeployer, logger 
 		return err
 	}
 
-	_ = logger.StartSpinner("Removing the function containers... 🔫")
-	if err := logger.StopSpinner(deployer.RemoveFunctionContainers(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("Removing fl networks... ✂️")
-	if err := logger.StopSpinner(deployer.RemoveFLNetworks(ctx)); err != nil {
+	_ = logger.StartSpinner("Removing fl network... ✂️")
+	if err := logger.StopSpinner(deployer.RemoveFLNetwork(ctx)); err != nil {
 		return err
 	}
 
