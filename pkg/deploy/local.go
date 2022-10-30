@@ -29,6 +29,20 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
+type DevDeployer interface {
+	Setup(ctx context.Context, coreImg, workerImg string) error
+
+	CreateFLNetwork(ctx context.Context) error
+	PullCoreImage(ctx context.Context) error
+	PullWorkerImage(ctx context.Context) error
+	StartCore(ctx context.Context) error
+	StartWorker(ctx context.Context) error
+
+	RemoveFLNetwork(ctx context.Context) error
+	RemoveCoreContainer(ctx context.Context) error
+	RemoveWorkerContainer(ctx context.Context) error
+}
+
 type LocalDeployer struct {
 	client   *client.Client
 	logsPath string

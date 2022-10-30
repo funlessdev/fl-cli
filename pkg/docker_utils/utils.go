@@ -93,6 +93,7 @@ func PullImage(ctx context.Context, c *client.Client, image string) error {
 	return nil
 }
 
+// Creates and starts a container and then waits for it to exit
 func RunAndWaitContainer(ctx context.Context, c *client.Client, config ContainerConfigs) error {
 	resp, err := c.ContainerCreate(ctx, config.Container, config.Host, config.Networking, nil, config.ContName)
 	if err != nil {
@@ -115,6 +116,7 @@ func RunAndWaitContainer(ctx context.Context, c *client.Client, config Container
 	}
 }
 
+// Creates and starts a container and returns without waiting
 func RunContainer(ctx context.Context, c *client.Client, configs ContainerConfigs) error {
 	resp, err := c.ContainerCreate(ctx, configs.Container, configs.Host, configs.Networking, nil, configs.ContName)
 	if err != nil {

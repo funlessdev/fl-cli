@@ -27,6 +27,12 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/docker_utils"
 )
 
+type DockerBuilder interface {
+	Setup(ctx context.Context, language string, outDir string) error
+	PullBuilderImage(ctx context.Context) error
+	BuildSource(ctx context.Context, srcPath string) error
+}
+
 type WasmBuilder struct {
 	client               *client.Client
 	builderImg           string
