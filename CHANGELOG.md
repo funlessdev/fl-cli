@@ -14,6 +14,52 @@
   ~ limitations under the License.
 -->
 
+## v0.2.0 (2022-10-30)
+
+### Feat
+
+- **dev**: add prometheus in admin dev deployment
+- **fn**: add out-dir param in fn create
+- **fn**: update "fn create" command with build and source-dir
+- **build**: add build module for function creation
+- update fn and fn_service to new sdk version
+- **dev**: add secret_key_base env in dev deployment
+- add custom worker and core image in dev deployment
+- **docker_utils**: add existence check in image pull
+
+### Fix
+
+- change host ip to local
+- use correct prom image and expose port
+- **fn**: check cast
+- openapi error handling
+- **build**: fix broken out-path in wasm builder
+- **fn**: add default value for namespace in create/delete/invoke
+- **fn**: fix out-dir and source-file interaction
+- add missing license header in test file
+- **fn**: mark language as not required in create
+- **dev**: forward correct port in fl-core
+- fix host and port configuration
+- **license**: change with correct license header
+
+### Refactor
+
+- move names in constants and remove prom in reset
+- move interfaces and impl in one file
+- change parameter name
+- **wasm**: use docker utils in wasm builder
+- **dev**: drop ow and update local deployer
+- **docker_utils**: move docker utils in its own package
+- **main**: separate parse and run
+- **main**: move app to its own package
+- **main**: separate cli run in app.go
+- **deploy**: add name for ctx parameter in dockerdeployer
+- **build**: change wasm build functions to struct methods
+- add type in Source flag and change resources to fixtures
+- **fn**: migrate fn and fn_service to new api sdk version
+- move images to Setup and pass kong default vars
+- **docker_utils**: fix linting errors
+
 ## v0.1.0 (2022-09-17)
 
 ### Feat
