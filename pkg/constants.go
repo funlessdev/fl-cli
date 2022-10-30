@@ -14,10 +14,16 @@
 
 package pkg
 
-const FLCoreDevSecretKey = "dev-secret-key"
-const FLCore = "ghcr.io/funlessdev/fl-core:latest"
+const CoreDevSecretKey = "dev-secret-key"
 
-const FLWorker = "ghcr.io/funlessdev/fl-worker:latest"
+const CoreImg = "ghcr.io/funlessdev/fl-core:latest"
+const WorkerImg = "ghcr.io/funlessdev/fl-worker:latest"
+const PrometheusImg = "giusdp/fl-prometheus:latest"
+
+const CoreContName = "fl-core"
+const WorkerContName = "fl-worker"
+const PrometheusContName = "prometheus"
+const FLNet = "fl-net"
 
 var FLRuntimes = map[string]string{
 	"js":   "ghcr.io/funlessdev/fl-js-builder:latest",

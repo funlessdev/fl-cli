@@ -24,7 +24,7 @@ import (
 type reset struct{}
 
 func (r *reset) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.FLogger) error {
-	logger.Info("Removing local funless deployment...\n")
+	logger.Info("Removing local FunLess deployment...\n")
 
 	if err := deployer.Setup(ctx, "", ""); err != nil {
 		return err
@@ -37,6 +37,11 @@ func (r *reset) Run(ctx context.Context, deployer deploy.DevDeployer, logger log
 
 	_ = logger.StartSpinner("Removing Worker container... 🔪")
 	if err := logger.StopSpinner(deployer.RemoveWorkerContainer(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Removing Prometheus container... ⚰️")
+	if err := logger.StopSpinner(deployer.RemovePromContainer(ctx)); err != nil {
 		return err
 	}
 

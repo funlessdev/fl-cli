@@ -35,12 +35,15 @@ type DevDeployer interface {
 	CreateFLNetwork(ctx context.Context) error
 	PullCoreImage(ctx context.Context) error
 	PullWorkerImage(ctx context.Context) error
+	PullPromImage(ctx context.Context) error
 	StartCore(ctx context.Context) error
 	StartWorker(ctx context.Context) error
+	StartProm(ctx context.Context) error
 
 	RemoveFLNetwork(ctx context.Context) error
 	RemoveCoreContainer(ctx context.Context) error
 	RemoveWorkerContainer(ctx context.Context) error
+	RemovePromContainer(ctx context.Context) error
 }
 
 type LocalDeployer struct {
@@ -54,6 +57,8 @@ type LocalDeployer struct {
 	coreContainerName   string
 	workerImg           string
 	workerContainerName string
+
+	promContainerName string
 }
 
 func NewDevDeployer(coreContainerName, workerContainerName, flNetName string) DevDeployer {
@@ -61,6 +66,7 @@ func NewDevDeployer(coreContainerName, workerContainerName, flNetName string) De
 		flNetName:           flNetName,
 		coreContainerName:   coreContainerName,
 		workerContainerName: workerContainerName,
+		promContainerName:   pkg.PrometheusContName,
 	}
 }
 
@@ -113,6 +119,10 @@ func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
 	return docker_utils.PullImage(ctx, d.client, d.workerImg)
 }
 
+func (d *LocalDeployer) PullPromImage(ctx context.Context) error {
+	return docker_utils.PullImage(ctx, d.client, pkg.PrometheusImg)
+}
+
 func (d *LocalDeployer) StartCore(ctx context.Context) error {
 	containerConfig := coreContainerConfig(d.coreImg)
 	hostConfig := coreHostConfig(d.logsPath)
@@ -129,6 +139,14 @@ func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 	return docker_utils.RunContainer(ctx, d.client, configs)
 }
 
+func (d *LocalDeployer) StartProm(ctx context.Context) error {
+	containerConfig := promContainerConfig()
+	hostConf := promHostConfig()
+	netConf := networkConfig(d.flNetName, d.flNetId)
+	configs := configs(d.promContainerName, containerConfig, hostConf, netConf)
+	return docker_utils.RunContainer(ctx, d.client, configs)
+}
+
 func (d *LocalDeployer) RemoveFLNetwork(ctx context.Context) error {
 	return docker_utils.RemoveNetwork(ctx, d.client, d.flNetName)
 }
@@ -141,13 +159,17 @@ func (d *LocalDeployer) RemoveWorkerContainer(ctx context.Context) error {
 	return docker_utils.RemoveContainer(ctx, d.client, d.workerContainerName)
 }
 
+func (d *LocalDeployer) RemovePromContainer(ctx context.Context) error {
+	return docker_utils.RemoveContainer(ctx, d.client, d.promContainerName)
+}
+
 func coreContainerConfig(coreImg string) *container.Config {
 	return &container.Config{
 		Image: coreImg,
 		ExposedPorts: nat.PortSet{
 			"4000/tcp": struct{}{},
 		},
-		Env:     []string{"SECRET_KEY_BASE=" + pkg.FLCoreDevSecretKey},
+		Env:     []string{"SECRET_KEY_BASE=" + pkg.CoreDevSecretKey},
 		Volumes: map[string]struct{}{},
 	}
 }
@@ -156,7 +178,7 @@ func coreHostConfig(logsPath string) *container.HostConfig {
 		PortBindings: nat.PortMap{
 			"4000/tcp": []nat.PortBinding{
 				{
-					HostIP:   "0.0.0.0",
+					HostIP:   "127.0.0.1",
 					HostPort: "4000",
 				},
 			},
@@ -182,6 +204,23 @@ func workerHostConfig(logsPath string) *container.HostConfig {
 				Source: logsPath,
 				Target: "/tmp/funless",
 				Type:   mount.TypeBind,
+			},
+		},
+	}
+}
+func promContainerConfig() *container.Config {
+	return &container.Config{
+		Image: pkg.PrometheusImg,
+	}
+}
+func promHostConfig() *container.HostConfig {
+	return &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"9090/tcp": []nat.PortBinding{
+				{
+					HostIP:   "127.0.0.1",
+					HostPort: "9090",
+				},
 			},
 		},
 	}

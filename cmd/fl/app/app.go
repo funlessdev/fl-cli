@@ -42,7 +42,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 
 	logger, err := buildLogger()
 
-	devDeployer := deploy.NewDevDeployer("fl-core", "fl-worker", "fl-net")
+	devDeployer := deploy.NewDevDeployer(pkg.CoreContName, pkg.WorkerContName, pkg.FLNet)
 	wasmBuilder := build.NewWasmBuilder()
 
 	if err != nil {
@@ -72,8 +72,8 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
 			"version":              version,
-			"default_core_image":   pkg.FLCore,
-			"default_worker_image": pkg.FLWorker,
+			"default_core_image":   pkg.CoreImg,
+			"default_worker_image": pkg.WorkerImg,
 		},
 		kong.UsageOnError(),
 	)

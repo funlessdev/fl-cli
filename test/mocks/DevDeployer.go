@@ -55,6 +55,20 @@ func (_m *DevDeployer) PullCoreImage(ctx context.Context) error {
 	return r0
 }
 
+// PullPromImage provides a mock function with given fields: ctx
+func (_m *DevDeployer) PullPromImage(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // PullWorkerImage provides a mock function with given fields: ctx
 func (_m *DevDeployer) PullWorkerImage(ctx context.Context) error {
 	ret := _m.Called(ctx)
@@ -97,6 +111,20 @@ func (_m *DevDeployer) RemoveFLNetwork(ctx context.Context) error {
 	return r0
 }
 
+// RemovePromContainer provides a mock function with given fields: ctx
+func (_m *DevDeployer) RemovePromContainer(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveWorkerContainer provides a mock function with given fields: ctx
 func (_m *DevDeployer) RemoveWorkerContainer(ctx context.Context) error {
 	ret := _m.Called(ctx)
@@ -127,6 +155,20 @@ func (_m *DevDeployer) Setup(ctx context.Context, coreImg string, workerImg stri
 
 // StartCore provides a mock function with given fields: ctx
 func (_m *DevDeployer) StartCore(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StartProm provides a mock function with given fields: ctx
+func (_m *DevDeployer) StartProm(ctx context.Context) error {
 	ret := _m.Called(ctx)
 
 	var r0 error
