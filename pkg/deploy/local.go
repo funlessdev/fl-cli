@@ -178,7 +178,7 @@ func coreHostConfig(logsPath string) *container.HostConfig {
 		PortBindings: nat.PortMap{
 			"4000/tcp": []nat.PortBinding{
 				{
-					HostIP:   "0.0.0.0",
+					HostIP:   "127.0.0.1",
 					HostPort: "4000",
 				},
 			},
@@ -218,7 +218,7 @@ func promHostConfig() *container.HostConfig {
 		PortBindings: nat.PortMap{
 			"9090/tcp": []nat.PortBinding{
 				{
-					HostIP:   "0.0.0.0",
+					HostIP:   "127.0.0.1",
 					HostPort: "9090",
 				},
 			},
