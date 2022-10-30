@@ -19,12 +19,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/docker_utils"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -35,20 +36,15 @@ type LocalDeployer struct {
 	flNetId   string
 	flNetName string
 
-	flRuntimeNetId   string
-	flRuntimeNetName string
-
 	coreImg             string
 	coreContainerName   string
 	workerImg           string
 	workerContainerName string
 }
 
-func NewLocalDeployer(coreContainerName, workerContainerName, flNetName, flRuntimeNetName string) *LocalDeployer {
+func NewDevDeployer(coreContainerName, workerContainerName, flNetName string) DevDeployer {
 	return &LocalDeployer{
-		flNetName:        flNetName,
-		flRuntimeNetName: flRuntimeNetName,
-
+		flNetName:           flNetName,
 		coreContainerName:   coreContainerName,
 		workerContainerName: workerContainerName,
 	}
@@ -77,59 +73,72 @@ func (d *LocalDeployer) Setup(ctx context.Context, coreImg, workerImg string) er
 	return nil
 }
 
-func (d *LocalDeployer) CreateFLNetworks(ctx context.Context) error {
+func (d *LocalDeployer) CreateFLNetwork(ctx context.Context) error {
 	// Network for Core + Worker
-	exists, net, err := flNetExists(ctx, d.client, d.flNetName)
+	exists, id, err := docker_utils.NetExists(ctx, d.client, d.flNetName)
 	if err != nil {
 		return err
 	}
 	if exists {
-
-		d.flNetId = net.ID
+		d.flNetId = id
 		return nil
 	}
-	id, err := flNetCreate(ctx, d.client, d.flNetName, false)
+	id, err = docker_utils.NetCreate(ctx, d.client, d.flNetName, false)
 	if err != nil {
 		return err
 	}
 	d.flNetId = id
-
-	// Network for Worker + Runtimes
-	exists, net, err = flNetExists(ctx, d.client, d.flRuntimeNetName)
-	if err != nil {
-		return err
-	}
-	if exists {
-
-		d.flRuntimeNetId = net.ID
-		return nil
-	}
-	runtimeId, err := flNetCreate(ctx, d.client, d.flRuntimeNetName, true)
-	d.flRuntimeNetId = runtimeId
-
-	return err
+	return nil
 }
 
 func (d *LocalDeployer) PullCoreImage(ctx context.Context) error {
-	return pullFLImage(ctx, d.client, d.coreImg)
+	return docker_utils.PullImage(ctx, d.client, d.coreImg)
 }
 
 func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
-	return pullFLImage(ctx, d.client, d.workerImg)
+	return docker_utils.PullImage(ctx, d.client, d.workerImg)
 }
 
 func (d *LocalDeployer) StartCore(ctx context.Context) error {
+	containerConfig := coreContainerConfig(d.coreImg)
+	hostConfig := coreHostConfig(d.logsPath)
+	netConf := networkConfig(d.flNetName, d.flNetId)
+	configs := configs(d.coreContainerName, containerConfig, hostConfig, netConf)
+	return docker_utils.RunContainer(ctx, d.client, configs)
+}
 
-	containerConfig := &container.Config{
-		Image: d.coreImg,
+func (d *LocalDeployer) StartWorker(ctx context.Context) error {
+	containerConfig := workerContainerConfig(d.workerImg)
+	hostConf := workerHostConfig(d.logsPath)
+	netConf := networkConfig(d.flNetName, d.flNetId)
+	configs := configs(d.workerContainerName, containerConfig, hostConf, netConf)
+	return docker_utils.RunContainer(ctx, d.client, configs)
+}
+
+func (d *LocalDeployer) RemoveFLNetwork(ctx context.Context) error {
+	return docker_utils.RemoveNetwork(ctx, d.client, d.flNetName)
+}
+
+func (d *LocalDeployer) RemoveCoreContainer(ctx context.Context) error {
+	return docker_utils.RemoveContainer(ctx, d.client, d.coreContainerName)
+}
+
+func (d *LocalDeployer) RemoveWorkerContainer(ctx context.Context) error {
+	return docker_utils.RemoveContainer(ctx, d.client, d.workerContainerName)
+}
+
+func coreContainerConfig(coreImg string) *container.Config {
+	return &container.Config{
+		Image: coreImg,
 		ExposedPorts: nat.PortSet{
 			"4000/tcp": struct{}{},
 		},
 		Env:     []string{"SECRET_KEY_BASE=" + pkg.FLCoreDevSecretKey},
 		Volumes: map[string]struct{}{},
 	}
-
-	hostConfig := &container.HostConfig{
+}
+func coreHostConfig(logsPath string) *container.HostConfig {
+	return &container.HostConfig{
 		PortBindings: nat.PortMap{
 			"4000/tcp": []nat.PortBinding{
 				{
@@ -140,84 +149,45 @@ func (d *LocalDeployer) StartCore(ctx context.Context) error {
 		},
 		Mounts: []mount.Mount{
 			{
-				Source: d.logsPath,
+				Source: logsPath,
 				Target: "/tmp/funless",
 				Type:   mount.TypeBind,
 			},
 		},
 	}
-
-	netConf := buildNetworkConfig(d.flNetName, d.flNetId)
-
-	configs := configuration{
-		container:  containerConfig,
-		host:       hostConfig,
-		networking: &netConf,
-	}
-
-	return startCoreContainer(ctx, d.client, configs, d.coreContainerName)
 }
-
-func (d *LocalDeployer) StartWorker(ctx context.Context) error {
-
-	dockerHost := getDockerHost()
-
-	containerConfig := &container.Config{
-		Image: d.workerImg,
-		Env:   []string{"RUNTIME_NETWORK=" + d.flRuntimeNetName},
+func workerContainerConfig(workerImg string) *container.Config {
+	return &container.Config{
+		Image: workerImg,
 	}
-
-	hostConf := &container.HostConfig{
+}
+func workerHostConfig(logsPath string) *container.HostConfig {
+	return &container.HostConfig{
 		Mounts: []mount.Mount{
 			{
-				Source: dockerHost,
-				Target: "/var/run/docker-host.sock",
-				Type:   mount.TypeBind,
-			},
-			{
-				Source: d.logsPath,
+				Source: logsPath,
 				Target: "/tmp/funless",
 				Type:   mount.TypeBind,
 			},
 		},
 	}
-
-	netConf := buildNetworkConfig(d.flNetName, d.flNetId)
-
-	configs := configuration{
-		container:  containerConfig,
-		host:       hostConf,
-		networking: &netConf,
-	}
-	return startWorkerContainer(ctx, d.client, configs, d.workerContainerName, d.flRuntimeNetId)
 }
-
-func (d *LocalDeployer) RemoveFLNetworks(ctx context.Context) error {
-	if err := removeNetwork(ctx, d.client, d.flNetName); err != nil {
-		return err
-	}
-	return removeNetwork(ctx, d.client, d.flRuntimeNetName)
-}
-
-func (d *LocalDeployer) RemoveCoreContainer(ctx context.Context) error {
-	return removeContainer(ctx, d.client, d.coreContainerName)
-}
-
-func (d *LocalDeployer) RemoveWorkerContainer(ctx context.Context) error {
-	return removeContainer(ctx, d.client, d.workerContainerName)
-}
-
-func (d *LocalDeployer) RemoveFunctionContainers(ctx context.Context) error {
-	containers, err := functionContainersList(ctx, d.client)
-	if err != nil {
-		return err
+func networkConfig(networkName, networkID string) *network.NetworkingConfig {
+	endpoints := make(map[string]*network.EndpointSettings, 1)
+	endpoints[networkName] = &network.EndpointSettings{
+		NetworkID: networkID,
 	}
 
-	var removalErr error = nil
-	for _, container := range containers {
-		if err := d.client.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
-			removalErr = err
-		}
+	return &network.NetworkingConfig{
+		EndpointsConfig: endpoints,
 	}
-	return removalErr
+}
+
+func configs(name string, c *container.Config, h *container.HostConfig, n *network.NetworkingConfig) docker_utils.ContainerConfigs {
+	return docker_utils.ContainerConfigs{
+		ContName:   name,
+		Container:  c,
+		Host:       h,
+		Networking: n,
+	}
 }

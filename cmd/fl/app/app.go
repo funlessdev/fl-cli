@@ -42,7 +42,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 
 	logger, err := buildLogger()
 
-	localDeployer := deploy.NewLocalDeployer("fl-core", "fl-worker", "fl-net", "fl-runtime-net")
+	devDeployer := deploy.NewDevDeployer("fl-core", "fl-worker", "fl-net")
 	wasmBuilder := build.NewWasmBuilder()
 
 	if err != nil {
@@ -68,7 +68,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
-		kong.BindTo(localDeployer, (*deploy.DockerDeployer)(nil)),
+		kong.BindTo(devDeployer, (*deploy.DevDeployer)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
 			"version":              version,
