@@ -42,7 +42,7 @@ func TestResetRun(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("should return error when docker networks setup fails", func(t *testing.T) {
+	t.Run("should return error when removing Core fails", func(t *testing.T) {
 		deployer.On("Setup", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
 			Return(func(ctx context.Context, coreImg string, workerImg string) error {
 				return nil
@@ -56,7 +56,7 @@ func TestResetRun(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("should return error when pulling core image fails", func(t *testing.T) {
+	t.Run("should return error when removing Worker fails", func(t *testing.T) {
 		deployer.On("RemoveCoreContainer", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
@@ -69,8 +69,21 @@ func TestResetRun(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("should return error when pulling worker image fails", func(t *testing.T) {
+	t.Run("should return error when removing Prometheus fails", func(t *testing.T) {
 		deployer.On("RemoveWorkerContainer", ctx).Return(func(ctx context.Context) error {
+			return nil
+		})
+		deployer.On("RemovePromContainer", ctx).Return(func(ctx context.Context) error {
+			return errors.New("error")
+		}).Once()
+
+		_, testLogger := testLogger()
+		err := reset.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
+	})
+
+	t.Run("should return error when removing FL network fails", func(t *testing.T) {
+		deployer.On("RemovePromContainer", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
 		deployer.On("RemoveFLNetwork", ctx).Return(func(ctx context.Context) error {
@@ -90,11 +103,13 @@ func TestResetRun(t *testing.T) {
 		outbuf, testLogger := testLogger()
 		err := reset.Run(ctx, deployer, testLogger)
 
-		expectedOutput := `Removing local funless deployment...
+		expectedOutput := `Removing local FunLess deployment...
 
 Removing Core container... ☠️
 done
 Removing Worker container... 🔪
+done
+Removing Prometheus container... ⚰️
 done
 Removing fl network... ✂️
 done

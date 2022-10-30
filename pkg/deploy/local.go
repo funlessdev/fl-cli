@@ -43,6 +43,7 @@ type DevDeployer interface {
 	RemoveFLNetwork(ctx context.Context) error
 	RemoveCoreContainer(ctx context.Context) error
 	RemoveWorkerContainer(ctx context.Context) error
+	RemovePromContainer(ctx context.Context) error
 }
 
 type LocalDeployer struct {
@@ -65,7 +66,7 @@ func NewDevDeployer(coreContainerName, workerContainerName, flNetName string) De
 		flNetName:           flNetName,
 		coreContainerName:   coreContainerName,
 		workerContainerName: workerContainerName,
-		promContainerName:   "fl-prometheus",
+		promContainerName:   pkg.PrometheusContName,
 	}
 }
 
@@ -119,7 +120,7 @@ func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
 }
 
 func (d *LocalDeployer) PullPromImage(ctx context.Context) error {
-	return docker_utils.PullImage(ctx, d.client, pkg.Prometheus)
+	return docker_utils.PullImage(ctx, d.client, pkg.PrometheusImg)
 }
 
 func (d *LocalDeployer) StartCore(ctx context.Context) error {
@@ -158,13 +159,17 @@ func (d *LocalDeployer) RemoveWorkerContainer(ctx context.Context) error {
 	return docker_utils.RemoveContainer(ctx, d.client, d.workerContainerName)
 }
 
+func (d *LocalDeployer) RemovePromContainer(ctx context.Context) error {
+	return docker_utils.RemoveContainer(ctx, d.client, d.promContainerName)
+}
+
 func coreContainerConfig(coreImg string) *container.Config {
 	return &container.Config{
 		Image: coreImg,
 		ExposedPorts: nat.PortSet{
 			"4000/tcp": struct{}{},
 		},
-		Env:     []string{"SECRET_KEY_BASE=" + pkg.FLCoreDevSecretKey},
+		Env:     []string{"SECRET_KEY_BASE=" + pkg.CoreDevSecretKey},
 		Volumes: map[string]struct{}{},
 	}
 }
@@ -205,7 +210,7 @@ func workerHostConfig(logsPath string) *container.HostConfig {
 }
 func promContainerConfig() *container.Config {
 	return &container.Config{
-		Image: pkg.Prometheus,
+		Image: pkg.PrometheusImg,
 	}
 }
 func promHostConfig() *container.HostConfig {
