@@ -214,7 +214,16 @@ func promContainerConfig() *container.Config {
 	}
 }
 func promHostConfig() *container.HostConfig {
-	return &container.HostConfig{}
+	return &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"9090/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "9090",
+				},
+			},
+		},
+	}
 }
 func networkConfig(networkName, networkID string) *network.NetworkingConfig {
 	endpoints := make(map[string]*network.EndpointSettings, 1)

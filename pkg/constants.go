@@ -18,11 +18,11 @@ const CoreDevSecretKey = "dev-secret-key"
 
 const CoreImg = "ghcr.io/funlessdev/fl-core:latest"
 const WorkerImg = "ghcr.io/funlessdev/fl-worker:latest"
-const PrometheusImg = "prom/prometheus:v2.39.1"
+const PrometheusImg = "giusdp/fl-prometheus:latest"
 
 const CoreContName = "fl-core"
 const WorkerContName = "fl-worker"
-const PrometheusContName = "fl-prometheus"
+const PrometheusContName = "prometheus"
 const FLNet = "fl-net"
 
 var FLRuntimes = map[string]string{
