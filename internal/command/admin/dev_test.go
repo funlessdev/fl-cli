@@ -24,38 +24,28 @@ import (
 	"github.com/funlessdev/fl-cli/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRun(t *testing.T) {
 	dev := dev{}
 	ctx := context.TODO()
 
-	var outbuf bytes.Buffer
-	testLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
-
 	deployer := mocks.NewDevDeployer(t)
 
-	t.Run("print error when setup client fails", func(t *testing.T) {
+	t.Run("should return error when setup client fails", func(t *testing.T) {
 		deployer.On("Setup", ctx, mock.Anything, mock.Anything).Return(
 			func(ctx context.Context, coreImg string, workerImg string) error {
 				return errors.New("error")
 			},
 		).Once()
 
-		_ = dev.Run(ctx, deployer, testLogger)
-
-		expectedOutput := []string{
-			"Deploying funless locally...\n",
-			"\n",
-			"Setting things up...\n",
-			"failed\n",
-			"",
-		}
-
-		assertOutput(t, expectedOutput, &outbuf)
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
 	})
 
-	t.Run("print error when docker networks setup fails", func(t *testing.T) {
+	t.Run("should return error when docker networks setup fails", func(t *testing.T) {
 		deployer.On("Setup", ctx, mock.Anything, mock.Anything).Return(
 			func(ctx context.Context, coreImg string, workerImg string) error {
 				return nil
@@ -65,20 +55,13 @@ func TestRun(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		_ = dev.Run(ctx, deployer, testLogger)
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
 
-		expectedOutput := []string{
-			"Deploying funless locally...\n",
-			"\n",
-			"Setting things up...\n",
-			"failed\n",
-			"",
-		}
-
-		assertOutput(t, expectedOutput, &outbuf)
 	})
 
-	t.Run("print error when pulling core image fails", func(t *testing.T) {
+	t.Run("should return error when pulling core image fails", func(t *testing.T) {
 		deployer.On("CreateFLNetwork", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
@@ -86,22 +69,13 @@ func TestRun(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		_ = dev.Run(ctx, deployer, testLogger)
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
 
-		expectedOutput := []string{
-			"Deploying funless locally...\n",
-			"\n",
-			"Setting things up...\n",
-			"done\n",
-			"pulling Core image () 📦\n",
-			"failed\n",
-			"",
-		}
-
-		assertOutput(t, expectedOutput, &outbuf)
+		require.Error(t, err)
 	})
 
-	t.Run("print error when pulling worker image fails", func(t *testing.T) {
+	t.Run("should return error when pulling worker image fails", func(t *testing.T) {
 		deployer.On("PullCoreImage", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
@@ -109,24 +83,13 @@ func TestRun(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		_ = dev.Run(ctx, deployer, testLogger)
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
 
-		expectedOutput := []string{
-			"Deploying funless locally...\n",
-			"\n",
-			"Setting things up...\n",
-			"done\n",
-			"pulling Core image () 📦\n",
-			"done\n",
-			"pulling Worker image () 🗃\n",
-			"failed\n",
-			"",
-		}
-
-		assertOutput(t, expectedOutput, &outbuf)
 	})
 
-	t.Run("print error when starting core fails", func(t *testing.T) {
+	t.Run("should return error when starting core fails", func(t *testing.T) {
 		deployer.On("PullWorkerImage", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
@@ -134,26 +97,12 @@ func TestRun(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		_ = dev.Run(ctx, deployer, testLogger)
-
-		expectedOutput := []string{
-			"Deploying funless locally...\n",
-			"\n",
-			"Setting things up...\n",
-			"done\n",
-			"pulling Core image () 📦\n",
-			"done\n",
-			"pulling Worker image () 🗃\n",
-			"done\n",
-			"starting Core container 🎛️\n",
-			"failed\n",
-			"",
-		}
-
-		assertOutput(t, expectedOutput, &outbuf)
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
 	})
 
-	t.Run("print error when starting worker fails", func(t *testing.T) {
+	t.Run("should return error when starting worker fails", func(t *testing.T) {
 		deployer.On("StartCore", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
@@ -161,25 +110,9 @@ func TestRun(t *testing.T) {
 			return errors.New("error")
 		}).Once()
 
-		_ = dev.Run(ctx, deployer, testLogger)
-
-		expectedOutput := []string{
-			"Deploying funless locally...\n",
-			"\n",
-			"Setting things up...\n",
-			"done\n",
-			"pulling Core image () 📦\n",
-			"done\n",
-			"pulling Worker image () 🗃\n",
-			"done\n",
-			"starting Core container 🎛️\n",
-			"done\n",
-			"starting Worker container 👷\n",
-			"failed\n",
-			"",
-		}
-
-		assertOutput(t, expectedOutput, &outbuf)
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
 	})
 
 	t.Run("successful prints when everything goes well", func(t *testing.T) {
@@ -187,36 +120,42 @@ func TestRun(t *testing.T) {
 			return nil
 		})
 
-		_ = dev.Run(ctx, deployer, testLogger)
+		outbuf, testLogger := testLogger()
 
-		expectedOutput := []string{
-			"Deploying funless locally...\n",
-			"\n",
-			"Setting things up...\n",
-			"done\n",
-			"pulling Core image () 📦\n",
-			"done\n",
-			"pulling Worker image () 🗃\n",
-			"done\n",
-			"starting Core container 🎛️\n",
-			"done\n",
-			"starting Worker container 👷\n",
-			"done\n",
-			"\n",
-			"Deployment complete!\n",
-			"You can now start using Funless! 🎉\n",
-			"",
-		}
+		err := dev.Run(ctx, deployer, testLogger)
+		require.NoError(t, err)
 
-		assertOutput(t, expectedOutput, &outbuf)
+		expectedOutput := `Deploying funless locally...
+
+Setting things up...
+done
+pulling Core image () 📦
+done
+pulling Worker image () 🗃
+done
+starting Core container 🎛️
+done
+starting Worker container 👷
+done
+
+Deployment complete!
+You can now start using Funless! 🎉
+`
+		assert.NoError(t, err)
+		assert.Equal(t, expectedOutput, outbuf.String())
+
 	})
-
 }
-
 func assertOutput(t *testing.T, expected []string, outbuf *bytes.Buffer) {
 	t.Helper()
 	for _, expected := range expected {
 		line, _ := outbuf.ReadString('\n')
 		assert.Equal(t, expected, line)
 	}
+}
+
+func testLogger() (*bytes.Buffer, log.FLogger) {
+	var outbuf bytes.Buffer
+	testLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
+	return &outbuf, testLogger
 }
