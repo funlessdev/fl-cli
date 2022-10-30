@@ -35,8 +35,10 @@ type DevDeployer interface {
 	CreateFLNetwork(ctx context.Context) error
 	PullCoreImage(ctx context.Context) error
 	PullWorkerImage(ctx context.Context) error
+	PullPromImage(ctx context.Context) error
 	StartCore(ctx context.Context) error
 	StartWorker(ctx context.Context) error
+	StartProm(ctx context.Context) error
 
 	RemoveFLNetwork(ctx context.Context) error
 	RemoveCoreContainer(ctx context.Context) error
@@ -54,6 +56,8 @@ type LocalDeployer struct {
 	coreContainerName   string
 	workerImg           string
 	workerContainerName string
+
+	promContainerName string
 }
 
 func NewDevDeployer(coreContainerName, workerContainerName, flNetName string) DevDeployer {
@@ -61,6 +65,7 @@ func NewDevDeployer(coreContainerName, workerContainerName, flNetName string) De
 		flNetName:           flNetName,
 		coreContainerName:   coreContainerName,
 		workerContainerName: workerContainerName,
+		promContainerName:   "fl-prometheus",
 	}
 }
 
@@ -113,6 +118,10 @@ func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
 	return docker_utils.PullImage(ctx, d.client, d.workerImg)
 }
 
+func (d *LocalDeployer) PullPromImage(ctx context.Context) error {
+	return docker_utils.PullImage(ctx, d.client, pkg.Prometheus)
+}
+
 func (d *LocalDeployer) StartCore(ctx context.Context) error {
 	containerConfig := coreContainerConfig(d.coreImg)
 	hostConfig := coreHostConfig(d.logsPath)
@@ -126,6 +135,14 @@ func (d *LocalDeployer) StartWorker(ctx context.Context) error {
 	hostConf := workerHostConfig(d.logsPath)
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.workerContainerName, containerConfig, hostConf, netConf)
+	return docker_utils.RunContainer(ctx, d.client, configs)
+}
+
+func (d *LocalDeployer) StartProm(ctx context.Context) error {
+	containerConfig := promContainerConfig()
+	hostConf := promHostConfig()
+	netConf := networkConfig(d.flNetName, d.flNetId)
+	configs := configs(d.promContainerName, containerConfig, hostConf, netConf)
 	return docker_utils.RunContainer(ctx, d.client, configs)
 }
 
@@ -185,6 +202,14 @@ func workerHostConfig(logsPath string) *container.HostConfig {
 			},
 		},
 	}
+}
+func promContainerConfig() *container.Config {
+	return &container.Config{
+		Image: pkg.Prometheus,
+	}
+}
+func promHostConfig() *container.HostConfig {
+	return &container.HostConfig{}
 }
 func networkConfig(networkName, networkID string) *network.NetworkingConfig {
 	endpoints := make(map[string]*network.EndpointSettings, 1)

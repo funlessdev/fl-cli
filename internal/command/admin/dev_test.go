@@ -89,8 +89,21 @@ func TestRun(t *testing.T) {
 
 	})
 
-	t.Run("should return error when starting core fails", func(t *testing.T) {
+	t.Run("should return error when pulling prometheus image fails", func(t *testing.T) {
 		deployer.On("PullWorkerImage", ctx).Return(func(ctx context.Context) error {
+			return nil
+		})
+		deployer.On("PullPromImage", ctx).Return(func(ctx context.Context) error {
+			return errors.New("error")
+		}).Once()
+
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
+	})
+
+	t.Run("should return error when starting core fails", func(t *testing.T) {
+		deployer.On("PullPromImage", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
 		deployer.On("StartCore", ctx).Return(func(ctx context.Context) error {
@@ -114,9 +127,20 @@ func TestRun(t *testing.T) {
 		err := dev.Run(ctx, deployer, testLogger)
 		require.Error(t, err)
 	})
-
-	t.Run("successful prints when everything goes well", func(t *testing.T) {
+	t.Run("should return error when starting prometheus fails", func(t *testing.T) {
 		deployer.On("StartWorker", ctx).Return(func(ctx context.Context) error {
+			return nil
+		})
+		deployer.On("StartProm", ctx).Return(func(ctx context.Context) error {
+			return errors.New("error")
+		}).Once()
+
+		_, testLogger := testLogger()
+		err := dev.Run(ctx, deployer, testLogger)
+		require.Error(t, err)
+	})
+	t.Run("successful prints when everything goes well", func(t *testing.T) {
+		deployer.On("StartProm", ctx).Return(func(ctx context.Context) error {
 			return nil
 		})
 
@@ -125,33 +149,30 @@ func TestRun(t *testing.T) {
 		err := dev.Run(ctx, deployer, testLogger)
 		require.NoError(t, err)
 
-		expectedOutput := `Deploying funless locally...
+		expectedOutput := `Deploying FunLess locally...
 
 Setting things up...
 done
-pulling Core image () 📦
+pulling Core image () 🐋
 done
-pulling Worker image () 🗃
+pulling Worker image () 🐋
+done
+pulling Prometheus image () 🐋
 done
 starting Core container 🎛️
 done
 starting Worker container 👷
 done
+starting Prometheus container 📊
+done
 
 Deployment complete!
-You can now start using Funless! 🎉
+You can now start using FunLess! 🎉
 `
 		assert.NoError(t, err)
 		assert.Equal(t, expectedOutput, outbuf.String())
 
 	})
-}
-func assertOutput(t *testing.T, expected []string, outbuf *bytes.Buffer) {
-	t.Helper()
-	for _, expected := range expected {
-		line, _ := outbuf.ReadString('\n')
-		assert.Equal(t, expected, line)
-	}
 }
 
 func testLogger() (*bytes.Buffer, log.FLogger) {

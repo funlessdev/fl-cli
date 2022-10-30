@@ -28,7 +28,7 @@ type dev struct {
 }
 
 func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.FLogger) error {
-	logger.Info("Deploying funless locally...\n")
+	logger.Info("Deploying FunLess locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
@@ -40,13 +40,18 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.F
 		return err
 	}
 
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Core image (%s) 📦", d.CoreImage))
+	_ = logger.StartSpinner(fmt.Sprintf("pulling Core image (%s) 🐋", d.CoreImage))
 	if err := logger.StopSpinner(deployer.PullCoreImage(ctx)); err != nil {
 		return err
 	}
 
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Worker image (%s) 🗃", d.WorkerImage))
+	_ = logger.StartSpinner(fmt.Sprintf("pulling Worker image (%s) 🐋", d.WorkerImage))
 	if err := logger.StopSpinner(deployer.PullWorkerImage(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner(fmt.Sprintf("pulling Prometheus image (%s) 🐋", d.WorkerImage))
+	if err := logger.StopSpinner(deployer.PullPromImage(ctx)); err != nil {
 		return err
 	}
 
@@ -60,8 +65,13 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.F
 		return err
 	}
 
+	_ = logger.StartSpinner("starting Prometheus container 📊")
+	if err := logger.StopSpinner(deployer.StartProm(ctx)); err != nil {
+		return err
+	}
+
 	logger.Info("\nDeployment complete!")
-	logger.Info("You can now start using Funless! 🎉")
+	logger.Info("You can now start using FunLess! 🎉")
 
 	return nil
 }
