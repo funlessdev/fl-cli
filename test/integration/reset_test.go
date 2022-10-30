@@ -37,13 +37,10 @@ func TestAdminResetRun(t *testing.T) {
 	}
 
 	admCmd := admin.Admin{Reset: struct{}{}}
-	admCmd.Dev.CoreImage = pkg.FLCore
-	admCmd.Dev.WorkerImage = pkg.FLWorker
+	admCmd.Dev.CoreImage = pkg.CoreImg
+	admCmd.Dev.WorkerImage = pkg.WorkerImg
 
-	coreName := "fl-core-test"
-	workerName := "fl-worker-test"
 	flNetName := "fl-net-test"
-	flRuntimeName := "fl-runtime-net-test"
 	localDeployer := deploy.NewDevDeployer(coreName, workerName, flNetName)
 
 	b := log.NewLoggerBuilder()
@@ -61,12 +58,14 @@ func TestAdminResetRun(t *testing.T) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	assert.NoError(t, err)
 
-	assertNetworksRemoved(t, ctx, cli, flNetName, flRuntimeName)
-	assertContainersRemoved(t, ctx, cli, coreName, workerName)
+	assertNetworkRemoved(t, ctx, cli, flNetName)
+	assertContainerRemoved(t, ctx, cli, coreName)
+	assertContainerRemoved(t, ctx, cli, workerName)
+	assertContainerRemoved(t, ctx, cli, pkg.PrometheusContName)
 
 }
 
-func assertNetworksRemoved(t *testing.T, ctx context.Context, cli *client.Client, flNetName, flRuntimeName string) {
+func assertNetworkRemoved(t *testing.T, ctx context.Context, cli *client.Client, flNetName string) {
 	t.Helper()
 
 	nets, _ := cli.NetworkList(ctx, types.NetworkListOptions{
@@ -74,30 +73,13 @@ func assertNetworksRemoved(t *testing.T, ctx context.Context, cli *client.Client
 	})
 	assert.Empty(t, nets)
 
-	nets, _ = cli.NetworkList(ctx, types.NetworkListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: flRuntimeName}),
-	})
-	assert.Empty(t, nets)
 }
 
-func assertContainersRemoved(t *testing.T, ctx context.Context, cli *client.Client, coreName, workerName string) {
+func assertContainerRemoved(t *testing.T, ctx context.Context, cli *client.Client, containerName string) {
 	t.Helper()
 
 	containers, _ := cli.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: coreName}),
+		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: containerName}),
 	})
-	assert.Empty(t, containers)
-
-	containers, _ = cli.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: workerName}),
-	})
-	assert.Empty(t, containers)
-	filter := filters.NewArgs(filters.KeyValuePair{Key: "name", Value: "funless"})
-	filter.Contains("funless")
-
-	containers, _ = cli.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filter,
-	})
-
 	assert.Empty(t, containers)
 }

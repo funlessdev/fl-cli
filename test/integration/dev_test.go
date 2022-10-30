@@ -31,6 +31,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var coreName = "fl-core-test"
+var workerName = "fl-worker-test"
+
 func TestAdminDevRun(t *testing.T) {
 	runIntegration := os.Getenv("INTEGRATION_TESTS")
 	if runIntegration == "" {
@@ -38,11 +41,9 @@ func TestAdminDevRun(t *testing.T) {
 	}
 
 	admCmd := admin.Admin{}
-	admCmd.Dev.CoreImage = pkg.FLCore
-	admCmd.Dev.WorkerImage = pkg.FLWorker
+	admCmd.Dev.CoreImage = pkg.CoreImg
+	admCmd.Dev.WorkerImage = pkg.WorkerImg
 
-	coreName := "fl-core-test"
-	workerName := "fl-worker-test"
 	flNetName := "fl-net-test"
 	localDeployer := deploy.NewDevDeployer(coreName, workerName, flNetName)
 
@@ -62,11 +63,13 @@ func TestAdminDevRun(t *testing.T) {
 
 		assertContainer(t, ctx, cli, coreName)
 		assertContainer(t, ctx, cli, workerName)
+		assertContainer(t, ctx, cli, pkg.PrometheusContName)
 
 		assertNetwork(t, ctx, cli, flNetName)
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveWorkerContainer(ctx)
+		_ = localDeployer.RemovePromContainer(ctx)
 		_ = localDeployer.RemoveFLNetwork(ctx)
 	})
 
@@ -82,10 +85,12 @@ func TestAdminDevRun(t *testing.T) {
 
 		assertContainer(t, ctx, cli, coreName)
 		assertContainer(t, ctx, cli, workerName)
+		assertContainer(t, ctx, cli, pkg.PrometheusContName)
 		assertNetwork(t, ctx, cli, flNetName)
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveWorkerContainer(ctx)
+		_ = localDeployer.RemovePromContainer(ctx)
 		_ = localDeployer.RemoveFLNetwork(ctx)
 	})
 
@@ -118,6 +123,7 @@ func TestAdminDevRun(t *testing.T) {
 
 		_ = localDeployer.RemoveCoreContainer(ctx)
 		_ = localDeployer.RemoveWorkerContainer(ctx)
+		_ = localDeployer.RemovePromContainer(ctx)
 		_ = localDeployer.RemoveFLNetwork(ctx)
 
 		err = os.RemoveAll(logFolder)
