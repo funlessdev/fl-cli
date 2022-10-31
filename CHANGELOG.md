@@ -14,6 +14,12 @@
   ~ limitations under the License.
 -->
 
+## v0.2.1 (2022-10-31)
+
+### Fix
+
+- **dev**: pulling prometheus log
+
 ## v0.2.0 (2022-10-30)
 
 ### Feat
