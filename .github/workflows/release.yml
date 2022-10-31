@@ -48,7 +48,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        ldflags: "-X main.CLIVersion=${{github.ref_name}}"
+        ldflags: "-X main.FLVersion=${{github.ref_name}}"
         project_path: "./cmd/fl"
         binary_name: "fl"
         extra_files: LICENSE README.md
