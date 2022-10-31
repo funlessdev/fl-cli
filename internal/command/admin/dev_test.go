@@ -157,7 +157,7 @@ pulling Core image () 🐋
 done
 pulling Worker image () 🐋
 done
-pulling Prometheus image () 🐋
+pulling Prometheus image 🐋
 done
 starting Core container 🎛️
 done

@@ -50,7 +50,7 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.F
 		return err
 	}
 
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Prometheus image (%s) 🐋", d.WorkerImage))
+	_ = logger.StartSpinner("pulling Prometheus image 🐋")
 	if err := logger.StopSpinner(deployer.PullPromImage(ctx)); err != nil {
 		return err
 	}
