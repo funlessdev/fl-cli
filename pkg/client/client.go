@@ -34,9 +34,8 @@ type Client struct {
 }
 
 type Config struct {
-	Host      string
-	Namespace string
-	BaseURL   *url.URL
+	Host    string
+	BaseURL *url.URL
 }
 
 // NewClient creates a new funless client with the provided http client and configuration.
