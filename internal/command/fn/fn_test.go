@@ -137,7 +137,7 @@ func TestFnCreateNoBuild(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testLanguage := "nodejs"
-	testSource, _ := filepath.Abs("../../../test/fixtures/test_code.txt")
+	testSource, _ := filepath.Abs("../../../test/fixtures/code.wasm")
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
