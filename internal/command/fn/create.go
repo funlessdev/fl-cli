@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
@@ -50,8 +51,13 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler
 		code, err = os.Open(path.Join(f.OutDir, "./code.wasm"))
 
 	} else if f.NoBuild {
+		if !strings.HasSuffix(f.SourceFile, ".wasm") {
+			return errors.New("a file with the .wasm extension must be passed")
+		}
+
 		code, err = os.Open(f.SourceFile)
 		stat, err := code.Stat()
+
 		if err != nil {
 			return err
 		}
