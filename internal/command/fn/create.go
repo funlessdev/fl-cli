@@ -51,6 +51,13 @@ func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler
 
 	} else if f.NoBuild {
 		code, err = os.Open(f.SourceFile)
+		stat, err := code.Stat()
+		if err != nil {
+			return err
+		}
+		if stat.Size() == 0 {
+			return errors.New("passing an empty file as source")
+		}
 	} else {
 		//NOTE: build single file => not implemented
 		return errors.New("building from a single file is not yet implemented")
