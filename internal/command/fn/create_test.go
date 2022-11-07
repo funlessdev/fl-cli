@@ -17,7 +17,6 @@ package fn
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -25,118 +24,17 @@ import (
 
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	openapi "github.com/funlessdev/fl-client-sdk-go"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
+
+	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
-
-func TestFnInvoke(t *testing.T) {
-	testResult := map[string]interface{}{"payload": "Hi"}
-	testFn := "test-fn"
-	testNs := "test-ns"
-	testArgs := map[string]string{"name": "Some name"}
-	testJArgs := "{\"name\":\"Some name\"}"
-	testParsedJArgs := map[string]interface{}{"name": "Some name"}
-	testCtx := context.Background()
-	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
-
-	t.Run("should use FnService.Invoke to invoke functions", func(t *testing.T) {
-		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			Args:      map[string]string{},
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
-
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
-		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, map[string]interface{}{})
-		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
-		mockInvoker.AssertExpectations(t)
-	})
-
-	t.Run("should correctly print result", func(t *testing.T) {
-		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			Args:      map[string]string{},
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
-
-		var outbuf bytes.Buffer
-		var testOutput, _ = json.Marshal(testResult)
-		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
-
-		err := cmd.Run(testCtx, mockInvoker, bufLogger)
-
-		require.NoError(t, err)
-		assert.Equal(t, string(testOutput)+"\n", (&outbuf).String())
-		mockInvoker.AssertExpectations(t)
-	})
-
-	t.Run("should correctly parse and forward keyword args", func(t *testing.T) {
-		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			Args:      testArgs,
-		}
-
-		mockArgs := make(map[string]interface{}, len(testArgs))
-		for k, v := range testArgs {
-			mockArgs[k] = v
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, mockArgs).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
-
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
-		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, mockArgs)
-		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
-		mockInvoker.AssertExpectations(t)
-	})
-
-	t.Run("should correctly parse and forward json args", func(t *testing.T) {
-		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			JsonArgs:  testJArgs,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, testParsedJArgs).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
-
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
-		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, testParsedJArgs)
-		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
-		mockInvoker.AssertExpectations(t)
-	})
-
-	t.Run("should return error if invalid invoke request", func(t *testing.T) {
-		cmd := Invoke{
-			Name: testFn,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		e := &openapi.GenericOpenAPIError{}
-		mockInvoker.On("Invoke", testCtx, testFn, "", map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{}, e)
-
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
-		require.Error(t, err)
-	})
-}
 
 func TestFnCreateNoBuild(t *testing.T) {
 	testResult := "test-fn"
 	testFn := "test-fn"
 	testNs := "test-ns"
-	testLanguage := "nodejs"
 	testSource, _ := filepath.Abs("../../../test/fixtures/code.wasm")
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
@@ -148,16 +46,15 @@ func TestFnCreateNoBuild(t *testing.T) {
 			Name:       testFn,
 			Namespace:  testNs,
 			SourceFile: testSource,
-			Language:   testLanguage,
 			NoBuild:    true,
 		}
 
 		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(openapi.FunctionCreationSuccess{Result: &testResult}, nil)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testResult}, nil)
 
 		err := cmd.Run(testCtx, mockBuilder, mockInvoker, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Create", testCtx, testFn, testNs, mock.AnythingOfType("*os.File"), testLanguage)
+		mockInvoker.AssertCalled(t, "Create", testCtx, testFn, testNs, mock.AnythingOfType("*os.File"))
 		mockInvoker.AssertNumberOfCalls(t, "Create", 1)
 		mockInvoker.AssertExpectations(t)
 	})
@@ -167,12 +64,11 @@ func TestFnCreateNoBuild(t *testing.T) {
 			Name:       testFn,
 			Namespace:  testNs,
 			SourceFile: testSource,
-			Language:   testLanguage,
 			NoBuild:    true,
 		}
 
 		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(openapi.FunctionCreationSuccess{Result: &testResult}, nil)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testResult}, nil)
 
 		var outbuf bytes.Buffer
 
@@ -190,13 +86,12 @@ func TestFnCreateNoBuild(t *testing.T) {
 			Name:       testFn,
 			Namespace:  testNs,
 			SourceFile: testSource,
-			Language:   testLanguage,
 			NoBuild:    true,
 		}
 
 		mockInvoker := mocks.NewFnHandler(t)
 		e := &openapi.GenericOpenAPIError{}
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(openapi.FunctionCreationSuccess{}, e)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{}, e)
 
 		err := cmd.Run(testCtx, mockBuilder, mockInvoker, testLogger)
 		require.Error(t, err)
@@ -207,7 +102,6 @@ func TestFnCreateNoBuild(t *testing.T) {
 			Name:       testFn,
 			Namespace:  testNs,
 			SourceFile: "no_file",
-			Language:   testLanguage,
 			NoBuild:    true,
 		}
 
@@ -251,7 +145,7 @@ test-fn
 		}
 
 		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
 
 		mockBuilder := mocks.NewDockerBuilder(t)
 		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(nil).Once()
@@ -261,7 +155,7 @@ test-fn
 		err := cmd.Run(testCtx, mockBuilder, mockInvoker, testLogger)
 		require.NoError(t, err)
 
-		mockInvoker.AssertCalled(t, "Create", testCtx, testFn, testNs, mock.AnythingOfType("*os.File"), testLanguage)
+		mockInvoker.AssertCalled(t, "Create", testCtx, testFn, testNs, mock.AnythingOfType("*os.File"))
 		mockInvoker.AssertNumberOfCalls(t, "Create", 1)
 		mockInvoker.AssertExpectations(t)
 	})
@@ -276,7 +170,7 @@ test-fn
 		}
 
 		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
 
 		mockBuilder := mocks.NewDockerBuilder(t)
 		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(nil).Once()
@@ -301,7 +195,7 @@ test-fn
 		}
 
 		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything, testLanguage).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
+		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
 
 		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(nil).Once()
 		mockBuilder.On("PullBuilderImage", testCtx).Return(nil).Once()
@@ -388,62 +282,5 @@ test-fn
 		err := cmd.Run(testCtx, mockBuilder, mockInvoker, testLogger)
 		require.Error(t, err)
 		mockBuilder.AssertExpectations(t)
-	})
-}
-
-func TestFnDelete(t *testing.T) {
-	testResult := "test-fn"
-	testFn := "test-fn"
-	testNs := "test-ns"
-	testCtx := context.Background()
-	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
-
-	t.Run("should use FnService.Delete to delete functions", func(t *testing.T) {
-		cmd := Delete{
-			Name:      testFn,
-			Namespace: testNs,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
-
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
-		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Delete", testCtx, testFn, testNs)
-		mockInvoker.AssertNumberOfCalls(t, "Delete", 1)
-		mockInvoker.AssertExpectations(t)
-	})
-	t.Run("should correctly print result", func(t *testing.T) {
-		cmd := Delete{
-			Name:      testFn,
-			Namespace: testNs,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
-
-		var outbuf bytes.Buffer
-		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
-
-		err := cmd.Run(testCtx, mockInvoker, bufLogger)
-
-		require.NoError(t, err)
-		assert.Equal(t, testResult+"\n", (&outbuf).String())
-		mockInvoker.AssertExpectations(t)
-	})
-
-	t.Run("should return error if invalid delete request", func(t *testing.T) {
-		cmd := Delete{
-			Name:      testFn,
-			Namespace: testNs,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-
-		e := &openapi.GenericOpenAPIError{}
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{}, e)
-
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
-		require.Error(t, err)
 	})
 }
