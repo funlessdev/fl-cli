@@ -34,7 +34,7 @@ type Create struct {
 	SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
 	OutDir     string `name:"out-dir" short:"o" xor:"out-build" type:"existingdir" help:"path where the compiled code file will be saved"`
 	NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build,out-build" help:"upload the file as-is, without building it"`
-	Language   string `name:"language" group:"build" short:"l" enum:"js,rust" help:"programming language of the function"`
+	Language   string `name:"language" group:"build" short:"l" help:"programming language of the function"`
 }
 
 func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
@@ -64,6 +64,10 @@ func (f *Create) obtainCode(ctx context.Context, builder build.DockerBuilder, lo
 }
 
 func (f *Create) buildFromDir(ctx context.Context, builder build.DockerBuilder, logger log.FLogger) (*os.File, error) {
+	if f.Language == "" {
+		return nil, errors.New("language is required when building from a directory")
+	}
+
 	if f.OutDir == "" {
 		/* can't use default, as outDir is also in a xor group */
 		f.OutDir = "./out_wasm/"
