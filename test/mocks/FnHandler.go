@@ -30,20 +30,20 @@ type FnHandler struct {
 	mock.Mock
 }
 
-// Create provides a mock function with given fields: ctx, fnName, fnNamespace, code, language
-func (_m *FnHandler) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (openapi.FunctionCreationSuccess, error) {
-	ret := _m.Called(ctx, fnName, fnNamespace, code, language)
+// Create provides a mock function with given fields: ctx, fnName, fnNamespace, code
+func (_m *FnHandler) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File) (openapi.FunctionCreationSuccess, error) {
+	ret := _m.Called(ctx, fnName, fnNamespace, code)
 
 	var r0 openapi.FunctionCreationSuccess
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, *os.File, string) openapi.FunctionCreationSuccess); ok {
-		r0 = rf(ctx, fnName, fnNamespace, code, language)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, *os.File) openapi.FunctionCreationSuccess); ok {
+		r0 = rf(ctx, fnName, fnNamespace, code)
 	} else {
 		r0 = ret.Get(0).(openapi.FunctionCreationSuccess)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, *os.File, string) error); ok {
-		r1 = rf(ctx, fnName, fnNamespace, code, language)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, *os.File) error); ok {
+		r1 = rf(ctx, fnName, fnNamespace, code)
 	} else {
 		r1 = ret.Error(1)
 	}

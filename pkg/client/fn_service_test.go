@@ -85,7 +85,6 @@ func TestInvoke(t *testing.T) {
 func TestCreate(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
-	testLanguage := "nodejs"
 	testSource, _ := filepath.Abs("../../test/fixtures/test_code.txt")
 	testCode, _ := os.Open(testSource)
 
@@ -104,7 +103,7 @@ func TestCreate(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		result, err := svc.Create(testCtx, testFn, testNs, testCode, testLanguage)
+		result, err := svc.Create(testCtx, testFn, testNs, testCode)
 
 		require.NoError(t, err)
 		assert.Equal(t, "some result", result.GetResult())
@@ -126,7 +125,7 @@ func TestCreate(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		_, err := svc.Create(testCtx, testFn, testNs, testCode, testLanguage)
+		_, err := svc.Create(testCtx, testFn, testNs, testCode)
 
 		require.Error(t, err)
 		openApiError := err.(*openapi.GenericOpenAPIError)

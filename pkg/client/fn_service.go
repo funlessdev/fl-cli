@@ -23,7 +23,7 @@ import (
 
 type FnHandler interface {
 	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (openapi.FunctionInvocationSuccess, error)
-	Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (openapi.FunctionCreationSuccess, error)
+	Create(ctx context.Context, fnName string, fnNamespace string, code *os.File) (openapi.FunctionCreationSuccess, error)
 	Delete(ctx context.Context, fnName string, fnNamespace string) (openapi.FunctionDeletionSuccess, error)
 }
 
@@ -48,7 +48,7 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace stri
 	return *response, err
 }
 
-func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File, language string) (openapi.FunctionCreationSuccess, error) {
+func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File) (openapi.FunctionCreationSuccess, error) {
 	apiService := fn.Client.ApiClient.DefaultApi
 	request := apiService.V1FnCreatePost(ctx).Name(fnName).Namespace(fnNamespace).Code(code)
 	response, _, err := apiService.V1FnCreatePostExecute(request)
