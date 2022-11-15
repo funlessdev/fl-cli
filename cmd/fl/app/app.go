@@ -30,8 +30,8 @@ import (
 )
 
 type CLI struct {
-	Fn    fn.Fn       `cmd:"" help:"create, delete and invoke functions using an instance of the platform"`
-	Admin admin.Admin `cmd:"" aliases:"a" help:"deploy and remove instances of the platform"`
+	Fn    fn.Fn       `cmd:"" help:"create, delete and manage functions"`
+	Admin admin.Admin `cmd:"" aliases:"a" help:"deploy and manage the platform"`
 
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
@@ -62,7 +62,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact:             true,
 			NoExpandSubcommands: true,
-			Summary:             true,
+			Summary:             false,
 			FlagsLast:           true,
 		}),
 		kong.BindTo(ctx, (*context.Context)(nil)),
