@@ -47,13 +47,13 @@ func NewWasmBuilder() *WasmBuilder {
 }
 
 func (b *WasmBuilder) Setup(ctx context.Context, language string, outDir string) error {
-	image, exists := pkg.FLRuntimes[language]
+	image, exists := pkg.FLBuilderImages[language]
 	if !exists {
 		return errors.New("no corresponding builder image found for the given language")
 	}
 	b.builderImg = image
 
-	containerName, exists := pkg.FLRuntimeNames[language]
+	containerName, exists := pkg.FLBuilderNames[language]
 	if !exists {
 		return errors.New("no corresponding container name found for the given language")
 	}
