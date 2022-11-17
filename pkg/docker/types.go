@@ -19,7 +19,6 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
 )
 
 type ContainerConfigs struct {
@@ -29,20 +28,16 @@ type ContainerConfigs struct {
 	Networking *network.NetworkingConfig
 }
 
-type ImageHandler interface {
-	Exists(ctx context.Context, dockerClient *client.Client, image string) (bool, error)
-	Pull(ctx context.Context, dockerClient *client.Client, image string) error
-}
+type DockerClient interface {
+	ImageExists(ctx context.Context, image string) (bool, error)
+	Pull(ctx context.Context, image string) error
 
-type ContainerHandler interface {
-	Exists(ctx context.Context, dockerClient *client.Client, containerName string) (bool, string, error)
-	RunAndWait(ctx context.Context, dockerClient *client.Client, conf ContainerConfigs) error
-	RunAsync(ctx context.Context, dockerClient *client.Client, conf ContainerConfigs) error
-	Remove(ctx context.Context, dockerClient *client.Client, containerID string) error
-}
+	CtrExists(ctx context.Context, containerName string) (bool, string, error)
+	RunAndWait(ctx context.Context, conf ContainerConfigs) error
+	RunAsync(ctx context.Context, conf ContainerConfigs) error
+	RemoveCtr(ctx context.Context, containerID string) error
 
-type NetworkHandler interface {
-	Exists(ctx context.Context, dockerClient *client.Client, networkName string) (bool, string, error)
-	Create(ctx context.Context, dockerClient *client.Client, networkName string) (string, error)
-	Remove(ctx context.Context, dockerClient *client.Client, networkID string) error
+	NetworkExists(ctx context.Context, networkName string) (bool, string, error)
+	CreateNetwork(ctx context.Context, networkName string) (string, error)
+	RemoveNetwork(ctx context.Context, networkID string) error
 }

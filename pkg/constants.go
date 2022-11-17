@@ -30,7 +30,4 @@ var FLBuilderImages = map[string]string{
 	"rust": "ghcr.io/funlessdev/fl-rust-builder:latest",
 }
 
-var FLBuilderNames = map[string]string{
-	"js":   "fl-js-builder",
-	"rust": "fl-rust-builder",
-}
+const LocalLogsPath = "funless-logs"

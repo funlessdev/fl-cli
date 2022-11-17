@@ -8,7 +8,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/docker"
@@ -16,7 +15,10 @@ import (
 )
 
 type DockerDeployer interface {
-	Setup(coreImg, workerImg string) error
+	WithImages(coreImg, workerImg string)
+	WithDockerClient(cli docker.DockerClient)
+	WithLogs(path string) error
+
 	CreateFLNetwork(ctx context.Context) error
 	PullCoreImage(ctx context.Context) error
 	PullWorkerImage(ctx context.Context) error
@@ -27,10 +29,7 @@ type DockerDeployer interface {
 }
 
 type FLDockerDeployer struct {
-	dockerClient *client.Client
-	image        docker.ImageHandler
-	container    docker.ContainerHandler
-	network      docker.NetworkHandler
+	flDocker docker.DockerClient
 
 	logsPath            string
 	flNetId             string
@@ -42,41 +41,41 @@ type FLDockerDeployer struct {
 	promContainerName   string
 }
 
-func NewDockerDeployer(img docker.ImageHandler, ctr docker.ContainerHandler, ntw docker.NetworkHandler) DockerDeployer {
-	d := &FLDockerDeployer{
-		image:     img,
-		container: ctr,
-		network:   ntw,
+func NewDockerDeployer(flNetName, coreCtrName, workerCtrName, promCtrName string) DockerDeployer {
+	return &FLDockerDeployer{
+		flNetName:           flNetName,
+		coreContainerName:   coreCtrName,
+		workerContainerName: workerCtrName,
+		promContainerName:   promCtrName,
 	}
-	return d
 }
 
-func (d *FLDockerDeployer) Setup(coreImg, workerImg string) error {
+func (d *FLDockerDeployer) WithImages(coreImg, workerImg string) {
 	d.coreImg = coreImg
 	d.workerImg = workerImg
+}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+func (d *FLDockerDeployer) WithDockerClient(cli docker.DockerClient) {
+	d.flDocker = cli
+}
+
+func (d *FLDockerDeployer) WithLogs(path string) error {
+	home, err := homedir.Dir()
 	if err != nil {
 		return err
 	}
-	d.dockerClient = cli
-
-	h, err := homedir.Dir()
+	logsPath := filepath.Join(home, path)
+	err = os.MkdirAll(logsPath, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	logsPath := filepath.Join(h, "funless-logs")
-	if err := os.MkdirAll(logsPath, 0755); err != nil {
-		return err
-	}
-
 	d.logsPath = logsPath
 	return nil
 }
 
 func (d *FLDockerDeployer) CreateFLNetwork(ctx context.Context) error {
 	// Network for Core + Worker
-	exists, id, err := d.network.Exists(ctx, d.dockerClient, d.flNetName)
+	exists, id, err := d.flDocker.NetworkExists(ctx, d.flNetName)
 	if err != nil {
 		return err
 	}
@@ -84,7 +83,7 @@ func (d *FLDockerDeployer) CreateFLNetwork(ctx context.Context) error {
 		d.flNetId = id
 		return nil
 	}
-	id, err = d.network.Create(ctx, d.dockerClient, d.flNetName)
+	id, err = d.flDocker.CreateNetwork(ctx, d.flNetName)
 	if err != nil {
 		return err
 	}
@@ -109,7 +108,7 @@ func (d *FLDockerDeployer) StartCore(ctx context.Context) error {
 	hostConfig := coreHostConfig(d.logsPath)
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.coreContainerName, containerConfig, hostConfig, netConf)
-	return d.container.RunAsync(ctx, d.dockerClient, configs)
+	return d.flDocker.RunAsync(ctx, configs)
 }
 
 func (d *FLDockerDeployer) StartWorker(ctx context.Context) error {
@@ -117,7 +116,7 @@ func (d *FLDockerDeployer) StartWorker(ctx context.Context) error {
 	hostConf := workerHostConfig(d.logsPath)
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.workerContainerName, containerConfig, hostConf, netConf)
-	return d.container.RunAsync(ctx, d.dockerClient, configs)
+	return d.flDocker.RunAsync(ctx, configs)
 }
 
 func (d *FLDockerDeployer) StartProm(ctx context.Context) error {
@@ -125,18 +124,18 @@ func (d *FLDockerDeployer) StartProm(ctx context.Context) error {
 	hostConf := promHostConfig()
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.promContainerName, containerConfig, hostConf, netConf)
-	return d.container.RunAsync(ctx, d.dockerClient, configs)
+	return d.flDocker.RunAsync(ctx, configs)
 }
 
 func (d *FLDockerDeployer) pull(ctx context.Context, img string) error {
-	exists, err := d.image.Exists(ctx, d.dockerClient, img)
+	exists, err := d.flDocker.ImageExists(ctx, img)
 	if err != nil {
 		return err
 	}
 	if exists {
 		return nil
 	}
-	return d.image.Pull(ctx, d.dockerClient, img)
+	return d.flDocker.Pull(ctx, img)
 
 }
 

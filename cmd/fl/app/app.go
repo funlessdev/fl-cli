@@ -41,8 +41,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 	ctx := context.Background()
 
 	logger, err := buildLogger()
-
-	devDeployer := deploy.NewDevDeployer(pkg.CoreContName, pkg.WorkerContName, pkg.FLNet)
+	dockerDeployer := buildDockerDeployer()
 	wasmBuilder := build.NewWasmBuilder()
 
 	if err != nil {
@@ -68,7 +67,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
-		kong.BindTo(devDeployer, (*deploy.DevDeployer)(nil)),
+		kong.BindTo(dockerDeployer, (*deploy.DockerDeployer)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
 			"version":              version,
@@ -88,4 +87,8 @@ func buildLogger() (log.FLogger, error) {
 	b := log.NewLoggerBuilder()
 	logger, err := b.WithDebug(true).SpinnerFrequency(150 * time.Millisecond).SpinnerCharSet(59).Build()
 	return logger, err
+}
+
+func buildDockerDeployer() deploy.DockerDeployer {
+	return deploy.NewDockerDeployer(pkg.FLNet, pkg.CoreContName, pkg.WorkerContName, pkg.PrometheusContName)
 }
