@@ -51,35 +51,17 @@ func (r *FLDockerRemover) WithDockerClient(cli docker.DockerClient) {
 }
 
 func (r *FLDockerRemover) RemoveFLNetwork(ctx context.Context) error {
-	exists, id, err := r.flDocker.NetworkExists(ctx, r.flNetName)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return nil
-	}
-	return r.flDocker.RemoveNetwork(ctx, id)
+	return r.flDocker.RemoveNetwork(ctx, r.flNetName)
 }
 
 func (r *FLDockerRemover) RemoveCoreContainer(ctx context.Context) error {
-	return r.remove(ctx, r.coreContainerName)
+	return r.flDocker.RemoveCtr(ctx, r.coreContainerName)
 }
 
 func (r *FLDockerRemover) RemoveWorkerContainer(ctx context.Context) error {
-	return r.remove(ctx, r.workerContainerName)
+	return r.flDocker.RemoveCtr(ctx, r.workerContainerName)
 }
 
 func (r *FLDockerRemover) RemovePromContainer(ctx context.Context) error {
-	return r.remove(ctx, r.promContainerName)
-}
-
-func (r *FLDockerRemover) remove(ctx context.Context, ctr string) error {
-	exists, id, err := r.flDocker.CtrExists(ctx, ctr)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return nil
-	}
-	return r.flDocker.RemoveCtr(ctx, id)
+	return r.flDocker.RemoveCtr(ctx, r.promContainerName)
 }

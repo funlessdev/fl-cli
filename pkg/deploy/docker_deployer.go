@@ -106,15 +106,15 @@ func (d *FLDockerDeployer) CreateFLNetwork(ctx context.Context) error {
 }
 
 func (d *FLDockerDeployer) PullCoreImage(ctx context.Context) error {
-	return d.pull(ctx, d.coreImg)
+	return d.flDocker.Pull(ctx, d.coreImg)
 }
 
 func (d *FLDockerDeployer) PullWorkerImage(ctx context.Context) error {
-	return d.pull(ctx, d.workerImg)
+	return d.flDocker.Pull(ctx, d.workerImg)
 }
 
 func (d *FLDockerDeployer) PullPromImage(ctx context.Context) error {
-	return d.pull(ctx, pkg.PrometheusImg)
+	return d.flDocker.Pull(ctx, pkg.PrometheusImg)
 }
 
 func (d *FLDockerDeployer) StartCore(ctx context.Context) error {
@@ -139,18 +139,6 @@ func (d *FLDockerDeployer) StartProm(ctx context.Context) error {
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.promContainerName, containerConfig, hostConf, netConf)
 	return d.flDocker.RunAsync(ctx, configs)
-}
-
-func (d *FLDockerDeployer) pull(ctx context.Context, img string) error {
-	exists, err := d.flDocker.ImageExists(ctx, img)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return nil
-	}
-	return d.flDocker.Pull(ctx, img)
-
 }
 
 func coreContainerConfig(coreImg string) *container.Config {

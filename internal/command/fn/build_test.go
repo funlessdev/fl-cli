@@ -1,3 +1,17 @@
+// Copyright 2022 Giuseppe De Palma, Matteo Trentin
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package fn
 
 import (
@@ -12,6 +26,7 @@ import (
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +37,9 @@ func TestFnBuild(t *testing.T) {
 	// testSource, _ := filepath.Abs("../../../test/fixtures/test_code.txt")
 	testDir, _ := filepath.Abs("../../../test/fixtures/test_dir/")
 	testOutDir, _ := filepath.Abs("../../../test/fixtures")
-	testCtx := context.Background()
+
+	ctx := context.TODO()
+
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	mockBuilder := mocks.NewDockerBuilder(t)
@@ -35,15 +52,13 @@ func TestFnBuild(t *testing.T) {
 			Language:    testLanguage,
 		}
 
-		mockBuilder := mocks.NewDockerBuilder(t)
-		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", testCtx).Return(nil).Once()
-		mockBuilder.On("BuildSource", testCtx, testDir).Return(nil).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
+		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
+		mockBuilder.On("BuildSource", ctx, testDir).Return(nil).Once()
 
-		err := cmd.Run(testCtx, mockBuilder, testLogger)
+		err := cmd.Run(ctx, mockBuilder, testLogger)
 		require.NoError(t, err)
 
-		mockBuilder.AssertCalled(t, "BuildSource", testCtx, testDir)
 		mockBuilder.AssertNumberOfCalls(t, "BuildSource", 1)
 		mockBuilder.AssertExpectations(t)
 	})
@@ -58,15 +73,14 @@ func TestFnBuild(t *testing.T) {
 
 		output := genTestOutput(testFn, pkg.FLBuilderImages[testLanguage], testOutDir)
 
-		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", testCtx).Return(nil).Once()
-		mockBuilder.On("BuildSource", testCtx, testDir).Return(nil).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
+		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
+		mockBuilder.On("BuildSource", ctx, testDir).Return(nil).Once()
 
 		var outbuf bytes.Buffer
-
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
 
-		err := cmd.Run(testCtx, mockBuilder, bufLogger)
+		err := cmd.Run(ctx, mockBuilder, bufLogger)
 
 		require.NoError(t, err)
 		require.Equal(t, output, (&outbuf).String())
@@ -81,9 +95,9 @@ func TestFnBuild(t *testing.T) {
 			Language:    testLanguage,
 		}
 
-		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(errors.New("some error")).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(errors.New("some error")).Once()
 
-		err := cmd.Run(testCtx, mockBuilder, testLogger)
+		err := cmd.Run(ctx, mockBuilder, testLogger)
 		require.Error(t, err)
 		mockBuilder.AssertExpectations(t)
 	})
@@ -96,10 +110,10 @@ func TestFnBuild(t *testing.T) {
 			Language:    testLanguage,
 		}
 
-		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", testCtx).Return(errors.New("some error")).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
+		mockBuilder.On("PullBuilderImage", ctx).Return(errors.New("some error")).Once()
 
-		err := cmd.Run(testCtx, mockBuilder, testLogger)
+		err := cmd.Run(ctx, mockBuilder, testLogger)
 		require.Error(t, err)
 		mockBuilder.AssertExpectations(t)
 	})
@@ -112,11 +126,11 @@ func TestFnBuild(t *testing.T) {
 			Destination: testOutDir,
 		}
 
-		mockBuilder.On("Setup", testCtx, testLanguage, testOutDir).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", testCtx).Return(nil).Once()
-		mockBuilder.On("BuildSource", testCtx, testDir).Return(errors.New("some error")).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
+		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
+		mockBuilder.On("BuildSource", ctx, testDir).Return(errors.New("some error")).Once()
 
-		err := cmd.Run(testCtx, mockBuilder, testLogger)
+		err := cmd.Run(ctx, mockBuilder, testLogger)
 		require.Error(t, err)
 		mockBuilder.AssertExpectations(t)
 	})

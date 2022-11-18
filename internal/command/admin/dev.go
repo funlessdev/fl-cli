@@ -95,7 +95,7 @@ func setupDev(core string, worker string, deployer deploy.DockerDeployer) error 
 func setupDockerClient() (docker.DockerClient, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	if err != nil {
-		return nil, err
+		return docker.DockerClient{}, err
 	}
 	return docker.NewDockerClient(cli), nil
 }
