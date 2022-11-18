@@ -35,6 +35,7 @@ type DockerBuilder interface {
 	Setup(client docker.DockerClient, language string, dest string) error
 	PullBuilderImage(ctx context.Context) error
 	BuildSource(ctx context.Context, srcPath string) error
+	RenameCodeWasm(name string) error
 }
 
 type WasmBuilder struct {
@@ -104,6 +105,10 @@ func (b *WasmBuilder) PullBuilderImage(ctx context.Context) error {
 		return nil
 	}
 	return b.flDocker.Pull(ctx, b.builderImg)
+}
+
+func (b *WasmBuilder) RenameCodeWasm(name string) error {
+	return os.Rename(filepath.Join(b.outPath, "code.wasm"), filepath.Join(b.outPath, name+".wasm"))
 }
 
 func builderContainerConfig(builderImg string) *container.Config {

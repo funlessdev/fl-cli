@@ -42,6 +42,20 @@ func (_m *DockerBuilder) PullBuilderImage(ctx context.Context) error {
 	return r0
 }
 
+// RenameCodeWasm provides a mock function with given fields: name
+func (_m *DockerBuilder) RenameCodeWasm(name string) error {
+	ret := _m.Called(name)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Setup provides a mock function with given fields: client, language, dest
 func (_m *DockerBuilder) Setup(client docker.DockerClient, language string, dest string) error {
 	ret := _m.Called(client, language, dest)
