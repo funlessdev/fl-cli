@@ -22,15 +22,16 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/funlessdev/fl-cli/pkg"
-	"github.com/funlessdev/fl-cli/pkg/docker_utils"
+	"github.com/funlessdev/fl-cli/pkg/docker"
 	"github.com/mitchellh/go-homedir"
 )
 
-type DevDeployer interface {
-	Setup(ctx context.Context, coreImg, workerImg string) error
+type DockerDeployer interface {
+	WithImages(coreImg, workerImg string)
+	WithDockerClient(cli docker.DockerClient)
+	WithLogs(path string) error
 
 	CreateFLNetwork(ctx context.Context) error
 	PullCoreImage(ctx context.Context) error
@@ -39,63 +40,56 @@ type DevDeployer interface {
 	StartCore(ctx context.Context) error
 	StartWorker(ctx context.Context) error
 	StartProm(ctx context.Context) error
-
-	RemoveFLNetwork(ctx context.Context) error
-	RemoveCoreContainer(ctx context.Context) error
-	RemoveWorkerContainer(ctx context.Context) error
-	RemovePromContainer(ctx context.Context) error
 }
 
-type LocalDeployer struct {
-	client   *client.Client
-	logsPath string
+type FLDockerDeployer struct {
+	flDocker docker.DockerClient
 
-	flNetId   string
-	flNetName string
-
+	logsPath            string
+	flNetId             string
+	flNetName           string
 	coreImg             string
 	coreContainerName   string
 	workerImg           string
 	workerContainerName string
-
-	promContainerName string
+	promContainerName   string
 }
 
-func NewDevDeployer(coreContainerName, workerContainerName, flNetName string) DevDeployer {
-	return &LocalDeployer{
+func NewDockerDeployer(flNetName, coreCtrName, workerCtrName, promCtrName string) DockerDeployer {
+	return &FLDockerDeployer{
 		flNetName:           flNetName,
-		coreContainerName:   coreContainerName,
-		workerContainerName: workerContainerName,
-		promContainerName:   pkg.PrometheusContName,
+		coreContainerName:   coreCtrName,
+		workerContainerName: workerCtrName,
+		promContainerName:   promCtrName,
 	}
 }
 
-func (d *LocalDeployer) Setup(ctx context.Context, coreImg, workerImg string) error {
+func (d *FLDockerDeployer) WithImages(coreImg, workerImg string) {
 	d.coreImg = coreImg
 	d.workerImg = workerImg
+}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+func (d *FLDockerDeployer) WithDockerClient(cli docker.DockerClient) {
+	d.flDocker = cli
+}
+
+func (d *FLDockerDeployer) WithLogs(path string) error {
+	home, err := homedir.Dir()
 	if err != nil {
 		return err
 	}
-	d.client = cli
-
-	h, err := homedir.Dir()
+	logsPath := filepath.Join(home, path)
+	err = os.MkdirAll(logsPath, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	logsPath := filepath.Join(h, "funless-logs")
-	if err := os.MkdirAll(logsPath, 0755); err != nil {
-		return err
-	}
-
 	d.logsPath = logsPath
 	return nil
 }
 
-func (d *LocalDeployer) CreateFLNetwork(ctx context.Context) error {
+func (d *FLDockerDeployer) CreateFLNetwork(ctx context.Context) error {
 	// Network for Core + Worker
-	exists, id, err := docker_utils.NetExists(ctx, d.client, d.flNetName)
+	exists, id, err := d.flDocker.NetworkExists(ctx, d.flNetName)
 	if err != nil {
 		return err
 	}
@@ -103,7 +97,7 @@ func (d *LocalDeployer) CreateFLNetwork(ctx context.Context) error {
 		d.flNetId = id
 		return nil
 	}
-	id, err = docker_utils.NetCreate(ctx, d.client, d.flNetName, false)
+	id, err = d.flDocker.CreateNetwork(ctx, d.flNetName)
 	if err != nil {
 		return err
 	}
@@ -111,56 +105,40 @@ func (d *LocalDeployer) CreateFLNetwork(ctx context.Context) error {
 	return nil
 }
 
-func (d *LocalDeployer) PullCoreImage(ctx context.Context) error {
-	return docker_utils.PullImage(ctx, d.client, d.coreImg)
+func (d *FLDockerDeployer) PullCoreImage(ctx context.Context) error {
+	return d.flDocker.Pull(ctx, d.coreImg)
 }
 
-func (d *LocalDeployer) PullWorkerImage(ctx context.Context) error {
-	return docker_utils.PullImage(ctx, d.client, d.workerImg)
+func (d *FLDockerDeployer) PullWorkerImage(ctx context.Context) error {
+	return d.flDocker.Pull(ctx, d.workerImg)
 }
 
-func (d *LocalDeployer) PullPromImage(ctx context.Context) error {
-	return docker_utils.PullImage(ctx, d.client, pkg.PrometheusImg)
+func (d *FLDockerDeployer) PullPromImage(ctx context.Context) error {
+	return d.flDocker.Pull(ctx, pkg.PrometheusImg)
 }
 
-func (d *LocalDeployer) StartCore(ctx context.Context) error {
+func (d *FLDockerDeployer) StartCore(ctx context.Context) error {
 	containerConfig := coreContainerConfig(d.coreImg)
 	hostConfig := coreHostConfig(d.logsPath)
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.coreContainerName, containerConfig, hostConfig, netConf)
-	return docker_utils.RunContainer(ctx, d.client, configs)
+	return d.flDocker.RunAsync(ctx, configs)
 }
 
-func (d *LocalDeployer) StartWorker(ctx context.Context) error {
+func (d *FLDockerDeployer) StartWorker(ctx context.Context) error {
 	containerConfig := workerContainerConfig(d.workerImg)
 	hostConf := workerHostConfig(d.logsPath)
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.workerContainerName, containerConfig, hostConf, netConf)
-	return docker_utils.RunContainer(ctx, d.client, configs)
+	return d.flDocker.RunAsync(ctx, configs)
 }
 
-func (d *LocalDeployer) StartProm(ctx context.Context) error {
+func (d *FLDockerDeployer) StartProm(ctx context.Context) error {
 	containerConfig := promContainerConfig()
 	hostConf := promHostConfig()
 	netConf := networkConfig(d.flNetName, d.flNetId)
 	configs := configs(d.promContainerName, containerConfig, hostConf, netConf)
-	return docker_utils.RunContainer(ctx, d.client, configs)
-}
-
-func (d *LocalDeployer) RemoveFLNetwork(ctx context.Context) error {
-	return docker_utils.RemoveNetwork(ctx, d.client, d.flNetName)
-}
-
-func (d *LocalDeployer) RemoveCoreContainer(ctx context.Context) error {
-	return docker_utils.RemoveContainer(ctx, d.client, d.coreContainerName)
-}
-
-func (d *LocalDeployer) RemoveWorkerContainer(ctx context.Context) error {
-	return docker_utils.RemoveContainer(ctx, d.client, d.workerContainerName)
-}
-
-func (d *LocalDeployer) RemovePromContainer(ctx context.Context) error {
-	return docker_utils.RemoveContainer(ctx, d.client, d.promContainerName)
+	return d.flDocker.RunAsync(ctx, configs)
 }
 
 func coreContainerConfig(coreImg string) *container.Config {
@@ -236,8 +214,8 @@ func networkConfig(networkName, networkID string) *network.NetworkingConfig {
 	}
 }
 
-func configs(name string, c *container.Config, h *container.HostConfig, n *network.NetworkingConfig) docker_utils.ContainerConfigs {
-	return docker_utils.ContainerConfigs{
+func configs(name string, c *container.Config, h *container.HostConfig, n *network.NetworkingConfig) docker.ContainerConfigs {
+	return docker.ContainerConfigs{
 		ContName:   name,
 		Container:  c,
 		Host:       h,

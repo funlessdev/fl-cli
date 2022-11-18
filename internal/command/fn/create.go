@@ -75,8 +75,8 @@ func (f *Create) buildFromDir(ctx context.Context, builder build.DockerBuilder, 
 	logger.Info("Building the given function using fl-runtimes...\n")
 
 	_ = logger.StartSpinner("Setting up...")
-	if build_err := logger.StopSpinner(builder.Setup(ctx, f.Language, f.OutDir)); build_err != nil {
-		return nil, build_err
+	if err := logger.StopSpinner(setupBuilder(builder, f.Language, f.OutDir)); err != nil {
+		return nil, err
 	}
 
 	_ = logger.StartSpinner(fmt.Sprintf("Pulling builder image for %s 📦", f.Language))

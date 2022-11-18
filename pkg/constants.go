@@ -25,12 +25,9 @@ const WorkerContName = "fl-worker"
 const PrometheusContName = "prometheus"
 const FLNet = "fl-net"
 
-var FLRuntimes = map[string]string{
+var FLBuilderImages = map[string]string{
 	"js":   "ghcr.io/funlessdev/fl-js-builder:latest",
 	"rust": "ghcr.io/funlessdev/fl-rust-builder:latest",
 }
 
-var FLRuntimeNames = map[string]string{
-	"js":   "fl-js-builder",
-	"rust": "fl-rust-builder",
-}
+const LocalLogsPath = "funless-logs"

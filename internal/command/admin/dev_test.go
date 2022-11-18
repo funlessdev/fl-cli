@@ -31,112 +31,71 @@ func TestRun(t *testing.T) {
 	dev := dev{}
 	ctx := context.TODO()
 
-	deployer := mocks.NewDevDeployer(t)
+	deployer := mocks.NewDockerDeployer(t)
+	_, logger := testLogger()
 
 	t.Run("should return error when setup client fails", func(t *testing.T) {
-		deployer.On("Setup", ctx, mock.Anything, mock.Anything).Return(
-			func(ctx context.Context, coreImg string, workerImg string) error {
-				return errors.New("error")
-			},
-		).Once()
-
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
+		deployer.On("WithImages", mock.Anything, mock.Anything).Return()
+		deployer.On("WithDockerClient", mock.Anything, mock.Anything).Return()
+		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(errors.New("error")).Once()
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
+		deployer.AssertExpectations(t)
 	})
 
-	t.Run("should return error when docker networks setup fails", func(t *testing.T) {
-		deployer.On("Setup", ctx, mock.Anything, mock.Anything).Return(
-			func(ctx context.Context, coreImg string, workerImg string) error {
-				return nil
-			},
-		)
-		deployer.On("CreateFLNetwork", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+	t.Run("should return error when docker network create fails", func(t *testing.T) {
+		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(nil)
+		deployer.On("CreateFLNetwork", ctx).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
-
 	})
 
 	t.Run("should return error when pulling core image fails", func(t *testing.T) {
-		deployer.On("CreateFLNetwork", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("PullCoreImage", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		deployer.On("CreateFLNetwork", ctx).Return(nil)
+		deployer.On("PullCoreImage", ctx).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
-
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
 	t.Run("should return error when pulling worker image fails", func(t *testing.T) {
-		deployer.On("PullCoreImage", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("PullWorkerImage", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		deployer.On("PullCoreImage", ctx).Return(nil)
+		deployer.On("PullWorkerImage", ctx).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
-
 	})
 
 	t.Run("should return error when pulling prometheus image fails", func(t *testing.T) {
-		deployer.On("PullWorkerImage", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("PullPromImage", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		deployer.On("PullWorkerImage", ctx).Return(nil)
+		deployer.On("PullPromImage", ctx).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
 	t.Run("should return error when starting core fails", func(t *testing.T) {
-		deployer.On("PullPromImage", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("StartCore", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		deployer.On("PullPromImage", ctx).Return(nil)
+		deployer.On("StartCore", ctx).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
 	t.Run("should return error when starting worker fails", func(t *testing.T) {
-		deployer.On("StartCore", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("StartWorker", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		deployer.On("StartCore", ctx).Return(nil)
+		deployer.On("StartWorker", ctx).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
-	t.Run("should return error when starting prometheus fails", func(t *testing.T) {
-		deployer.On("StartWorker", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("StartProm", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
 
-		_, testLogger := testLogger()
-		err := dev.Run(ctx, deployer, testLogger)
+	t.Run("should return error when starting prometheus fails", func(t *testing.T) {
+		deployer.On("StartWorker", ctx).Return(nil)
+		deployer.On("StartProm", ctx).Return(errors.New("error")).Once()
+
+		err := dev.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 	t.Run("successful prints when everything goes well", func(t *testing.T) {

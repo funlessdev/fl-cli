@@ -23,8 +23,10 @@ import (
 
 type Fn struct {
 	Invoke Invoke `cmd:"" help:"run a function on an instance of the platform"`
-	Create Create `cmd:"" help:"create a function and upload it to the platform"`
+	Create Create `cmd:"" help:"build and upload a function to the platform"`
 	Delete Delete `cmd:"" help:"delete an existing function from the platform"`
+	Build  Build  `cmd:"" help:"compile a function into a wasm binary"`
+	// Upload Upload `cmd:"" help:"upload the wasm binary of a function to the platform"`
 }
 
 type FnError struct {
@@ -43,4 +45,8 @@ func extractError(err error) error {
 		return err
 	}
 	return errors.New(e.Errors.Detail)
+}
+
+func (f *Fn) Help() string {
+	return "More Description!"
 }

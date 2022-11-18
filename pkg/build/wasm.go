@@ -22,53 +22,54 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/pkg"
-	"github.com/funlessdev/fl-cli/pkg/docker_utils"
+	"github.com/funlessdev/fl-cli/pkg/docker"
 )
 
+var builderNames = map[string]string{
+	"js":   "fl-js-builder",
+	"rust": "fl-rust-builder",
+}
+
 type DockerBuilder interface {
-	Setup(ctx context.Context, language string, outDir string) error
+	Setup(client docker.DockerClient, language string, dest string) error
 	PullBuilderImage(ctx context.Context) error
 	BuildSource(ctx context.Context, srcPath string) error
+	RenameCodeWasm(name string) error
 }
 
 type WasmBuilder struct {
-	client               *client.Client
+	flDocker             docker.DockerClient
 	builderImg           string
 	builderContainerName string
 	outPath              string
 }
 
-var _ DockerBuilder = &WasmBuilder{}
-
-func NewWasmBuilder() *WasmBuilder {
+func NewWasmBuilder() DockerBuilder {
 	return &WasmBuilder{}
 }
 
-func (b *WasmBuilder) Setup(ctx context.Context, language string, outDir string) error {
-	image, exists := pkg.FLRuntimes[language]
+func (b *WasmBuilder) Setup(flDocker docker.DockerClient, language string, dest string) error {
+	dest, err := filepath.Abs(dest)
+	if err != nil {
+		return err
+	}
+
+	image, exists := pkg.FLBuilderImages[language]
 	if !exists {
 		return errors.New("no corresponding builder image found for the given language")
 	}
 	b.builderImg = image
 
-	containerName, exists := pkg.FLRuntimeNames[language]
+	containerName, exists := builderNames[language]
 	if !exists {
-		return errors.New("no corresponding container name found for the given language")
+		return errors.New("no corresponding builder name found for the given language")
 	}
 	b.builderContainerName = containerName
+	b.flDocker = flDocker
+	b.outPath = dest
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
-	if err != nil {
-		return err
-	}
-	b.client = cli
-
-	outPath, _ := filepath.Abs(outDir)
-	b.outPath = outPath
-
-	err = os.MkdirAll(outPath, 0700)
+	err = os.MkdirAll(dest, 0700)
 	if err != nil {
 		return err
 	}
@@ -85,18 +86,29 @@ func (b *WasmBuilder) BuildSource(ctx context.Context, srcPath string) error {
 	containerConfig := builderContainerConfig(b.builderImg)
 	hostConfig := builderHostConfig(absPath, b.outPath)
 
-	configs := docker_utils.ContainerConfigs{
+	configs := docker.ContainerConfigs{
 		ContName:   b.builderContainerName,
 		Container:  containerConfig,
 		Host:       hostConfig,
 		Networking: nil,
 	}
 
-	return docker_utils.RunAndWaitContainer(ctx, b.client, configs)
+	return b.flDocker.RunAndWait(ctx, configs)
 }
 
 func (b *WasmBuilder) PullBuilderImage(ctx context.Context) error {
-	return docker_utils.PullImage(ctx, b.client, b.builderImg)
+	exists, err := b.flDocker.ImageExists(ctx, b.builderImg)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+	return b.flDocker.Pull(ctx, b.builderImg)
+}
+
+func (b *WasmBuilder) RenameCodeWasm(name string) error {
+	return os.Rename(filepath.Join(b.outPath, "code.wasm"), filepath.Join(b.outPath, name+".wasm"))
 }
 
 func builderContainerConfig(builderImg string) *container.Config {

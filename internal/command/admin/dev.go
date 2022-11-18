@@ -18,7 +18,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/docker/docker/client"
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
+	"github.com/funlessdev/fl-cli/pkg/docker"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
@@ -27,12 +30,12 @@ type dev struct {
 	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
 }
 
-func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.FLogger) error {
+func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
 	logger.Info("Deploying FunLess locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	if err := deployer.Setup(ctx, d.CoreImage, d.WorkerImage); err != nil {
+	if err := setupDev(d.CoreImage, d.WorkerImage, deployer); err != nil {
 		return logger.StopSpinner(err)
 	}
 
@@ -56,6 +59,7 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.F
 	}
 
 	_ = logger.StartSpinner("starting Core container 🎛️")
+
 	if err := logger.StopSpinner(deployer.StartCore(ctx)); err != nil {
 		return err
 	}
@@ -74,4 +78,24 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DevDeployer, logger log.F
 	logger.Info("You can now start using FunLess! 🎉")
 
 	return nil
+}
+
+func setupDev(core string, worker string, deployer deploy.DockerDeployer) error {
+	deployer.WithImages(core, worker)
+
+	c, err := setupDockerClient()
+	if err != nil {
+		return err
+	}
+
+	deployer.WithDockerClient(c)
+	return deployer.WithLogs(pkg.LocalLogsPath)
+}
+
+func setupDockerClient() (docker.DockerClient, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+	if err != nil {
+		return docker.DockerClient{}, err
+	}
+	return docker.NewDockerClient(cli), nil
 }
