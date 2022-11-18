@@ -16,7 +16,7 @@ type FLDockerClient struct {
 	innerClient *client.Client
 }
 
-func NewFLDockerClient(client *client.Client) DockerClient {
+func NewDockerClient(client *client.Client) DockerClient {
 	return &FLDockerClient{
 		innerClient: client,
 	}

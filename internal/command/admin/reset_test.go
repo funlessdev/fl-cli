@@ -29,79 +29,50 @@ func TestResetRun(t *testing.T) {
 	reset := reset{}
 	ctx := context.TODO()
 
-	deployer := mocks.NewDevDeployer(t)
-
-	t.Run("should return error when setup client fails", func(t *testing.T) {
-		deployer.On("Setup", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
-			Return(func(ctx context.Context, coreImg string, workerImg string) error {
-				return errors.New("error")
-			}).Once()
-
-		_, testLogger := testLogger()
-		err := reset.Run(ctx, deployer, testLogger)
-		require.Error(t, err)
-	})
+	mockRemover := mocks.NewDockerRemover(t)
+	_, logger := testLogger()
 
 	t.Run("should return error when removing Core fails", func(t *testing.T) {
-		deployer.On("Setup", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
-			Return(func(ctx context.Context, coreImg string, workerImg string) error {
-				return nil
-			})
-		deployer.On("RemoveCoreContainer", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		mockRemover.On("WithDockerClient", mock.Anything).Return()
+		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := reset.Run(ctx, deployer, testLogger)
+		err := reset.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
+		mockRemover.AssertNumberOfCalls(t, "RemoveCoreContainer", 1)
 	})
 
 	t.Run("should return error when removing Worker fails", func(t *testing.T) {
-		deployer.On("RemoveCoreContainer", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("RemoveWorkerContainer", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(nil)
+		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := reset.Run(ctx, deployer, testLogger)
+		err := reset.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
+		mockRemover.AssertNumberOfCalls(t, "RemoveWorkerContainer", 1)
 	})
 
 	t.Run("should return error when removing Prometheus fails", func(t *testing.T) {
-		deployer.On("RemoveWorkerContainer", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("RemovePromContainer", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(nil)
+		mockRemover.On("RemovePromContainer", mock.Anything).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := reset.Run(ctx, deployer, testLogger)
+		err := reset.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
+		mockRemover.AssertNumberOfCalls(t, "RemovePromContainer", 1)
 	})
 
 	t.Run("should return error when removing FL network fails", func(t *testing.T) {
-		deployer.On("RemovePromContainer", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-		deployer.On("RemoveFLNetwork", ctx).Return(func(ctx context.Context) error {
-			return errors.New("error")
-		}).Once()
+		mockRemover.On("RemovePromContainer", mock.Anything).Return(nil)
+		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(errors.New("error")).Once()
 
-		_, testLogger := testLogger()
-		err := reset.Run(ctx, deployer, testLogger)
+		err := reset.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
+		mockRemover.AssertNumberOfCalls(t, "RemoveFLNetwork", 1)
 	})
 
 	t.Run("successful prints when everything goes well", func(t *testing.T) {
-		deployer.On("RemoveFLNetwork", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
+		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(nil)
 
 		outbuf, testLogger := testLogger()
-		err := reset.Run(ctx, deployer, testLogger)
+		err := reset.Run(ctx, mockRemover, testLogger)
 
 		expectedOutput := `Removing local FunLess deployment...
 

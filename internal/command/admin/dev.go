@@ -35,7 +35,7 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger lo
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	if err := Setup(d.CoreImage, d.WorkerImage, deployer); err != nil {
+	if err := setupDev(d.CoreImage, d.WorkerImage, deployer); err != nil {
 		return logger.StopSpinner(err)
 	}
 
@@ -80,15 +80,22 @@ func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger lo
 	return nil
 }
 
-func Setup(core string, worker string, deployer deploy.DockerDeployer) error {
+func setupDev(core string, worker string, deployer deploy.DockerDeployer) error {
 	deployer.WithImages(core, worker)
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+	c, err := setupDockerClient()
 	if err != nil {
 		return err
 	}
-	flDocker := docker.NewFLDockerClient(cli)
 
-	deployer.WithDockerClient(flDocker)
+	deployer.WithDockerClient(c)
 	return deployer.WithLogs(pkg.LocalLogsPath)
+}
+
+func setupDockerClient() (docker.DockerClient, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+	if err != nil {
+		return nil, err
+	}
+	return docker.NewDockerClient(cli), nil
 }
