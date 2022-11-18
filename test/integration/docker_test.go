@@ -40,7 +40,7 @@ func TestImageHandling(t *testing.T) {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	require.NoError(t, err)
 	ctx := context.TODO()
-	flDocker := docker.NewFLDockerClient(dockerClient)
+	flDocker := docker.NewDockerClient(dockerClient)
 
 	t.Run("ImageExists should return false when an image is not present", func(t *testing.T) {
 		exists, err := flDocker.ImageExists(ctx, "should_not_have/this_image:for_sure")
@@ -74,7 +74,7 @@ func TestContainerHandler(t *testing.T) {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	require.NoError(t, err)
 	ctx := context.TODO()
-	flDocker := docker.NewFLDockerClient(dockerClient)
+	flDocker := docker.NewDockerClient(dockerClient)
 
 	t.Run("Exists should return false when a container is not present", func(t *testing.T) {
 		exists, id, err := flDocker.CtrExists(ctx, "should_not_have_this_container")
@@ -172,7 +172,7 @@ func TestNetworkHandler(t *testing.T) {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	require.NoError(t, err)
 	ctx := context.TODO()
-	flDocker := docker.NewFLDockerClient(dockerClient)
+	flDocker := docker.NewDockerClient(dockerClient)
 
 	t.Run("Exists should return false when a network is not present", func(t *testing.T) {
 		exists, id, err := flDocker.NetworkExists(ctx, "should_not_have_this_network")
