@@ -82,7 +82,7 @@ func TestAdminDevRun(t *testing.T) {
 
 	t.Run("should successfully deploy without creating networks when they already exist", func(t *testing.T) {
 
-		deployer.CreateFLNetwork(ctx)
+		_ = deployer.CreateFLNetwork(ctx)
 		assertNetwork(t, flDocker, flNet)
 
 		err := admCmd.Dev.Run(ctx, deployer, logger)

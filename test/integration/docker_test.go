@@ -107,7 +107,7 @@ func TestContainerHandler(t *testing.T) {
 
 	t.Run("RunAndWait should return nil and remove the container when success", func(t *testing.T) {
 		t.Log("DEBUG: Pulling image hello-world! It might take some time...")
-		flDocker.Pull(ctx, "hello-world:latest")
+		_ = flDocker.Pull(ctx, "hello-world:latest")
 
 		contName := "test_container"
 
@@ -130,7 +130,7 @@ func TestContainerHandler(t *testing.T) {
 
 	t.Run("RunAsync should return nil immediately and the container stays up when success", func(t *testing.T) {
 		t.Log("DEBUG: Pulling Prometheys image! It might take some time...")
-		flDocker.Pull(ctx, pkg.PrometheusImg)
+		_ = flDocker.Pull(ctx, pkg.PrometheusImg)
 
 		contName := "test_prom_cont"
 

@@ -34,7 +34,6 @@ func TestFnBuild(t *testing.T) {
 
 	testFn := "test-fn"
 	testLanguage := "js"
-	// testSource, _ := filepath.Abs("../../../test/fixtures/test_code.txt")
 	testDir, _ := filepath.Abs("../../../test/fixtures/test_dir/")
 	testOutDir, _ := filepath.Abs("../../../test/fixtures")
 
@@ -43,6 +42,7 @@ func TestFnBuild(t *testing.T) {
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	mockBuilder := mocks.NewDockerBuilder(t)
+	mockBuilder.On("RenameCodeWasm", mock.Anything).Return(nil)
 
 	t.Run("should use DockerBuilder to build functions", func(t *testing.T) {
 		cmd := Build{

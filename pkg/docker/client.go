@@ -121,8 +121,7 @@ func (c *DockerClient) RunAndWait(ctx context.Context, conf ContainerConfigs) er
 	for {
 		select {
 		case <-okC:
-			c.RemoveCtr(ctx, resp.ID)
-			return nil
+			return c.RemoveCtr(ctx, resp.ID)
 		case err = <-errC:
 			return err
 		}

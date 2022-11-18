@@ -35,8 +35,7 @@ func TestRun(t *testing.T) {
 	_, logger := testLogger()
 
 	t.Run("should return error when setup client fails", func(t *testing.T) {
-		deployer.On("WithCoreImage", mock.Anything, mock.Anything).Return()
-		deployer.On("WithWorkerImage", mock.Anything, mock.Anything).Return()
+		deployer.On("WithImages", mock.Anything, mock.Anything).Return()
 		deployer.On("WithDockerClient", mock.Anything, mock.Anything).Return()
 		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(errors.New("error")).Once()
 		err := dev.Run(ctx, deployer, logger)
