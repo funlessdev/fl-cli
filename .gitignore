@@ -36,4 +36,5 @@ config/
 
 hello.js
 *.wasm
-!test/fixtures/code.wasm
+!test/fixtures/fake.wasm
+!test/fixtures/real.wasm

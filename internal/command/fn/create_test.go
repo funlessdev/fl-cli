@@ -35,7 +35,7 @@ func TestFnCreateNoBuild(t *testing.T) {
 	testResult := "test-fn"
 	testFn := "test-fn"
 	testNs := "test-ns"
-	testSource, _ := filepath.Abs("../../../test/fixtures/code.wasm")
+	testSource, _ := filepath.Abs("../../../test/fixtures/real.wasm")
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
@@ -126,13 +126,18 @@ test-fn
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testLanguage := "js"
-	testSource, _ := filepath.Abs("../../../test/fixtures/test_code.txt")
+	testSource, _ := filepath.Abs("../../../test/fixtures/real.wasm")
 	testDir, _ := filepath.Abs("../../../test/fixtures/test_dir/")
 	testOutDir, _ := filepath.Abs("../../../test/fixtures")
 	ctx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	mockFnHandler := mocks.NewFnHandler(t)
+	mockBuilder := mocks.NewDockerBuilder(t)
+	mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil)
+	mockBuilder.On("PullBuilderImage", ctx).Return(nil)
+	mockBuilder.On("BuildSource", ctx, testDir).Return(nil)
+	mockBuilder.On("GetWasmFile", testFn).Return(nil, nil)
 
 	t.Run("should use FnService.Create to create functions", func(t *testing.T) {
 		cmd := Create{
@@ -144,11 +149,6 @@ test-fn
 		}
 
 		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
-
-		mockBuilder := mocks.NewDockerBuilder(t)
-		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
-		mockBuilder.On("BuildSource", ctx, testDir).Return(nil).Once()
 
 		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
 		require.NoError(t, err)
@@ -170,16 +170,11 @@ test-fn
 		mockFnHandler := mocks.NewFnHandler(t)
 		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
 
-		mockBuilder := mocks.NewDockerBuilder(t)
-		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
-		mockBuilder.On("BuildSource", ctx, testDir).Return(nil).Once()
-
 		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
 		require.NoError(t, err)
 
 		mockBuilder.AssertCalled(t, "BuildSource", ctx, testDir)
-		mockBuilder.AssertNumberOfCalls(t, "BuildSource", 1)
+		mockBuilder.AssertNumberOfCalls(t, "BuildSource", 2)
 		mockBuilder.AssertExpectations(t)
 	})
 
@@ -195,11 +190,6 @@ test-fn
 		mockFnHandler := mocks.NewFnHandler(t)
 		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
 
-		mockBuilder := mocks.NewDockerBuilder(t)
-		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
-		mockBuilder.On("BuildSource", ctx, testDir).Return(nil).Once()
-
 		var outbuf bytes.Buffer
 
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
@@ -209,7 +199,7 @@ test-fn
 		require.NoError(t, err)
 		assert.Equal(t, testResult, (&outbuf).String())
 		mockFnHandler.AssertExpectations(t)
-		mockBuilder.AssertNumberOfCalls(t, "BuildSource", 1)
+		mockBuilder.AssertExpectations(t)
 	})
 
 	t.Run("should return error if asked to build a single source file", func(t *testing.T) {

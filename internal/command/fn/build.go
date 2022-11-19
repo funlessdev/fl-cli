@@ -28,7 +28,7 @@ import (
 
 type Build struct {
 	Name        string `arg:"" help:"the name of the function"`
-	Source      string `arg:"" short:"s" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
+	Source      string `arg:"" type:"existingdir" help:"path of the source directory"`
 	Destination string `short:"d" type:"path" help:"path where the compiled wasm file will be saved" default:"."`
 	Language    string `short:"l" enum:"rust,js" required:"" help:"programming language of the function"`
 }

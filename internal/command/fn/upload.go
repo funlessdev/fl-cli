@@ -1,0 +1,108 @@
+// Copyright 2022 Giuseppe De Palma, Matteo Trentin
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package fn
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/funlessdev/fl-cli/pkg/client"
+	"github.com/funlessdev/fl-cli/pkg/log"
+)
+
+type Upload struct {
+	Name      string `arg:"" help:"the name of the function"`
+	Source    string `arg:"" type:"existingfile" help:"path of the wasm binary"`
+	Namespace string `short:"n" default:"_" help:"the namespace of the function"`
+}
+
+func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
+	_ = logger.StartSpinner("Reading wasm...")
+	code, err := openWasmFile(u.Source)
+	if err != nil {
+		return logger.StopSpinner(err)
+	}
+	_ = logger.StopSpinner(nil)
+
+	_ = logger.StartSpinner("Uploading function...")
+	_, err = fnHandler.Create(ctx, u.Name, u.Namespace, code)
+	if err != nil {
+		return logger.StopSpinner(extractError(err))
+	}
+	_ = logger.StopSpinner(nil)
+
+	logger.Info(fmt.Sprintf("Successfully uploaded function %s/%s 👌", u.Namespace, u.Name))
+	return nil
+}
+
+func openWasmFile(path string) (*os.File, error) {
+	if !strings.HasSuffix(path, ".wasm") {
+		return nil, errors.New("can only create function with a .wasm file")
+	}
+
+	wasmPath := filepath.Clean(path)
+
+	code, err := os.Open(wasmPath)
+	if err != nil {
+		return nil, err
+	}
+	stat, err := code.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if stat.IsDir() {
+		return nil, errors.New("the specified file is a directory")
+	}
+
+	wasmMagicHeader := []byte{0x00, 0x61, 0x73, 0x6d}
+	var buf = make([]byte, 4)
+	if _, err := code.Read(buf); err != nil {
+		return nil, err
+	}
+
+	if !bytes.Equal(buf, wasmMagicHeader) {
+		return nil, errors.New("the file is not a valid wasm binary")
+	}
+
+	// Reset the file pointer to the beginning of the file
+	_, err = code.Seek(0, io.SeekStart)
+	return code, err
+}
+
+func (f *Create) openWasmFile() (*os.File, error) {
+	if !strings.HasSuffix(f.SourceFile, ".wasm") {
+		return nil, errors.New("a file with the .wasm extension must be passed")
+	}
+
+	code, err := os.Open(f.SourceFile)
+	if err != nil {
+		return nil, err
+	}
+	stat, err := code.Stat()
+
+	if err != nil {
+		return nil, err
+	}
+	if stat.Size() == 0 {
+		return nil, errors.New("passing an empty file as source")
+	}
+	return code, nil
+}

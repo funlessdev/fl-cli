@@ -26,7 +26,7 @@ type Fn struct {
 	Create Create `cmd:"" help:"build and upload a function to the platform"`
 	Delete Delete `cmd:"" help:"delete an existing function from the platform"`
 	Build  Build  `cmd:"" help:"compile a function into a wasm binary"`
-	// Upload Upload `cmd:"" help:"upload the wasm binary of a function to the platform"`
+	Upload Upload `cmd:"" help:"create functions by uploading wasm binaries"`
 }
 
 type FnError struct {
@@ -48,5 +48,5 @@ func extractError(err error) error {
 }
 
 func (f *Fn) Help() string {
-	return "More Description!"
+	return "Manage functions (description TBD)"
 }

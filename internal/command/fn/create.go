@@ -19,8 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
@@ -88,25 +86,5 @@ func (f *Create) buildFromDir(ctx context.Context, builder build.DockerBuilder, 
 		return nil, build_err
 	}
 
-	return os.Open(path.Join(f.OutDir, "./code.wasm"))
-}
-
-func (f *Create) openWasmFile() (*os.File, error) {
-	if !strings.HasSuffix(f.SourceFile, ".wasm") {
-		return nil, errors.New("a file with the .wasm extension must be passed")
-	}
-
-	code, err := os.Open(f.SourceFile)
-	if err != nil {
-		return nil, err
-	}
-	stat, err := code.Stat()
-
-	if err != nil {
-		return nil, err
-	}
-	if stat.Size() == 0 {
-		return nil, errors.New("passing an empty file as source")
-	}
-	return code, nil
+	return builder.GetWasmFile(f.Name)
 }
