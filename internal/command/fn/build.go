@@ -52,7 +52,7 @@ func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log
 		return err
 	}
 
-	logger.Info(fmt.Sprintf("\nSuccessfully built function at %s/%s.wasm 🥳🥳", b.Destination, b.Name))
+	logger.Info(fmt.Sprintf("\nSuccessfully built %s.wasm 🥳🥳", b.Name))
 	return nil
 }
 

@@ -36,7 +36,6 @@ type DockerBuilder interface {
 	PullBuilderImage(ctx context.Context) error
 	BuildSource(ctx context.Context, srcPath string) error
 	RenameCodeWasm(name string) error
-	GetWasmFile(name string) (*os.File, error)
 }
 
 type WasmBuilder struct {
@@ -110,10 +109,6 @@ func (b *WasmBuilder) PullBuilderImage(ctx context.Context) error {
 
 func (b *WasmBuilder) RenameCodeWasm(name string) error {
 	return os.Rename(filepath.Join(b.outPath, "code.wasm"), filepath.Join(b.outPath, name+".wasm"))
-}
-
-func (b *WasmBuilder) GetWasmFile(name string) (*os.File, error) {
-	return os.Open(filepath.Join(b.outPath, name+".wasm"))
 }
 
 func builderContainerConfig(builderImg string) *container.Config {
