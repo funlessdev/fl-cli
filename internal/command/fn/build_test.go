@@ -71,7 +71,7 @@ func TestFnBuild(t *testing.T) {
 			Language:    testLanguage,
 		}
 
-		output := genTestOutput(testFn, pkg.FLBuilderImages[testLanguage], testOutDir)
+		output := genTestOutput(testFn, pkg.FLBuilderImages[testLanguage])
 
 		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
 		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
@@ -136,7 +136,7 @@ func TestFnBuild(t *testing.T) {
 	})
 }
 
-func genTestOutput(name, image, dest string) string {
+func genTestOutput(name, image string) string {
 	return fmt.Sprintf(`Building %s into a wasm binary...
 
 Setting up...
@@ -146,6 +146,6 @@ done
 Building source... 🛠️
 done
 
-Successfully built function at %s/%s.wasm 🥳🥳
-`, name, image, dest, name)
+Successfully built %s.wasm 🥳🥳
+`, name, image, name)
 }

@@ -37,6 +37,8 @@ func TestFnUpload(t *testing.T) {
 	ctx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
+	openWasmFile = readWasmFile
+
 	t.Run("should return error if file is not valid", func(t *testing.T) {
 		upload := Upload{
 			Name:      testFn,

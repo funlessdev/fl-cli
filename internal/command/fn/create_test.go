@@ -31,164 +31,43 @@ import (
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
-func TestFnCreateNoBuild(t *testing.T) {
-	testResult := "test-fn"
-	testFn := "test-fn"
-	testNs := "test-ns"
-	testSource, _ := filepath.Abs("../../../test/fixtures/real.wasm")
-	testCtx := context.Background()
-	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
+func TestFnCreate(t *testing.T) {
+	testResult := `Creating test-fn function...
 
-	mockBuilder := mocks.NewDockerBuilder(t)
-
-	t.Run("should use FnService.Create to create functions", func(t *testing.T) {
-		cmd := Create{
-			Name:       testFn,
-			Namespace:  testNs,
-			SourceFile: testSource,
-			NoBuild:    true,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testResult}, nil)
-
-		err := cmd.Run(testCtx, mockBuilder, mockInvoker, testLogger)
-		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Create", testCtx, testFn, testNs, mock.AnythingOfType("*os.File"))
-		mockInvoker.AssertNumberOfCalls(t, "Create", 1)
-		mockInvoker.AssertExpectations(t)
-	})
-
-	t.Run("should correctly print result with single file", func(t *testing.T) {
-		cmd := Create{
-			Name:       testFn,
-			Namespace:  testNs,
-			SourceFile: testSource,
-			NoBuild:    true,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testResult}, nil)
-
-		var outbuf bytes.Buffer
-
-		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
-
-		err := cmd.Run(testCtx, mockBuilder, mockInvoker, bufLogger)
-
-		require.NoError(t, err)
-		assert.Equal(t, testResult+"\n", (&outbuf).String())
-		mockInvoker.AssertExpectations(t)
-	})
-
-	t.Run("should return error if given an invalid create request", func(t *testing.T) {
-		cmd := Create{
-			Name:       testFn,
-			Namespace:  testNs,
-			SourceFile: testSource,
-			NoBuild:    true,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-		e := &openapi.GenericOpenAPIError{}
-		mockInvoker.On("Create", testCtx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{}, e)
-
-		err := cmd.Run(testCtx, mockBuilder, mockInvoker, testLogger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error if source file does not exist", func(t *testing.T) {
-		cmd := Create{
-			Name:       testFn,
-			Namespace:  testNs,
-			SourceFile: "no_file",
-			NoBuild:    true,
-		}
-
-		mockInvoker := mocks.NewFnHandler(t)
-
-		err := cmd.Run(testCtx, mockBuilder, mockInvoker, testLogger)
-		require.Error(t, err)
-	})
-}
-
-func TestFnCreateBuild(t *testing.T) {
-	testResult := `Building the given function using fl-runtimes...
-
-Setting up...
+Building function...🏗 ️
 done
-Pulling builder image for js 📦
+Uploading function... 📮
 done
-Building source using builder image 🛠️
-done
-test-fn
+
+Successfully created function test-ns/test-fn.
 `
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testLanguage := "js"
-	testSource, _ := filepath.Abs("../../../test/fixtures/real.wasm")
 	testDir, _ := filepath.Abs("../../../test/fixtures/test_dir/")
-	testOutDir, _ := filepath.Abs("../../../test/fixtures")
 	ctx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	mockFnHandler := mocks.NewFnHandler(t)
+	mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
+
 	mockBuilder := mocks.NewDockerBuilder(t)
-	mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil)
+	mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil)
 	mockBuilder.On("PullBuilderImage", ctx).Return(nil)
 	mockBuilder.On("BuildSource", ctx, testDir).Return(nil)
-	mockBuilder.On("GetWasmFile", testFn).Return(nil, nil)
 
-	t.Run("should use FnService.Create to create functions", func(t *testing.T) {
+	// monkey patch the openWasmFile function
+	openWasmFile = func(path string) (*os.File, error) {
+		return &os.File{}, nil
+	}
+
+	t.Run("success: should correctly print result when building from a directory", func(t *testing.T) {
 		cmd := Create{
 			Name:      testFn,
 			Namespace: testNs,
-			SourceDir: testDir,
+			Source:    testDir,
 			Language:  testLanguage,
-			OutDir:    testOutDir,
 		}
-
-		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
-
-		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
-		require.NoError(t, err)
-
-		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testNs, mock.AnythingOfType("*os.File"))
-		mockFnHandler.AssertNumberOfCalls(t, "Create", 1)
-		mockFnHandler.AssertExpectations(t)
-	})
-
-	t.Run("should use DockerBuilder.BuildSource to build functions", func(t *testing.T) {
-		cmd := Create{
-			Name:      testFn,
-			Namespace: testNs,
-			SourceDir: testDir,
-			Language:  testLanguage,
-			OutDir:    testOutDir,
-		}
-
-		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
-
-		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
-		require.NoError(t, err)
-
-		mockBuilder.AssertCalled(t, "BuildSource", ctx, testDir)
-		mockBuilder.AssertNumberOfCalls(t, "BuildSource", 2)
-		mockBuilder.AssertExpectations(t)
-	})
-
-	t.Run("should correctly print result when building from a directory", func(t *testing.T) {
-		cmd := Create{
-			Name:      testFn,
-			Namespace: testNs,
-			SourceDir: testDir,
-			Language:  testLanguage,
-			OutDir:    testOutDir,
-		}
-
-		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
 
 		var outbuf bytes.Buffer
 
@@ -198,38 +77,38 @@ test-fn
 
 		require.NoError(t, err)
 		assert.Equal(t, testResult, (&outbuf).String())
+		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testNs, mock.AnythingOfType("*os.File"))
+		mockFnHandler.AssertNumberOfCalls(t, "Create", 1)
 		mockFnHandler.AssertExpectations(t)
 		mockBuilder.AssertExpectations(t)
 	})
 
-	t.Run("should return error if asked to build a single source file", func(t *testing.T) {
+	t.Run("should use DockerBuilder.BuildSource to build functions", func(t *testing.T) {
 		cmd := Create{
-			Name:       testFn,
-			Namespace:  testNs,
-			SourceFile: testSource,
-			Language:   testLanguage,
+			Name:      testFn,
+			Namespace: testNs,
+			Source:    testDir,
+			Language:  testLanguage,
 		}
 
-		mockFnHandler := mocks.NewFnHandler(t)
-
-		mockBuilder := mocks.NewDockerBuilder(t)
 		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
-		require.Error(t, err)
+		require.NoError(t, err)
+
+		mockBuilder.AssertCalled(t, "BuildSource", ctx, testDir)
+		mockBuilder.AssertNumberOfCalls(t, "BuildSource", 2)
+		mockBuilder.AssertExpectations(t)
 	})
 
 	t.Run("should return error if builder setup encounters errors", func(t *testing.T) {
 		cmd := Create{
 			Name:      testFn,
 			Namespace: testNs,
-			SourceDir: testDir,
+			Source:    testDir,
 			Language:  testLanguage,
-			OutDir:    testOutDir,
 		}
 
-		mockFnHandler := mocks.NewFnHandler(t)
-
 		mockBuilder := mocks.NewDockerBuilder(t)
-		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(errors.New("some error")).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(errors.New("some error")).Once()
 
 		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
 		require.Error(t, err)
@@ -240,15 +119,12 @@ test-fn
 		cmd := Create{
 			Name:      testFn,
 			Namespace: testNs,
-			SourceDir: testDir,
+			Source:    testDir,
 			Language:  testLanguage,
-			OutDir:    testOutDir,
 		}
 
-		mockFnHandler := mocks.NewFnHandler(t)
-
 		mockBuilder := mocks.NewDockerBuilder(t)
-		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil).Once()
 		mockBuilder.On("PullBuilderImage", ctx).Return(errors.New("some error")).Once()
 
 		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
@@ -260,15 +136,12 @@ test-fn
 		cmd := Create{
 			Name:      testFn,
 			Namespace: testNs,
-			SourceDir: testDir,
+			Source:    testDir,
 			Language:  testLanguage,
-			OutDir:    testOutDir,
 		}
 
-		mockFnHandler := mocks.NewFnHandler(t)
-
 		mockBuilder := mocks.NewDockerBuilder(t)
-		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
+		mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil).Once()
 		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
 		mockBuilder.On("BuildSource", ctx, testDir).Return(errors.New("some error")).Once()
 

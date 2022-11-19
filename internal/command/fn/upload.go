@@ -53,7 +53,12 @@ func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 	return nil
 }
 
-func openWasmFile(path string) (*os.File, error) {
+// I swap the function with a fake one in create_test.go
+var openWasmFile = func(path string) (*os.File, error) {
+	return readWasmFile(path)
+}
+
+func readWasmFile(path string) (*os.File, error) {
 	if !strings.HasSuffix(path, ".wasm") {
 		return nil, errors.New("can only create function with a .wasm file")
 	}
@@ -85,24 +90,4 @@ func openWasmFile(path string) (*os.File, error) {
 	// Reset the file pointer to the beginning of the file
 	_, err = code.Seek(0, io.SeekStart)
 	return code, err
-}
-
-func (f *Create) openWasmFile() (*os.File, error) {
-	if !strings.HasSuffix(f.SourceFile, ".wasm") {
-		return nil, errors.New("a file with the .wasm extension must be passed")
-	}
-
-	code, err := os.Open(f.SourceFile)
-	if err != nil {
-		return nil, err
-	}
-	stat, err := code.Stat()
-
-	if err != nil {
-		return nil, err
-	}
-	if stat.Size() == 0 {
-		return nil, errors.New("passing an empty file as source")
-	}
-	return code, nil
 }

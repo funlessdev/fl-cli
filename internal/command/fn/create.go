@@ -16,9 +16,9 @@ package fn
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
@@ -26,65 +26,45 @@ import (
 )
 
 type Create struct {
-	Name       string `arg:"" name:"name" help:"name of the function to create"`
-	Namespace  string `name:"namespace" short:"n" default:"_" help:"namespace of the function to create"`
-	SourceDir  string `name:"source-dir" group:"build" short:"d" required:"" xor:"dir-file,dir-build" type:"existingdir" help:"path of the source directory"`
-	SourceFile string `name:"source-file" short:"f" required:"" xor:"dir-file" type:"existingFile" help:"path of the source file"`
-	OutDir     string `name:"out-dir" short:"o" xor:"out-build" type:"existingdir" help:"path where the compiled code file will be saved"`
-	NoBuild    bool   `name:"no-build" short:"b" xor:"dir-build,out-build" help:"upload the file as-is, without building it"`
-	Language   string `name:"language" group:"build" short:"l" help:"programming language of the function"`
+	Name      string `arg:"" help:"name of the function to create"`
+	Source    string `arg:"" type:"existingdir" help:"path of the source directory"`
+	Namespace string `short:"n" default:"_" help:"namespace of the function to create"`
+	Language  string `short:"l" required:"" enum:"rust,js" help:"programming language of the function"`
 }
 
-func (f *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
-	code, err := f.obtainCode(ctx, builder, logger)
+func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
+	logger.Info(fmt.Sprintf("Creating %s function...\n", c.Name))
+
+	_ = logger.StartSpinner("Building function...🏗 ️")
+	dest, err := os.MkdirTemp("", "funless-bin")
 	if err != nil {
-		return err
+		return logger.StopSpinner(err)
+	}
+	defer os.RemoveAll(dest)
+
+	if err := setupBuilder(builder, c.Language, dest); err != nil {
+		return logger.StopSpinner(err)
+	}
+	if err := builder.PullBuilderImage(ctx); err != nil {
+		return logger.StopSpinner(err)
+	}
+	if err := builder.BuildSource(ctx, c.Source); err != nil {
+		return logger.StopSpinner(err)
+	}
+	_ = logger.StopSpinner(nil)
+
+	_ = logger.StartSpinner("Uploading function... 📮")
+	code, err := openWasmFile(filepath.Join(dest, "code.wasm"))
+	if err != nil {
+		return logger.StopSpinner(err)
 	}
 
-	res, err := fnHandler.Create(ctx, f.Name, f.Namespace, code)
+	_, err = fnHandler.Create(ctx, c.Name, c.Namespace, code)
 	if err != nil {
-		return extractError(err)
+		return logger.StopSpinner(extractError(err))
 	}
+	_ = logger.StopSpinner(nil)
 
-	logger.Info(*res.Result)
+	logger.Info(fmt.Sprintf("\nSuccessfully created function %s/%s.", c.Namespace, c.Name))
 	return nil
-}
-
-func (f *Create) obtainCode(ctx context.Context, builder build.DockerBuilder, logger log.FLogger) (*os.File, error) {
-	if f.SourceDir != "" {
-		return f.buildFromDir(ctx, builder, logger)
-	} else if f.NoBuild {
-		return f.openWasmFile()
-	} else {
-		//NOTE: build single file => not implemented
-		return nil, errors.New("building from a single file is not yet implemented")
-	}
-}
-
-func (f *Create) buildFromDir(ctx context.Context, builder build.DockerBuilder, logger log.FLogger) (*os.File, error) {
-	if f.Language == "" {
-		return nil, errors.New("language is required when building from a directory")
-	}
-
-	if f.OutDir == "" {
-		/* can't use default, as outDir is also in a xor group */
-		f.OutDir = "./out_wasm/"
-	}
-	logger.Info("Building the given function using fl-runtimes...\n")
-
-	_ = logger.StartSpinner("Setting up...")
-	if err := logger.StopSpinner(setupBuilder(builder, f.Language, f.OutDir)); err != nil {
-		return nil, err
-	}
-
-	_ = logger.StartSpinner(fmt.Sprintf("Pulling builder image for %s 📦", f.Language))
-	if build_err := logger.StopSpinner(builder.PullBuilderImage(ctx)); build_err != nil {
-		return nil, build_err
-	}
-	_ = logger.StartSpinner("Building source using builder image 🛠️")
-	if build_err := logger.StopSpinner(builder.BuildSource(ctx, f.SourceDir)); build_err != nil {
-		return nil, build_err
-	}
-
-	return builder.GetWasmFile(f.Name)
 }

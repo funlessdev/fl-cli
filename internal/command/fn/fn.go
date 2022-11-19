@@ -22,9 +22,9 @@ import (
 )
 
 type Fn struct {
-	Invoke Invoke `cmd:"" help:"run a function on an instance of the platform"`
-	Create Create `cmd:"" help:"build and upload a function to the platform"`
-	Delete Delete `cmd:"" help:"delete an existing function from the platform"`
+	Invoke Invoke `cmd:"" help:"invoke a function"`
+	Create Create `cmd:"" help:"a combination of build and upload to create a function"`
+	Delete Delete `cmd:"" help:"delete an existing function"`
 	Build  Build  `cmd:"" help:"compile a function into a wasm binary"`
 	Upload Upload `cmd:"" help:"create functions by uploading wasm binaries"`
 }
