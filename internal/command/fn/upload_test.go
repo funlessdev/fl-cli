@@ -107,7 +107,7 @@ func Test_obtainWasmFile(t *testing.T) {
 	})
 
 	t.Run("should return error if file does not contain wasm magic header", func(t *testing.T) {
-		_, err := openWasmFile("../../../test/fixtures/code.wasm")
+		_, err := openWasmFile("../../../test/fixtures/fake.wasm")
 		require.Error(t, err)
 	})
 
