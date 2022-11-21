@@ -46,14 +46,14 @@ func TestFnInvoke(t *testing.T) {
 			Args:      map[string]string{},
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, map[string]interface{}{})
-		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testNs, map[string]interface{}{})
+		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
+		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should correctly print result", func(t *testing.T) {
@@ -63,18 +63,18 @@ func TestFnInvoke(t *testing.T) {
 			Args:      map[string]string{},
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
 
 		var outbuf bytes.Buffer
 		var testOutput, _ = json.Marshal(testResult)
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockInvoker, bufLogger)
+		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 
 		require.NoError(t, err)
 		assert.Equal(t, string(testOutput)+"\n", (&outbuf).String())
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should correctly parse and forward keyword args", func(t *testing.T) {
@@ -89,14 +89,14 @@ func TestFnInvoke(t *testing.T) {
 			mockArgs[k] = v
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, mockArgs).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("Invoke", testCtx, testFn, testNs, mockArgs).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, mockArgs)
-		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testNs, mockArgs)
+		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
+		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should correctly parse and forward json args", func(t *testing.T) {
@@ -106,14 +106,14 @@ func TestFnInvoke(t *testing.T) {
 			JsonArgs:  testJArgs,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Invoke", testCtx, testFn, testNs, testParsedJArgs).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("Invoke", testCtx, testFn, testNs, testParsedJArgs).Return(openapi.FunctionInvocationSuccess{Result: testResult}, nil)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Invoke", testCtx, testFn, testNs, testParsedJArgs)
-		mockInvoker.AssertNumberOfCalls(t, "Invoke", 1)
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testNs, testParsedJArgs)
+		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
+		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should return error if invalid invoke request", func(t *testing.T) {
@@ -121,11 +121,11 @@ func TestFnInvoke(t *testing.T) {
 			Name: testFn,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
+		mockFnHandler := mocks.NewFnHandler(t)
 		e := &openapi.GenericOpenAPIError{}
-		mockInvoker.On("Invoke", testCtx, testFn, "", map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{}, e)
+		mockFnHandler.On("Invoke", testCtx, testFn, "", map[string]interface{}{}).Return(openapi.FunctionInvocationSuccess{}, e)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.Error(t, err)
 	})
 }

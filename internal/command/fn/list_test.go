@@ -40,32 +40,32 @@ func TestFnList(t *testing.T) {
 			Namespace: testNs,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "List", testCtx, testNs)
-		mockInvoker.AssertNumberOfCalls(t, "List", 1)
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertCalled(t, "List", testCtx, testNs)
+		mockFnHandler.AssertNumberOfCalls(t, "List", 1)
+		mockFnHandler.AssertExpectations(t)
 	})
 	t.Run("should correctly print result", func(t *testing.T) {
 		cmd := List{
 			Namespace: testNs,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockInvoker, bufLogger)
+		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 		expected := fmt.Sprintf("%s\n%s\n", testResult[0], testResult[1])
 
 		require.NoError(t, err)
 		assert.Equal(t, expected, (&outbuf).String())
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should correctly print result when asked to count returned functions", func(t *testing.T) {
@@ -74,18 +74,18 @@ func TestFnList(t *testing.T) {
 			Count:     true,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockInvoker, bufLogger)
+		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 		expected := fmt.Sprintf("%s\n%s\nCount: %d\n", testResult[0], testResult[1], len(testResult))
 
 		require.NoError(t, err)
 		assert.Equal(t, expected, (&outbuf).String())
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should return error if the list request is invalid", func(t *testing.T) {
@@ -93,12 +93,12 @@ func TestFnList(t *testing.T) {
 			Namespace: testNs,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
+		mockFnHandler := mocks.NewFnHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockInvoker.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{}, e)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{}, e)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.Error(t, err)
 	})
 }

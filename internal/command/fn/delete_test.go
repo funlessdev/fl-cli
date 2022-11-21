@@ -41,14 +41,14 @@ func TestFnDelete(t *testing.T) {
 			Namespace: testNs,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockInvoker.AssertCalled(t, "Delete", testCtx, testFn, testNs)
-		mockInvoker.AssertNumberOfCalls(t, "Delete", 1)
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertCalled(t, "Delete", testCtx, testFn, testNs)
+		mockFnHandler.AssertNumberOfCalls(t, "Delete", 1)
+		mockFnHandler.AssertExpectations(t)
 	})
 	t.Run("should correctly print result", func(t *testing.T) {
 		cmd := Delete{
@@ -56,17 +56,17 @@ func TestFnDelete(t *testing.T) {
 			Namespace: testNs,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockInvoker, bufLogger)
+		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 
 		require.NoError(t, err)
 		assert.Equal(t, testResult+"\n", (&outbuf).String())
-		mockInvoker.AssertExpectations(t)
+		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should return error if invalid delete request", func(t *testing.T) {
@@ -75,12 +75,12 @@ func TestFnDelete(t *testing.T) {
 			Namespace: testNs,
 		}
 
-		mockInvoker := mocks.NewFnHandler(t)
+		mockFnHandler := mocks.NewFnHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockInvoker.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{}, e)
+		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{}, e)
 
-		err := cmd.Run(testCtx, mockInvoker, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.Error(t, err)
 	})
 }
