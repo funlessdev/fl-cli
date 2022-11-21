@@ -93,6 +93,27 @@ func (_m *FnHandler) Invoke(ctx context.Context, fnName string, fnNamespace stri
 	return r0, r1
 }
 
+// List provides a mock function with given fields: ctx, namespace
+func (_m *FnHandler) List(ctx context.Context, namespace string) (openapi.FunctionListSuccess, error) {
+	ret := _m.Called(ctx, namespace)
+
+	var r0 openapi.FunctionListSuccess
+	if rf, ok := ret.Get(0).(func(context.Context, string) openapi.FunctionListSuccess); ok {
+		r0 = rf(ctx, namespace)
+	} else {
+		r0 = ret.Get(0).(openapi.FunctionListSuccess)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, namespace)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewFnHandler interface {
 	mock.TestingT
 	Cleanup(func())

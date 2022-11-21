@@ -17,6 +17,7 @@ package fn
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -28,57 +29,74 @@ import (
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
-func TestFnDelete(t *testing.T) {
-	testResult := "test-fn"
-	testFn := "test-fn"
+func TestFnList(t *testing.T) {
 	testNs := "test-ns"
 	testCtx := context.Background()
+	testResult := []string{"f1", "f2"}
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
 
-	t.Run("should use FnService.Delete to delete functions", func(t *testing.T) {
-		cmd := Delete{
-			Name:      testFn,
+	t.Run("should use FnService.List to list functions", func(t *testing.T) {
+		cmd := List{
 			Namespace: testNs,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Delete", testCtx, testFn, testNs)
-		mockFnHandler.AssertNumberOfCalls(t, "Delete", 1)
+		mockFnHandler.AssertCalled(t, "List", testCtx, testNs)
+		mockFnHandler.AssertNumberOfCalls(t, "List", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
 	t.Run("should correctly print result", func(t *testing.T) {
-		cmd := Delete{
-			Name:      testFn,
+		cmd := List{
 			Namespace: testNs,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
 		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
+		expected := fmt.Sprintf("%s\n%s\n", testResult[0], testResult[1])
 
 		require.NoError(t, err)
-		assert.Equal(t, testResult+"\n", (&outbuf).String())
+		assert.Equal(t, expected, (&outbuf).String())
 		mockFnHandler.AssertExpectations(t)
 	})
 
-	t.Run("should return error if invalid delete request", func(t *testing.T) {
-		cmd := Delete{
-			Name:      testFn,
+	t.Run("should correctly print result when asked to count returned functions", func(t *testing.T) {
+		cmd := List{
+			Namespace: testNs,
+			Count:     true,
+		}
+
+		mockFnHandler := mocks.NewFnHandler(t)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{Result: testResult}, nil)
+
+		var outbuf bytes.Buffer
+		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
+
+		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
+		expected := fmt.Sprintf("%s\n%s\nCount: %d\n", testResult[0], testResult[1], len(testResult))
+
+		require.NoError(t, err)
+		assert.Equal(t, expected, (&outbuf).String())
+		mockFnHandler.AssertExpectations(t)
+	})
+
+	t.Run("should return error if the list request is invalid", func(t *testing.T) {
+		cmd := List{
 			Namespace: testNs,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{}, e)
+		mockFnHandler.On("List", testCtx, testNs).Return(openapi.FunctionListSuccess{}, e)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.Error(t, err)
