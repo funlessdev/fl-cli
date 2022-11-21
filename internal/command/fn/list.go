@@ -34,10 +34,6 @@ func (f *List) Run(ctx context.Context, fnHandler client.FnHandler, logger log.F
 	}
 
 	if res.Result != nil {
-		// TODO: extract list items and print
-		if err != nil {
-			return err
-		}
 		for _, v := range res.Result {
 			logger.Info(v)
 		}
