@@ -71,6 +71,8 @@ github.com/funlessdev/fl-client-sdk-go v0.0.0-20221029103504-967857536cdf h1:5BJ
 github.com/funlessdev/fl-client-sdk-go v0.0.0-20221029103504-967857536cdf/go.mod h1:q4QenjUMITIhPv8CRTJJx2ohWSckV+rPvu4aBE9CZKU=
 github.com/funlessdev/fl-client-sdk-go v0.0.0-20221118150323-731027287e8a h1:TAgkwuXVyOI5qk7R2DxQPoKWBTkXETKiOD42gWtztdw=
 github.com/funlessdev/fl-client-sdk-go v0.0.0-20221118150323-731027287e8a/go.mod h1:q4QenjUMITIhPv8CRTJJx2ohWSckV+rPvu4aBE9CZKU=
+github.com/funlessdev/fl-client-sdk-go v0.0.0-20221121091856-94ec50e3ea24 h1:WHYiJssCe3QZOzxYIeP6fY18U97qlZ3b2uPcJ8Gxl9A=
+github.com/funlessdev/fl-client-sdk-go v0.0.0-20221121091856-94ec50e3ea24/go.mod h1:q4QenjUMITIhPv8CRTJJx2ohWSckV+rPvu4aBE9CZKU=
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=

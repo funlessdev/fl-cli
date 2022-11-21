@@ -20,7 +20,7 @@ require (
 	github.com/alecthomas/kong v0.7.1
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/funlessdev/fl-client-sdk-go v0.0.0-20221118150323-731027287e8a
+	github.com/funlessdev/fl-client-sdk-go v0.0.0-20221121091856-94ec50e3ea24
 	github.com/theckman/yacspin v0.13.12
 	gotest.tools/v3 v3.4.0
 )

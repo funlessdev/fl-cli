@@ -27,6 +27,7 @@ type Fn struct {
 	Delete Delete `cmd:"" help:"delete an existing function"`
 	Build  Build  `cmd:"" help:"compile a function into a wasm binary"`
 	Upload Upload `cmd:"" help:"create functions by uploading wasm binaries"`
+	List   List   `cmd:"" help:"list all functions in a given namespace"`
 }
 
 type FnError struct {

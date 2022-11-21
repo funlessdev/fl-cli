@@ -25,6 +25,7 @@ type FnHandler interface {
 	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (openapi.FunctionInvocationSuccess, error)
 	Create(ctx context.Context, fnName string, fnNamespace string, code *os.File) (openapi.FunctionCreationSuccess, error)
 	Delete(ctx context.Context, fnName string, fnNamespace string) (openapi.FunctionDeletionSuccess, error)
+	List(ctx context.Context, namespace string) (openapi.FunctionListSuccess, error)
 }
 
 type FnService struct {
@@ -69,6 +70,16 @@ func (fn *FnService) Delete(ctx context.Context, fnName string, fnNamespace stri
 	response, _, err := apiService.V1FnDeleteDeleteExecute(request)
 	if err != nil {
 		return openapi.FunctionDeletionSuccess{}, err
+	}
+	return *response, err
+}
+
+func (fn *FnService) List(ctx context.Context, namespace string) (openapi.FunctionListSuccess, error) {
+	apiService := fn.Client.ApiClient.DefaultApi
+	request := apiService.V1FnListFnNamespaceGet(ctx, namespace)
+	response, _, err := apiService.V1FnListFnNamespaceGetExecute(request)
+	if err != nil {
+		return openapi.FunctionListSuccess{}, err
 	}
 	return *response, err
 }
