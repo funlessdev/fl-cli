@@ -43,6 +43,10 @@ func ParseCMD(version string) (*kong.Context, error) {
 	logger, err := buildLogger()
 	dockerDeployer := buildDockerDeployer()
 	dockerRemover := buildDockerRemover()
+
+	kubernetesDeployer := deploy.NewKubernetesDeployer()
+	kubernetesRemover := deploy.NewKubernetesRemover()
+
 	wasmBuilder := build.NewWasmBuilder()
 
 	if err != nil {
@@ -70,11 +74,14 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.BindTo(dockerDeployer, (*deploy.DockerDeployer)(nil)),
 		kong.BindTo(dockerRemover, (*deploy.DockerRemover)(nil)),
+		kong.BindTo(kubernetesDeployer, (*deploy.KubernetesDeployer)(nil)),
+		kong.BindTo(kubernetesRemover, (*deploy.KubernetesRemover)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
-			"version":              version,
-			"default_core_image":   pkg.CoreImg,
-			"default_worker_image": pkg.WorkerImg,
+			"version":                  version,
+			"default_core_image":       pkg.CoreImg,
+			"default_worker_image":     pkg.WorkerImg,
+			"default_prometheus_image": pkg.PrometheusImg,
 		},
 		kong.UsageOnError(),
 	)

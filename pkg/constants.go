@@ -18,7 +18,7 @@ const CoreDevSecretKey = "dev-secret-key"
 
 const CoreImg = "ghcr.io/funlessdev/fl-core:latest"
 const WorkerImg = "ghcr.io/funlessdev/fl-worker:latest"
-const PrometheusImg = "giusdp/fl-prometheus:latest"
+const PrometheusImg = "prom/prometheus:latest"
 
 const CoreContName = "fl-core"
 const WorkerContName = "fl-worker"
