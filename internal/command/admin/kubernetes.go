@@ -36,11 +36,7 @@ func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logge
 	logger.Info("Deploying FunLess on Kubernetes...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
-
-	cs, err := setupKubernetesClientSet(k.KubeConfig)
-	deployer.WithClientSet(cs)
-
-	if logger.StopSpinner(err) != nil {
+	if err := logger.StopSpinner(setupDeployer(k.KubeConfig, deployer)); err != nil {
 		return err
 	}
 
@@ -70,8 +66,13 @@ func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logge
 	return nil
 }
 
-func setupDeployer() {
-
+func setupDeployer(kubeconfig string, deployer deploy.KubernetesDeployer) error {
+	cs, err := setupKubernetesClientSet(kubeconfig)
+	if err != nil {
+		return err
+	}
+	deployer.WithClientSet(cs)
+	return nil
 }
 
 func setupKubernetesClientSet(config string) (kubernetes.Interface, error) {
