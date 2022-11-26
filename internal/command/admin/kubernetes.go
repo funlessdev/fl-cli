@@ -22,10 +22,7 @@ import (
 )
 
 type k8s struct {
-	CoreImage       string `name:"core" short:"c" help:"core docker image to deploy" default:"${default_core_image}"`
-	WorkerImage     string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
-	PrometheusImage string `name:"prometheus" short:"p" help:"prometheus docker image to deploy" default:"${default_prometheus_image}"`
-	KubeConfig      string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
+	KubeConfig string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
 }
 
 func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
