@@ -32,14 +32,35 @@ type k8s struct {
 	KubeConfig      string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
 }
 
-func (k *k8s) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
+func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
 	logger.Info("Deploying FunLess on Kubernetes...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	_, err := setupKubernetesClientSet(k.KubeConfig)
+	cs, err := setupKubernetesClientSet(k.KubeConfig)
+	deployer.WithClientSet(cs)
 
-	if err != nil {
+	if logger.StopSpinner(err) != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Creating namespace...")
+	if err := logger.StopSpinner(deployer.CreateNamespace(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Creating service account...")
+	if err := logger.StopSpinner(deployer.CreateSvcAccount(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Creating role...")
+	if err := logger.StopSpinner(deployer.CreateRole(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Creating role binding...")
+	if err := logger.StopSpinner(deployer.CreateRoleBinding(ctx)); err != nil {
 		return err
 	}
 

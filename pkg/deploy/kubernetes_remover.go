@@ -21,7 +21,7 @@ import (
 )
 
 type KubernetesRemover interface {
-	WithClientSet(cs kubernetes.Clientset)
+	WithClientSet(cs kubernetes.Interface)
 
 	RemoveNamespace(ctx context.Context)
 	RemoveSvcAccount(ctx context.Context)
@@ -33,24 +33,17 @@ type KubernetesRemover interface {
 }
 
 type FlKubernetesRemover struct {
-	kubernetesClientSet kubernetes.Clientset
+	kubernetesClientSet kubernetes.Interface
 
-	namespace       string
-	svcAccountName  string
-	roleName        string
-	roleBindingName string
-
-	coreName       string
-	workerName     string
-	prometheusName string
+	namespace string
 }
 
 func NewKubernetesRemover() KubernetesRemover {
-	return &FlKubernetesRemover{}
+	return &FlKubernetesRemover{namespace: "fl"}
 }
 
-func (k *FlKubernetesRemover) WithClientSet(cs kubernetes.Clientset) {
-
+func (k *FlKubernetesRemover) WithClientSet(cs kubernetes.Interface) {
+	k.kubernetesClientSet = cs
 }
 
 func (k *FlKubernetesRemover) RemoveNamespace(ctx context.Context) {
