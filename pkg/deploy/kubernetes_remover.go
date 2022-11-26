@@ -16,20 +16,17 @@ package deploy
 
 import (
 	"context"
+	"fmt"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 )
 
 type KubernetesRemover interface {
 	WithClientSet(cs kubernetes.Interface)
 
-	RemoveNamespace(ctx context.Context)
-	RemoveSvcAccount(ctx context.Context)
-	RemoveRole(ctx context.Context)
-	RemoveRoleBinding(ctx context.Context)
-	RemoveCore(ctx context.Context)
-	RemoveWorker(ctx context.Context)
-	RemovePrometheus(ctx context.Context)
+	RemoveNamespace(ctx context.Context) error
 }
 
 type FlKubernetesRemover struct {
@@ -46,30 +43,23 @@ func (k *FlKubernetesRemover) WithClientSet(cs kubernetes.Interface) {
 	k.kubernetesClientSet = cs
 }
 
-func (k *FlKubernetesRemover) RemoveNamespace(ctx context.Context) {
+func (k *FlKubernetesRemover) RemoveNamespace(ctx context.Context) error {
+	selector := fmt.Sprintf("metadata.name=%s", k.namespace)
+	watcher, err := k.kubernetesClientSet.CoreV1().Namespaces().Watch(ctx, v1.ListOptions{FieldSelector: selector})
+	if err != nil {
+		return err
+	}
 
-}
+	err = k.kubernetesClientSet.CoreV1().Namespaces().Delete(ctx, k.namespace, v1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
 
-func (k *FlKubernetesRemover) RemoveSvcAccount(ctx context.Context) {
-
-}
-
-func (k *FlKubernetesRemover) RemoveRole(ctx context.Context) {
-
-}
-
-func (k *FlKubernetesRemover) RemoveRoleBinding(ctx context.Context) {
-
-}
-
-func (k *FlKubernetesRemover) RemoveCore(ctx context.Context) {
-
-}
-
-func (k *FlKubernetesRemover) RemoveWorker(ctx context.Context) {
-
-}
-
-func (k *FlKubernetesRemover) RemovePrometheus(ctx context.Context) {
-
+	for {
+		event := <-watcher.ResultChan()
+		if event.Type == watch.Deleted {
+			break
+		}
+	}
+	return err
 }
