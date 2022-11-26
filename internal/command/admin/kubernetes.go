@@ -16,13 +16,9 @@ package admin
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 type k8s struct {
@@ -36,7 +32,7 @@ func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logge
 	logger.Info("Deploying FunLess on Kubernetes...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
-	if err := logger.StopSpinner(setupDeployer(k.KubeConfig, deployer)); err != nil {
+	if err := logger.StopSpinner(deployer.WithConfig(k.KubeConfig)); err != nil {
 		return err
 	}
 
@@ -94,35 +90,4 @@ func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logge
 	logger.Info("You can now start using FunLess! 🎉")
 
 	return nil
-}
-
-func setupDeployer(kubeconfig string, deployer deploy.KubernetesDeployer) error {
-	cs, err := setupKubernetesClientSet(kubeconfig)
-	if err != nil {
-		return err
-	}
-	deployer.WithClientSet(cs)
-	return nil
-}
-
-func setupKubernetesClientSet(config string) (kubernetes.Interface, error) {
-	if config == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, err
-		}
-		config = filepath.Join(home, ".kube", "config")
-	}
-
-	kConfig, err := clientcmd.BuildConfigFromFlags("", config)
-	if err != nil {
-		return nil, err
-	}
-
-	clientSet, err := kubernetes.NewForConfig(kConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return clientSet, nil
 }

@@ -17,14 +17,17 @@ package deploy
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type KubernetesRemover interface {
-	WithClientSet(cs kubernetes.Interface)
+	WithConfig(config string) error
 
 	RemoveNamespace(ctx context.Context) error
 }
@@ -39,8 +42,27 @@ func NewKubernetesRemover() KubernetesRemover {
 	return &FlKubernetesRemover{namespace: "fl"}
 }
 
-func (k *FlKubernetesRemover) WithClientSet(cs kubernetes.Interface) {
-	k.kubernetesClientSet = cs
+func (k *FlKubernetesRemover) WithConfig(config string) error {
+	if config == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		config = filepath.Join(home, ".kube", "config")
+	}
+
+	kConfig, err := clientcmd.BuildConfigFromFlags("", config)
+	if err != nil {
+		return err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(kConfig)
+	if err != nil {
+		return err
+	}
+
+	k.kubernetesClientSet = clientSet
+	return nil
 }
 
 func (k *FlKubernetesRemover) RemoveNamespace(ctx context.Context) error {

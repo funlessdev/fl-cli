@@ -29,7 +29,7 @@ func (k *k8sRm) Run(ctx context.Context, remover deploy.KubernetesRemover, logge
 	logger.Info("Removing Kubernetes FunLess deployment...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
-	if err := logger.StopSpinner(setupRemover(k.KubeConfig, remover)); err != nil {
+	if err := logger.StopSpinner(remover.WithConfig(k.KubeConfig)); err != nil {
 		return err
 	}
 
@@ -40,14 +40,5 @@ func (k *k8sRm) Run(ctx context.Context, remover deploy.KubernetesRemover, logge
 
 	logger.Info("\nAll clear!")
 
-	return nil
-}
-
-func setupRemover(kubeconfig string, remover deploy.KubernetesRemover) error {
-	cs, err := setupKubernetesClientSet(kubeconfig)
-	if err != nil {
-		return err
-	}
-	remover.WithClientSet(cs)
 	return nil
 }

@@ -18,6 +18,8 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/funlessdev/fl-cli/pkg/fl_k8s"
 	apiAppsV1 "k8s.io/api/apps/v1"
@@ -25,10 +27,11 @@ import (
 	apiRbacV1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type KubernetesDeployer interface {
-	WithClientSet(cs kubernetes.Interface)
+	WithConfig(config string) error
 
 	CreateNamespace(ctx context.Context) error
 	CreateSvcAccount(ctx context.Context) error
@@ -65,8 +68,27 @@ func NewKubernetesDeployer() KubernetesDeployer {
 	return &FLKubernetesDeployer{namespace: "fl"}
 }
 
-func (k *FLKubernetesDeployer) WithClientSet(cs kubernetes.Interface) {
-	k.kubernetesClientSet = cs
+func (k *FLKubernetesDeployer) WithConfig(config string) error {
+	if config == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		config = filepath.Join(home, ".kube", "config")
+	}
+
+	kConfig, err := clientcmd.BuildConfigFromFlags("", config)
+	if err != nil {
+		return err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(kConfig)
+	if err != nil {
+		return err
+	}
+
+	k.kubernetesClientSet = clientSet
+	return nil
 }
 
 func (k *FLKubernetesDeployer) CreateNamespace(ctx context.Context) error {
