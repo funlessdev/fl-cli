@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/funlessdev/fl-cli/pkg/fl_k8s"
+	apiAppsV1 "k8s.io/api/apps/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiRbacV1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +38,7 @@ type KubernetesDeployer interface {
 	DeployPrometheus(ctx context.Context) error
 	DeployPrometheusService(ctx context.Context) error
 	DeployCore(ctx context.Context) error
-	DeployeCoreService(ctx context.Context) error
+	DeployCoreService(ctx context.Context) error
 	DeployWorker(ctx context.Context) error
 }
 
@@ -164,36 +165,96 @@ func (k *FLKubernetesDeployer) CreatePrometheusConfigMap(ctx context.Context) er
 }
 
 func (k *FLKubernetesDeployer) DeployPrometheus(ctx context.Context) error {
-	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/prometheus-cm.yml")
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/prometheus.yml")
 	if err != nil {
 		return err
 	}
 
-	typeMeta := v1.TypeMeta{Kind: "ConfigMap", APIVersion: "v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.ConfigMap{TypeMeta: typeMeta})
+	typeMeta := v1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
+	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
 
-	configMap := obj.(*apiCoreV1.ConfigMap)
+	deployment := obj.(*apiAppsV1.Deployment)
 
-	_, err = k.kubernetesClientSet.CoreV1().ConfigMaps(k.namespace).Create(ctx, configMap, v1.CreateOptions{})
+	_, err = k.kubernetesClientSet.AppsV1().Deployments(k.namespace).Create(ctx, deployment, v1.CreateOptions{})
 
 	return err
 }
 
 func (k *FLKubernetesDeployer) DeployPrometheusService(ctx context.Context) error {
-	return nil
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/prometheus.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
+	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	service := obj.(*apiCoreV1.Service)
+
+	_, err = k.kubernetesClientSet.CoreV1().Services(k.namespace).Create(ctx, service, v1.CreateOptions{})
+
+	return err
 }
 
 func (k *FLKubernetesDeployer) DeployCore(ctx context.Context) error {
-	return nil
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/core.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
+	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	deployment := obj.(*apiAppsV1.Deployment)
+
+	_, err = k.kubernetesClientSet.AppsV1().Deployments(k.namespace).Create(ctx, deployment, v1.CreateOptions{})
+
+	return err
 }
 
-func (k *FLKubernetesDeployer) DeployeCoreService(ctx context.Context) error {
-	return nil
+func (k *FLKubernetesDeployer) DeployCoreService(ctx context.Context) error {
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/core.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
+	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	service := obj.(*apiCoreV1.Service)
+
+	_, err = k.kubernetesClientSet.CoreV1().Services(k.namespace).Create(ctx, service, v1.CreateOptions{})
+
+	return err
 }
 
 func (k *FLKubernetesDeployer) DeployWorker(ctx context.Context) error {
-	return nil
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/worker.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "DaemonSet", APIVersion: "apps/v1"}
+	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiAppsV1.DaemonSet{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	daemonSet := obj.(*apiAppsV1.DaemonSet)
+
+	_, err = k.kubernetesClientSet.AppsV1().DaemonSets(k.namespace).Create(ctx, daemonSet, v1.CreateOptions{})
+
+	return err
 }

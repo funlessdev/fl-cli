@@ -40,23 +40,53 @@ func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logge
 		return err
 	}
 
-	_ = logger.StartSpinner("Creating namespace...")
+	_ = logger.StartSpinner("Creating Namespace...")
 	if err := logger.StopSpinner(deployer.CreateNamespace(ctx)); err != nil {
 		return err
 	}
 
-	_ = logger.StartSpinner("Creating service account...")
+	_ = logger.StartSpinner("Creating ServiceAccount...")
 	if err := logger.StopSpinner(deployer.CreateSvcAccount(ctx)); err != nil {
 		return err
 	}
 
-	_ = logger.StartSpinner("Creating role...")
+	_ = logger.StartSpinner("Creating Role...")
 	if err := logger.StopSpinner(deployer.CreateRole(ctx)); err != nil {
 		return err
 	}
 
-	_ = logger.StartSpinner("Creating role binding...")
+	_ = logger.StartSpinner("Creating RoleBinding...")
 	if err := logger.StopSpinner(deployer.CreateRoleBinding(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Creating Prometheus ConfigMap...")
+	if err := logger.StopSpinner(deployer.CreatePrometheusConfigMap(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Deploying Prometheus...")
+	if err := logger.StopSpinner(deployer.DeployPrometheus(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Deploying Prometheus Service...")
+	if err := logger.StopSpinner(deployer.DeployPrometheusService(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Deploying Core...")
+	if err := logger.StopSpinner(deployer.DeployCore(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Deploying Core Service...")
+	if err := logger.StopSpinner(deployer.DeployCoreService(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Deploying Workers...")
+	if err := logger.StopSpinner(deployer.DeployWorker(ctx)); err != nil {
 		return err
 	}
 
