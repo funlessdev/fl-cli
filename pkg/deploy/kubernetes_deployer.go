@@ -33,15 +33,31 @@ type KubernetesDeployer interface {
 	CreateSvcAccount(ctx context.Context) error
 	CreateRole(ctx context.Context) error
 	CreateRoleBinding(ctx context.Context) error
-	DeployCore(ctx context.Context) error
-	DeployWorker(ctx context.Context) error
+	CreatePrometheusConfigMap(ctx context.Context) error
 	DeployPrometheus(ctx context.Context) error
+	DeployPrometheusService(ctx context.Context) error
+	DeployCore(ctx context.Context) error
+	DeployeCoreService(ctx context.Context) error
+	DeployWorker(ctx context.Context) error
 }
 
 type FLKubernetesDeployer struct {
 	kubernetesClientSet kubernetes.Interface
 
 	namespace string
+}
+
+func getYAMLContent(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	yml, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return yml, nil
 }
 
 func NewKubernetesDeployer() KubernetesDeployer {
@@ -53,12 +69,7 @@ func (k *FLKubernetesDeployer) WithClientSet(cs kubernetes.Interface) {
 }
 
 func (k *FLKubernetesDeployer) CreateNamespace(ctx context.Context) error {
-	resp, err := http.Get("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/namespace.yml")
-	if err != nil {
-		return err
-	}
-
-	yml, err := io.ReadAll(resp.Body)
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/namespace.yml")
 	if err != nil {
 		return err
 	}
@@ -77,12 +88,7 @@ func (k *FLKubernetesDeployer) CreateNamespace(ctx context.Context) error {
 }
 
 func (k *FLKubernetesDeployer) CreateSvcAccount(ctx context.Context) error {
-	resp, err := http.Get("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/svc-account.yml")
-	if err != nil {
-		return err
-	}
-
-	yml, err := io.ReadAll(resp.Body)
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/svc-account.yml")
 	if err != nil {
 		return err
 	}
@@ -101,12 +107,7 @@ func (k *FLKubernetesDeployer) CreateSvcAccount(ctx context.Context) error {
 }
 
 func (k *FLKubernetesDeployer) CreateRole(ctx context.Context) error {
-	resp, err := http.Get("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/svc-account.yml")
-	if err != nil {
-		return err
-	}
-
-	yml, err := io.ReadAll(resp.Body)
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/svc-account.yml")
 	if err != nil {
 		return err
 	}
@@ -125,12 +126,7 @@ func (k *FLKubernetesDeployer) CreateRole(ctx context.Context) error {
 }
 
 func (k *FLKubernetesDeployer) CreateRoleBinding(ctx context.Context) error {
-	resp, err := http.Get("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/svc-account.yml")
-	if err != nil {
-		return err
-	}
-
-	yml, err := io.ReadAll(resp.Body)
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/svc-account.yml")
 	if err != nil {
 		return err
 	}
@@ -148,14 +144,56 @@ func (k *FLKubernetesDeployer) CreateRoleBinding(ctx context.Context) error {
 	return err
 }
 
+func (k *FLKubernetesDeployer) CreatePrometheusConfigMap(ctx context.Context) error {
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/prometheus-cm.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "ConfigMap", APIVersion: "v1"}
+	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.ConfigMap{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	configMap := obj.(*apiCoreV1.ConfigMap)
+
+	_, err = k.kubernetesClientSet.CoreV1().ConfigMaps(k.namespace).Create(ctx, configMap, v1.CreateOptions{})
+
+	return err
+}
+
+func (k *FLKubernetesDeployer) DeployPrometheus(ctx context.Context) error {
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/prometheus-cm.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "ConfigMap", APIVersion: "v1"}
+	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.ConfigMap{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	configMap := obj.(*apiCoreV1.ConfigMap)
+
+	_, err = k.kubernetesClientSet.CoreV1().ConfigMaps(k.namespace).Create(ctx, configMap, v1.CreateOptions{})
+
+	return err
+}
+
+func (k *FLKubernetesDeployer) DeployPrometheusService(ctx context.Context) error {
+	return nil
+}
+
 func (k *FLKubernetesDeployer) DeployCore(ctx context.Context) error {
 	return nil
 }
 
-func (k *FLKubernetesDeployer) DeployWorker(ctx context.Context) error {
+func (k *FLKubernetesDeployer) DeployeCoreService(ctx context.Context) error {
 	return nil
 }
 
-func (k *FLKubernetesDeployer) DeployPrometheus(ctx context.Context) error {
+func (k *FLKubernetesDeployer) DeployWorker(ctx context.Context) error {
 	return nil
 }
