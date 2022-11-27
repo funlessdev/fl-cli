@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_kubernetes
 
 import (
 	"context"
@@ -21,11 +21,11 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type k8sRm struct {
+type Down struct {
 	KubeConfig string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
 }
 
-func (k *k8sRm) Run(ctx context.Context, remover deploy.KubernetesRemover, logger log.FLogger) error {
+func (k *Down) Run(ctx context.Context, remover deploy.KubernetesRemover, logger log.FLogger) error {
 	logger.Info("Removing Kubernetes FunLess deployment...\n")
 
 	_ = logger.StartSpinner("Setting things up...")

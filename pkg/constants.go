@@ -16,8 +16,8 @@ package pkg
 
 const CoreDevSecretKey = "dev-secret-key"
 
-const CoreImg = "ghcr.io/funlessdev/fl-core:latest"
-const WorkerImg = "ghcr.io/funlessdev/fl-worker:latest"
+const CoreImg = "ghcr.io/funlessdev/core:latest"
+const WorkerImg = "ghcr.io/funlessdev/worker:latest"
 const PrometheusImg = "giusdp/fl-prometheus:latest"
 
 const CoreContName = "fl-core"

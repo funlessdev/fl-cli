@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_docker
 
 import (
 	"bytes"
@@ -27,8 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRun(t *testing.T) {
-	dev := dev{}
+func TestDockerUpRun(t *testing.T) {
+	up := Up{}
 	ctx := context.TODO()
 
 	deployer := mocks.NewDockerDeployer(t)
@@ -38,7 +38,7 @@ func TestRun(t *testing.T) {
 		deployer.On("WithImages", mock.Anything, mock.Anything).Return()
 		deployer.On("WithDockerClient", mock.Anything, mock.Anything).Return()
 		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(errors.New("error")).Once()
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 		deployer.AssertExpectations(t)
 	})
@@ -47,7 +47,7 @@ func TestRun(t *testing.T) {
 		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(nil)
 		deployer.On("CreateFLNetwork", ctx).Return(errors.New("error")).Once()
 
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
@@ -55,7 +55,7 @@ func TestRun(t *testing.T) {
 		deployer.On("CreateFLNetwork", ctx).Return(nil)
 		deployer.On("PullCoreImage", ctx).Return(errors.New("error")).Once()
 
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
@@ -63,7 +63,7 @@ func TestRun(t *testing.T) {
 		deployer.On("PullCoreImage", ctx).Return(nil)
 		deployer.On("PullWorkerImage", ctx).Return(errors.New("error")).Once()
 
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
@@ -71,7 +71,7 @@ func TestRun(t *testing.T) {
 		deployer.On("PullWorkerImage", ctx).Return(nil)
 		deployer.On("PullPromImage", ctx).Return(errors.New("error")).Once()
 
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
@@ -79,7 +79,7 @@ func TestRun(t *testing.T) {
 		deployer.On("PullPromImage", ctx).Return(nil)
 		deployer.On("StartCore", ctx).Return(errors.New("error")).Once()
 
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
@@ -87,7 +87,7 @@ func TestRun(t *testing.T) {
 		deployer.On("StartCore", ctx).Return(nil)
 		deployer.On("StartWorker", ctx).Return(errors.New("error")).Once()
 
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 
@@ -95,7 +95,7 @@ func TestRun(t *testing.T) {
 		deployer.On("StartWorker", ctx).Return(nil)
 		deployer.On("StartProm", ctx).Return(errors.New("error")).Once()
 
-		err := dev.Run(ctx, deployer, logger)
+		err := up.Run(ctx, deployer, logger)
 		require.Error(t, err)
 	})
 	t.Run("successful prints when everything goes well", func(t *testing.T) {
@@ -105,7 +105,7 @@ func TestRun(t *testing.T) {
 
 		outbuf, testLogger := testLogger()
 
-		err := dev.Run(ctx, deployer, testLogger)
+		err := up.Run(ctx, deployer, testLogger)
 		require.NoError(t, err)
 
 		expectedOutput := `Deploying FunLess locally...

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_kubernetes
 
 import (
 	"context"
@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKubernetesRmRun(t *testing.T) {
-	k8sRm := k8sRm{}
+func TestKubernetesDownRun(t *testing.T) {
+	k8sRm := Down{}
 	ctx := context.TODO()
 
 	mockRemover := mocks.NewKubernetesRemover(t)
