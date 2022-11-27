@@ -32,17 +32,17 @@ type KubernetesRemover interface {
 	RemoveNamespace(ctx context.Context) error
 }
 
-type FlKubernetesRemover struct {
+type FLKubernetesRemover struct {
 	kubernetesClientSet kubernetes.Interface
 
 	namespace string
 }
 
 func NewKubernetesRemover() KubernetesRemover {
-	return &FlKubernetesRemover{namespace: "fl"}
+	return &FLKubernetesRemover{namespace: "fl"}
 }
 
-func (k *FlKubernetesRemover) WithConfig(config string) error {
+func (k *FLKubernetesRemover) WithConfig(config string) error {
 	if config == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -65,7 +65,7 @@ func (k *FlKubernetesRemover) WithConfig(config string) error {
 	return nil
 }
 
-func (k *FlKubernetesRemover) RemoveNamespace(ctx context.Context) error {
+func (k *FLKubernetesRemover) RemoveNamespace(ctx context.Context) error {
 	selector := fmt.Sprintf("metadata.name=%s", k.namespace)
 	watcher, err := k.kubernetesClientSet.CoreV1().Namespaces().Watch(ctx, v1.ListOptions{FieldSelector: selector})
 	if err != nil {
