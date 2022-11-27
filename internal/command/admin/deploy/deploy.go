@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy
+
+import (
+	docker "github.com/funlessdev/fl-cli/internal/command/admin/deploy/docker"
+	kubernetes "github.com/funlessdev/fl-cli/internal/command/admin/deploy/kubernetes"
+)
 
 type Deploy struct {
 	Docker     deploy_docker     `cmd:"" name:"docker" aliases:"d" help:"deploy locally with 1 core and 1 worker docker containers"`
@@ -20,11 +25,11 @@ type Deploy struct {
 }
 
 type deploy_docker struct {
-	Up   docker_up   `cmd:"" name:"up" aliases:"u" help:"spin up Docker-based FunLess deployment"`
-	Down docker_down `cmd:"" name:"down" aliases:"d" help:"tear down Docker-based FunLess deployment"`
+	Up   docker.Up   `cmd:"" name:"up" aliases:"u" help:"spin up Docker-based FunLess deployment"`
+	Down docker.Down `cmd:"" name:"down" aliases:"d" help:"tear down Docker-based FunLess deployment"`
 }
 
 type deploy_kubernetes struct {
-	Up   kubernetes_up   `cmd:"" name:"up" aliases:"u" help:"spin up Kubernetes-based FunLess deployment"`
-	Down kubernetes_down `cmd:"" name:"down" aliases:"d" help:"tear down Kubernetes-based FunLess deployment"`
+	Up   kubernetes.Up   `cmd:"" name:"up" aliases:"u" help:"spin up Kubernetes-based FunLess deployment"`
+	Down kubernetes.Down `cmd:"" name:"down" aliases:"d" help:"tear down Kubernetes-based FunLess deployment"`
 }

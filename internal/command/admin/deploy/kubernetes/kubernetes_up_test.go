@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_kubernetes
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 )
 
 func TestKubernetesUpRun(t *testing.T) {
-	k8s := kubernetes_up{}
+	k8s := Up{}
 	ctx := context.TODO()
 
 	mockDeployer := mocks.NewKubernetesDeployer(t)

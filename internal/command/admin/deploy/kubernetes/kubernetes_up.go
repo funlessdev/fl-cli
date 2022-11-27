@@ -12,20 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_kubernetes
 
 import (
+	"bytes"
 	"context"
 
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type kubernetes_up struct {
+type Up struct {
 	KubeConfig string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
 }
 
-func (k *kubernetes_up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
+func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
 	logger.Info("Deploying FunLess on Kubernetes...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
@@ -87,4 +88,10 @@ func (k *kubernetes_up) Run(ctx context.Context, deployer deploy.KubernetesDeplo
 	logger.Info("You can now start using FunLess! 🎉")
 
 	return nil
+}
+
+func testLogger() (*bytes.Buffer, log.FLogger) {
+	var outbuf bytes.Buffer
+	testLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
+	return &outbuf, testLogger
 }

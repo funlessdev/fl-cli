@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_docker
 
 import (
 	"bytes"
@@ -28,7 +28,7 @@ import (
 )
 
 func TestDockerUpRun(t *testing.T) {
-	up := docker_up{}
+	up := Up{}
 	ctx := context.TODO()
 
 	deployer := mocks.NewDockerDeployer(t)

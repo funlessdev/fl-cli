@@ -14,6 +14,8 @@
 
 package admin
 
+import deploy "github.com/funlessdev/fl-cli/internal/command/admin/deploy"
+
 type Admin struct {
-	Deploy Deploy `cmd:"" help:"deploy FunLess on different setups"`
+	Deploy deploy.Deploy `cmd:"" help:"deploy FunLess on different setups"`
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_docker
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 )
 
 func TestDockerDownRun(t *testing.T) {
-	down := docker_down{}
+	down := Down{}
 	ctx := context.TODO()
 
 	mockRemover := mocks.NewDockerRemover(t)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package admin_deploy_docker
 
 import (
 	"context"
@@ -21,10 +21,10 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type docker_down struct {
+type Down struct {
 }
 
-func (r *docker_down) Run(ctx context.Context, remover deploy.DockerRemover, logger log.FLogger) error {
+func (r *Down) Run(ctx context.Context, remover deploy.DockerRemover, logger log.FLogger) error {
 	logger.Info("Removing local FunLess deployment...\n")
 
 	cli, err := setupDockerClient()
