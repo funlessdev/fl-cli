@@ -21,7 +21,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/funlessdev/fl-cli/pkg/fl_k8s"
 	apiAppsV1 "k8s.io/api/apps/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiRbacV1 "k8s.io/api/rbac/v1"
@@ -98,7 +97,7 @@ func (k *FLKubernetesDeployer) CreateNamespace(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "Namespace", APIVersion: "v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.Namespace{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.Namespace{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -117,7 +116,7 @@ func (k *FLKubernetesDeployer) CreateSvcAccount(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "ServiceAccount", APIVersion: "v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.ServiceAccount{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.ServiceAccount{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func (k *FLKubernetesDeployer) CreateRole(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "Role", APIVersion: "rbac.authorization.k8s.io/v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiRbacV1.Role{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiRbacV1.Role{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -155,7 +154,7 @@ func (k *FLKubernetesDeployer) CreateRoleBinding(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "RoleBinding", APIVersion: "rbac.authorization.k8s.io/v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiRbacV1.RoleBinding{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiRbacV1.RoleBinding{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -174,7 +173,7 @@ func (k *FLKubernetesDeployer) CreatePrometheusConfigMap(ctx context.Context) er
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "ConfigMap", APIVersion: "v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.ConfigMap{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.ConfigMap{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -193,7 +192,7 @@ func (k *FLKubernetesDeployer) DeployPrometheus(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -212,7 +211,7 @@ func (k *FLKubernetesDeployer) DeployPrometheusService(ctx context.Context) erro
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -231,7 +230,7 @@ func (k *FLKubernetesDeployer) DeployCore(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -250,7 +249,7 @@ func (k *FLKubernetesDeployer) DeployCoreService(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
@@ -269,7 +268,7 @@ func (k *FLKubernetesDeployer) DeployWorker(ctx context.Context) error {
 	}
 
 	typeMeta := v1.TypeMeta{Kind: "DaemonSet", APIVersion: "apps/v1"}
-	obj, err := fl_k8s.ParseKubernetesYAML(yml, &apiAppsV1.DaemonSet{TypeMeta: typeMeta})
+	obj, err := ParseKubernetesYAML(yml, &apiAppsV1.DaemonSet{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
