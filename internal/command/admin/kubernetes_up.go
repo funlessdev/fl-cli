@@ -21,11 +21,11 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type k8s struct {
+type kubernetes_up struct {
 	KubeConfig string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
 }
 
-func (k *k8s) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
+func (k *kubernetes_up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
 	logger.Info("Deploying FunLess on Kubernetes...\n")
 
 	_ = logger.StartSpinner("Setting things up...")

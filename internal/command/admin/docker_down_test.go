@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestResetRun(t *testing.T) {
-	reset := reset{}
+func TestDockerDownRun(t *testing.T) {
+	down := docker_down{}
 	ctx := context.TODO()
 
 	mockRemover := mocks.NewDockerRemover(t)
@@ -36,7 +36,7 @@ func TestResetRun(t *testing.T) {
 		mockRemover.On("WithDockerClient", mock.Anything).Return()
 		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(errors.New("error")).Once()
 
-		err := reset.Run(ctx, mockRemover, logger)
+		err := down.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
 		mockRemover.AssertNumberOfCalls(t, "RemoveCoreContainer", 1)
 	})
@@ -45,7 +45,7 @@ func TestResetRun(t *testing.T) {
 		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(nil)
 		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(errors.New("error")).Once()
 
-		err := reset.Run(ctx, mockRemover, logger)
+		err := down.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
 		mockRemover.AssertNumberOfCalls(t, "RemoveWorkerContainer", 1)
 	})
@@ -54,7 +54,7 @@ func TestResetRun(t *testing.T) {
 		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(nil)
 		mockRemover.On("RemovePromContainer", mock.Anything).Return(errors.New("error")).Once()
 
-		err := reset.Run(ctx, mockRemover, logger)
+		err := down.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
 		mockRemover.AssertNumberOfCalls(t, "RemovePromContainer", 1)
 	})
@@ -63,7 +63,7 @@ func TestResetRun(t *testing.T) {
 		mockRemover.On("RemovePromContainer", mock.Anything).Return(nil)
 		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(errors.New("error")).Once()
 
-		err := reset.Run(ctx, mockRemover, logger)
+		err := down.Run(ctx, mockRemover, logger)
 		require.Error(t, err)
 		mockRemover.AssertNumberOfCalls(t, "RemoveFLNetwork", 1)
 	})
@@ -72,7 +72,7 @@ func TestResetRun(t *testing.T) {
 		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(nil)
 
 		outbuf, testLogger := testLogger()
-		err := reset.Run(ctx, mockRemover, testLogger)
+		err := down.Run(ctx, mockRemover, testLogger)
 
 		expectedOutput := `Removing local FunLess deployment...
 

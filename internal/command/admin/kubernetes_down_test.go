@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKubernetesRmRun(t *testing.T) {
-	k8sRm := k8sRm{}
+func TestKubernetesDownRun(t *testing.T) {
+	k8sRm := kubernetes_down{}
 	ctx := context.TODO()
 
 	mockRemover := mocks.NewKubernetesRemover(t)

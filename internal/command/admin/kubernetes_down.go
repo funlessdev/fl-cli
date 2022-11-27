@@ -21,11 +21,11 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type k8sRm struct {
+type kubernetes_down struct {
 	KubeConfig string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
 }
 
-func (k *k8sRm) Run(ctx context.Context, remover deploy.KubernetesRemover, logger log.FLogger) error {
+func (k *kubernetes_down) Run(ctx context.Context, remover deploy.KubernetesRemover, logger log.FLogger) error {
 	logger.Info("Removing Kubernetes FunLess deployment...\n")
 
 	_ = logger.StartSpinner("Setting things up...")

@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKubernetesRun(t *testing.T) {
-	k8s := k8s{}
+func TestKubernetesUpRun(t *testing.T) {
+	k8s := kubernetes_up{}
 	ctx := context.TODO()
 
 	mockDeployer := mocks.NewKubernetesDeployer(t)

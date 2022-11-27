@@ -21,9 +21,10 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type reset struct{}
+type docker_down struct {
+}
 
-func (r *reset) Run(ctx context.Context, remover deploy.DockerRemover, logger log.FLogger) error {
+func (r *docker_down) Run(ctx context.Context, remover deploy.DockerRemover, logger log.FLogger) error {
 	logger.Info("Removing local FunLess deployment...\n")
 
 	cli, err := setupDockerClient()

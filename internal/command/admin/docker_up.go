@@ -25,12 +25,12 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type dev struct {
+type docker_up struct {
 	CoreImage   string `name:"core" short:"c" help:"core docker image to deploy" default:"${default_core_image}"`
 	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
 }
 
-func (d *dev) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
+func (d *docker_up) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
 	logger.Info("Deploying FunLess locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
