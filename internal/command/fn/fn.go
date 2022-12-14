@@ -22,12 +22,12 @@ import (
 )
 
 type Fn struct {
-	Invoke Invoke `cmd:"" help:"invoke a function"`
-	Create Create `cmd:"" help:"a combination of build and upload to create a function"`
-	Delete Delete `cmd:"" help:"delete an existing function"`
-	Build  Build  `cmd:"" help:"compile a function into a wasm binary"`
-	Upload Upload `cmd:"" help:"create functions by uploading wasm binaries"`
-	List   List   `cmd:"" help:"list all functions in a given namespace"`
+	Invoke Invoke `cmd:"" aliases:"i" help:"invoke a function"`
+	Create Create `cmd:"" aliases:"c" help:"a combination of build and upload to create a function"`
+	Delete Delete `cmd:"" aliases:"d" help:"delete an existing function"`
+	Build  Build  `cmd:"" aliases:"b" help:"compile a function into a wasm binary"`
+	Upload Upload `cmd:"" aliases:"up" help:"create functions by uploading wasm binaries"`
+	List   List   `cmd:"" aliases:"ls" help:"list all functions in a given namespace"`
 }
 
 type FnError struct {
