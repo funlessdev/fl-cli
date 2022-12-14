@@ -28,6 +28,7 @@ type Fn struct {
 	Build  Build  `cmd:"" aliases:"b" help:"compile a function into a wasm binary"`
 	Upload Upload `cmd:"" aliases:"up" help:"create functions by uploading wasm binaries"`
 	List   List   `cmd:"" aliases:"ls" help:"list all functions in a given namespace"`
+	New    New    `cmd:"" aliases:"n" help:"create a new function from a template"`
 }
 
 type FnError struct {
