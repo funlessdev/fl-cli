@@ -33,7 +33,7 @@ type Create struct {
 }
 
 func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
-	logger.Info(fmt.Sprintf("Creating %s function...\n", c.Name))
+	logger.Infof("Creating %s function...\n\n", c.Name)
 
 	_ = logger.StartSpinner("Building function...🏗 ️")
 	dest, err := os.MkdirTemp("", "funless-bin")

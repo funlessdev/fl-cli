@@ -22,6 +22,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
 	"github.com/funlessdev/fl-cli/internal/command/fn"
+	"github.com/funlessdev/fl-cli/internal/command/template"
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
@@ -30,8 +31,9 @@ import (
 )
 
 type CLI struct {
-	Fn    fn.Fn       `cmd:"" help:"create, delete and manage functions"`
-	Admin admin.Admin `cmd:"" aliases:"a" help:"deploy and manage the platform"`
+	Fn       fn.Fn             `cmd:"" help:"create, delete and manage functions"`
+	Admin    admin.Admin       `cmd:"" aliases:"a" help:"deploy and manage the platform"`
+	Template template.Template `cmd:"" help:"pull function templates"`
 
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
