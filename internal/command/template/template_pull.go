@@ -45,13 +45,15 @@ type copyOpts struct {
 	destDir string
 
 	force bool
+
+	err error
 }
 
 func (p *Pull) Run(ctx context.Context, logger log.FLogger) error {
 	// Create a tmp tmpDir for the repository
 
-	logger.StartSpinner("Cloning templates repository...")
-	tmpDir, err := os.MkdirTemp("", "funlessTemplates")
+	_ = logger.StartSpinner("Cloning templates repository...")
+	tmpDir, err := os.MkdirTemp("", "funless-templates-")
 	if err != nil {
 		return logger.StopSpinner(err)
 	}
@@ -72,7 +74,7 @@ func (p *Pull) Run(ctx context.Context, logger log.FLogger) error {
 		force:              p.Force,
 	}
 
-	logger.StartSpinner("Preparing templates...")
+	_ = logger.StartSpinner("Preparing templates...")
 	// Move the templates from the repository to the template folder
 	err = logger.StopSpinner(copyTemplates(copyOpts))
 	if err != nil {
@@ -80,7 +82,7 @@ func (p *Pull) Run(ctx context.Context, logger log.FLogger) error {
 	}
 
 	if len(copyOpts.notCopiedTemplates) > 0 {
-		logger.Infof("Skipped %d templates: %v", len(copyOpts.notCopiedTemplates), copyOpts.notCopiedTemplates)
+		logger.Infof("Skipped %d template(s) (already present): %v\n", len(copyOpts.notCopiedTemplates), copyOpts.notCopiedTemplates)
 	}
 	logger.Infof("Retrieved %d templates from %s : %v", len(copyOpts.copiedTemplates), p.Repository, copyOpts.copiedTemplates)
 	return nil
@@ -107,7 +109,7 @@ func copyTemplates(c *copyOpts) error {
 	for _, dir := range templates {
 		copySingleTemplate(dir, c)
 	}
-	return nil
+	return c.err
 }
 
 func copySingleTemplate(dir fs.DirEntry, c *copyOpts) {
@@ -119,22 +121,24 @@ func copySingleTemplate(dir fs.DirEntry, c *copyOpts) {
 
 	// if we don't know we can copy the template, check if it already exists
 	if _, found := c.okToCopyTemplate[language]; !found {
-		c.okToCopyTemplate[language] = templateAlreadyExists(c.destDir, language) || c.force
+		c.okToCopyTemplate[language] = canCopyTemplate(c.destDir, language) || c.force
 	}
 
 	if c.okToCopyTemplate[language] {
 		c.copiedTemplates = append(c.copiedTemplates, language)
 
 		// Now actually copy the template
-		copy(c.destDir, c.destDir, language)
-
+		if err := copy(c.srcDir, c.destDir, language); err != nil {
+			c.err = err
+		}
 	} else {
 		c.notCopiedTemplates = append(c.notCopiedTemplates, language)
 	}
 }
 
-// templateAlreadyExists checks if the folder of a particular language exists.
-func templateAlreadyExists(destDir string, language string) bool {
+// canCopyTemplate checks if the folder of a particular language exists.
+// If it does, it returns false (no copy needed), otherwise true
+func canCopyTemplate(destDir string, language string) bool {
 	dir := filepath.Join(destDir, language)
 	if _, err := os.Stat(dir); err == nil {
 		return false
@@ -146,7 +150,6 @@ func copy(srcDir string, destDir string, entry string) error {
 	src := filepath.Join(srcDir, entry)
 	dest := filepath.Join(destDir, entry)
 
-	fmt.Println("Copying", src, "to", dest)
 	// Get properties of source
 	info, err := os.Stat(src)
 	if err != nil {
@@ -170,7 +173,7 @@ func copy(srcDir string, destDir string, entry string) error {
 
 		// 3. For each entry in the directory, recursively copy it
 		for _, dirEntry := range entries {
-			if copy(src, dest, dirEntry.Name()); err != nil {
+			if err := copy(src, dest, dirEntry.Name()); err != nil {
 				return err
 			}
 		}

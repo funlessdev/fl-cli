@@ -14,8 +14,6 @@
 
 package template
 
-const templateDirectory = "./template/"
-
 type Template struct {
 	Pull Pull `cmd:"" help:"pull a template from a repository"`
 }
