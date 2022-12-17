@@ -12,24 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package template
 
-const CoreDevSecretKey = "dev-secret-key"
+const templateDirectory = "./template/"
 
-const CoreImg = "ghcr.io/funlessdev/core:latest"
-const WorkerImg = "ghcr.io/funlessdev/worker:latest"
-const PrometheusImg = "giusdp/fl-prometheus:latest"
-
-const CoreContName = "fl-core"
-const WorkerContName = "fl-worker"
-const PrometheusContName = "prometheus"
-const FLNet = "fl-net"
-
-var FLBuilderImages = map[string]string{
-	"js":   "ghcr.io/funlessdev/fl-js-builder:latest",
-	"rust": "ghcr.io/funlessdev/fl-rust-builder:latest",
+type Template struct {
+	Pull Pull `cmd:"" help:"pull a template from a repository"`
 }
-
-const LocalLogsPath = "funless-logs"
-
-const DefaultTemplateRepository = "https://github.com/funlessdev/fl-templates.git"
