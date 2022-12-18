@@ -18,55 +18,37 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sort"
+	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type New struct {
-	Name     string `arg:"" help:"the name of the function"`
-	Language string `name:"lang" short:"l" required:"" xor:"list-lang" enum:"rust, js" help:"the language of the function"`
-	List     bool   `aliases:"ls" xor:"list-lang" required:"" help:"list available templates in the current folder"`
+	Name        string `arg:"" help:"the name of the function"`
+	Language    string `name:"lang" short:"l" required:"" xor:"list-lang" enum:"rust, js" help:"the language of the function"`
+	TemplateDir string `short:"t" type:"path" default:"./template" help:"the directory where the template are located"`
 }
-
-const templateDirectory = "./template/"
 
 func (n *New) Run(ctx context.Context, logger log.FLogger) error {
-	if n.List {
-		return listTemplates(logger)
+	// check that Language is an existing template
+	if !isValidTemplate(n.TemplateDir, n.Language) {
+		return fmt.Errorf("no valid template for \"%s\" found", n.Language)
 	}
 
-	logger.Info("Not implemented yet!")
+	// copy template to current directory
+	src := filepath.Join(n.TemplateDir, n.Language)
+	dst := filepath.Join(".", n.Name)
+	pkg.Copy(src, dst)
+
+	logger.Info("Implementing...")
 	return nil
 }
 
-func listTemplates(logger log.FLogger) error {
-	var templates []string
-
-	templateFolders, err := os.ReadDir(templateDirectory)
-	if os.IsNotExist(err) {
-		logger.Info("No templates found! You can use 'fl template pull' to download some templates.")
-		return nil
+func isValidTemplate(tDir string, lang string) bool {
+	path := filepath.Join(tDir, lang)
+	if _, err := os.Stat(path); err == nil {
+		return true
 	}
-
-	for _, file := range templateFolders {
-		if file.IsDir() {
-			templates = append(templates, file.Name())
-		}
-	}
-
-	logger.Infof("Available templates:\n%s\n", formatTemplateList(templates))
-
-	return nil
-}
-
-func formatTemplateList(availableTemplates []string) string {
-	var result string
-	sort.Slice(availableTemplates, func(i, j int) bool {
-		return availableTemplates[i] < availableTemplates[j]
-	})
-	for _, template := range availableTemplates {
-		result += fmt.Sprintf("- %s\n", template)
-	}
-	return result
+	return false
 }
