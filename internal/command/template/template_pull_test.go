@@ -31,7 +31,7 @@ func TestTemplatePull(t *testing.T) {
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	t.Run("template pull", func(t *testing.T) {
-		testOutDir, err := os.MkdirTemp("", "funless-test-templates-outdir-")
+		testOutDir, err := os.MkdirTemp("", "funless-test-template-outdir-")
 		require.NoError(t, err)
 		defer os.RemoveAll(testOutDir)
 
@@ -50,7 +50,7 @@ func TestTemplatePull(t *testing.T) {
 	})
 
 	t.Run("template pull with force", func(t *testing.T) {
-		testOutDir, err := os.MkdirTemp("", "funless-test-templates-outdir-")
+		testOutDir, err := os.MkdirTemp("", "funless-test-template-outdir-")
 		require.NoError(t, err)
 		defer os.RemoveAll(testOutDir)
 

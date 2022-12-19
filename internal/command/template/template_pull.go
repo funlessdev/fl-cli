@@ -82,7 +82,13 @@ func (p *Pull) Run(ctx context.Context, logger log.FLogger) error {
 	if len(copyOpts.notCopiedTemplates) > 0 {
 		logger.Infof("Skipped %d template(s) (already present): %v\n", len(copyOpts.notCopiedTemplates), copyOpts.notCopiedTemplates)
 	}
-	logger.Infof("Retrieved %d templates from %s : %v", len(copyOpts.copiedTemplates), p.Repository, copyOpts.copiedTemplates)
+
+	if len(copyOpts.copiedTemplates) == 0 {
+		logger.Info("No new templates retrieved.")
+	} else {
+		logger.Infof("Retrieved %d templates from %s : %v\n", len(copyOpts.copiedTemplates), p.Repository, copyOpts.copiedTemplates)
+	}
+
 	return nil
 }
 

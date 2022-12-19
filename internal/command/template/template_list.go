@@ -11,7 +11,7 @@ import (
 )
 
 type List struct {
-	TemplateDir string `short:"d" type:"path" default:"./template" help:"the directory to read the templates from"`
+	TemplateDir string `short:"d" type:"path" default:"." help:"the directory to read the templates from"`
 }
 
 func (l *List) Run(ctx context.Context, logger log.FLogger) error {
