@@ -20,34 +20,54 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/internal/command/template"
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type New struct {
 	Name        string `arg:"" help:"the name of the function"`
-	Language    string `name:"lang" short:"l" required:"" xor:"list-lang" enum:"rust, js" help:"the language of the function"`
-	TemplateDir string `short:"t" type:"path" default:"./template" help:"the directory where the template are located"`
+	Language    string `name:"lang" short:"l" required:"" enum:"rust, js" help:"the language of the function"`
+	TemplateDir string `short:"t" type:"path" default:"." help:"the directory where the template are located"`
+	OutDir      string `short:"o" type:"path" default:"." help:"the directory where the function will be created"`
 }
 
 func (n *New) Run(ctx context.Context, logger log.FLogger) error {
-	// check that Language is an existing template
-	if !isValidTemplate(n.TemplateDir, n.Language) {
+	srcLanguageTemplate := filepath.Join(n.TemplateDir, "template", n.Language)
+	destFunc := filepath.Join(n.OutDir, n.Name)
+
+	// Check that function is not already present
+	if folderExists(destFunc) {
+		return fmt.Errorf("function \"%s\" already exists", n.Name)
+	}
+
+	// if template folder not found, pull default templates
+	if !folderExists(filepath.Join(n.TemplateDir, "template")) {
+		logger.Infof("Folder \"template\" not found in %s. Pulling default templates!\n", n.TemplateDir)
+		pullCmd := template.Pull{
+			Repository: pkg.DefaultTemplateRepository,
+			OutDir:     n.TemplateDir,
+		}
+		if err := pullCmd.Run(ctx, logger); err != nil {
+			return err
+		}
+	}
+
+	// if language template is still not available, return error
+	if !folderExists(srcLanguageTemplate) {
 		return fmt.Errorf("no valid template for \"%s\" found", n.Language)
 	}
 
-	// copy template to current directory
-	src := filepath.Join(n.TemplateDir, n.Language)
-	dst := filepath.Join(".", n.Name)
-	pkg.Copy(src, dst)
+	// copy template to current directory with the name of the function
+	pkg.Copy(srcLanguageTemplate, destFunc)
 
-	logger.Info("Implementing...")
+	logger.Infof("Function \"%s\" created!", n.Name)
+
 	return nil
 }
 
-func isValidTemplate(tDir string, lang string) bool {
-	path := filepath.Join(tDir, lang)
-	if _, err := os.Stat(path); err == nil {
+func folderExists(template string) bool {
+	if _, err := os.Stat(template); err == nil {
 		return true
 	}
 	return false
