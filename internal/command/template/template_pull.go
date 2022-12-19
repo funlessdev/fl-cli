@@ -17,20 +17,18 @@ package template
 import (
 	"context"
 	"errors"
-	"fmt"
-	"io"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/go-git/go-git/v5"
 )
 
 type Pull struct {
 	Repository string `arg:"" default:"https://github.com/funlessdev/fl-templates.git" help:"the repository to pull the template folder from"`
-	OutDir     string `short:"o" default:"." help:"the output directory where the template folder will be placed"`
+	OutDir     string `short:"o" type:"existingdir" default:"." help:"the output directory where the template folder will be placed"`
 	Force      bool   `short:"f" default:"false" help:"overwrite the template if it already exists"`
 }
 
@@ -84,7 +82,13 @@ func (p *Pull) Run(ctx context.Context, logger log.FLogger) error {
 	if len(copyOpts.notCopiedTemplates) > 0 {
 		logger.Infof("Skipped %d template(s) (already present): %v\n", len(copyOpts.notCopiedTemplates), copyOpts.notCopiedTemplates)
 	}
-	logger.Infof("Retrieved %d templates from %s : %v", len(copyOpts.copiedTemplates), p.Repository, copyOpts.copiedTemplates)
+
+	if len(copyOpts.copiedTemplates) == 0 {
+		logger.Info("No new templates retrieved.")
+	} else {
+		logger.Infof("Retrieved %d templates from %s : %v\n", len(copyOpts.copiedTemplates), p.Repository, copyOpts.copiedTemplates)
+	}
+
 	return nil
 }
 
@@ -128,7 +132,9 @@ func copySingleTemplate(dir fs.DirEntry, c *copyOpts) {
 		c.copiedTemplates = append(c.copiedTemplates, language)
 
 		// Now actually copy the template
-		if err := copy(c.srcDir, c.destDir, language); err != nil {
+		src := filepath.Join(c.srcDir, language)
+		dest := filepath.Join(c.destDir, language)
+		if err := pkg.Copy(src, dest); err != nil {
 			c.err = err
 		}
 	} else {
@@ -144,87 +150,4 @@ func canCopyTemplate(destDir string, language string) bool {
 		return false
 	}
 	return true
-}
-
-func copy(srcDir string, destDir string, entry string) error {
-	src := filepath.Join(srcDir, entry)
-	dest := filepath.Join(destDir, entry)
-
-	// Get properties of source
-	info, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	// If it's a directory, create it and copy recursively
-	if info.IsDir() {
-		// 1. Create the dest directory
-		if err := os.MkdirAll(dest, info.Mode()); err != nil {
-			return fmt.Errorf("error creating: %s - %s", dest, err.Error())
-		}
-
-		// 2. Read the source directory
-		entries, err := os.ReadDir(src)
-		if err != nil {
-			// If we fail to read the source directory, remove the created directory
-			os.RemoveAll(dest)
-			return err
-		}
-
-		// 3. For each entry in the directory, recursively copy it
-		for _, dirEntry := range entries {
-			if err := copy(src, dest, dirEntry.Name()); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	// If it's a file, copy it
-	return copySingleFile(src, dest)
-}
-
-func copySingleFile(src, dest string) error {
-	info, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	err = ensureBaseDir(dest)
-	if err != nil {
-		return fmt.Errorf("error creating base directory: %s", err.Error())
-	}
-
-	f, err := os.Create(dest)
-	if err != nil {
-		return fmt.Errorf("error creating dest file: %s", err.Error())
-	}
-	defer f.Close()
-
-	if err = os.Chmod(f.Name(), info.Mode()); err != nil {
-		return fmt.Errorf("error setting dest file mode: %s", err.Error())
-	}
-
-	s, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("error opening src file: %s", err.Error())
-	}
-	defer s.Close()
-
-	_, err = io.Copy(f, s)
-	if err != nil {
-		return fmt.Errorf("Error copying dest file: %s\n" + err.Error())
-	}
-
-	return nil
-}
-
-// ensureBaseDir creates the base directory of a given file path, if it does not exist.
-func ensureBaseDir(fpath string) error {
-	baseDir := path.Dir(fpath)
-	info, err := os.Stat(baseDir)
-	if err == nil && info.IsDir() {
-		return nil
-	}
-	return os.MkdirAll(baseDir, 0755)
 }

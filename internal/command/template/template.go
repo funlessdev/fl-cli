@@ -16,4 +16,5 @@ package template
 
 type Template struct {
 	Pull Pull `cmd:"" help:"pull a template from a repository"`
+	List List `cmd:"" help:"list available templates"`
 }

@@ -18,55 +18,59 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sort"
+	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/internal/command/template"
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type New struct {
-	Name     string `arg:"" help:"the name of the function"`
-	Language string `name:"lang" short:"l" required:"" xor:"list-lang" enum:"rust, js" help:"the language of the function"`
-	List     bool   `aliases:"ls" xor:"list-lang" required:"" help:"list available templates in the current folder"`
+	Name        string `arg:"" help:"the name of the function"`
+	Language    string `name:"lang" short:"l" required:"" enum:"rust, js" help:"the language of the function"`
+	TemplateDir string `short:"t" type:"path" default:"." help:"the directory where the template are located"`
+	OutDir      string `short:"o" type:"path" default:"." help:"the directory where the function will be created"`
 }
-
-const templateDirectory = "./template/"
 
 func (n *New) Run(ctx context.Context, logger log.FLogger) error {
-	if n.List {
-		return listTemplates(logger)
+	srcLanguageTemplate := filepath.Join(n.TemplateDir, "template", n.Language)
+	destFunc := filepath.Join(n.OutDir, n.Name)
+
+	// Check that function is not already present
+	if folderExists(destFunc) {
+		return fmt.Errorf("function \"%s\" already exists", n.Name)
 	}
 
-	logger.Info("Not implemented yet!")
-	return nil
-}
-
-func listTemplates(logger log.FLogger) error {
-	var templates []string
-
-	templateFolders, err := os.ReadDir(templateDirectory)
-	if os.IsNotExist(err) {
-		logger.Info("No templates found! You can use 'fl template pull' to download some templates.")
-		return nil
-	}
-
-	for _, file := range templateFolders {
-		if file.IsDir() {
-			templates = append(templates, file.Name())
+	// if template folder not found, pull default templates
+	if !folderExists(filepath.Join(n.TemplateDir, "template")) {
+		logger.Infof("Folder \"template\" not found in %s. Pulling default templates!\n", n.TemplateDir)
+		pullCmd := template.Pull{
+			Repository: pkg.DefaultTemplateRepository,
+			OutDir:     n.TemplateDir,
+		}
+		if err := pullCmd.Run(ctx, logger); err != nil {
+			return err
 		}
 	}
 
-	logger.Infof("Available templates:\n%s\n", formatTemplateList(templates))
+	// if language template is still not available, return error
+	if !folderExists(srcLanguageTemplate) {
+		return fmt.Errorf("no valid template for \"%s\" found", n.Language)
+	}
+
+	// copy template to current directory with the name of the function
+	if err := pkg.Copy(srcLanguageTemplate, destFunc); err != nil {
+		return err
+	}
+
+	logger.Infof("Function \"%s\" created!", n.Name)
 
 	return nil
 }
 
-func formatTemplateList(availableTemplates []string) string {
-	var result string
-	sort.Slice(availableTemplates, func(i, j int) bool {
-		return availableTemplates[i] < availableTemplates[j]
-	})
-	for _, template := range availableTemplates {
-		result += fmt.Sprintf("- %s\n", template)
+func folderExists(template string) bool {
+	if _, err := os.Stat(template); err == nil {
+		return true
 	}
-	return result
+	return false
 }
