@@ -59,7 +59,9 @@ func (n *New) Run(ctx context.Context, logger log.FLogger) error {
 	}
 
 	// copy template to current directory with the name of the function
-	pkg.Copy(srcLanguageTemplate, destFunc)
+	if err := pkg.Copy(srcLanguageTemplate, destFunc); err != nil {
+		return err
+	}
 
 	logger.Infof("Function \"%s\" created!", n.Name)
 

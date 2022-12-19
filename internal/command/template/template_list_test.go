@@ -58,7 +58,8 @@ func TestListTemplates(t *testing.T) {
 			OutDir:     tmpDir,
 		}
 
-		templatePullCmd.Run(ctx, testLogger)
+		err = templatePullCmd.Run(ctx, testLogger)
+		require.NoError(t, err)
 
 		listCmd := List{
 			TemplateDir: tmpDir,
