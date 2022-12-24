@@ -20,6 +20,8 @@ import (
 	"path/filepath"
 )
 
+const configDir = ".fl"
+
 var getHomeDir = os.UserHomeDir
 
 // EnsureConfigDir return the path to the config directory.
@@ -29,7 +31,7 @@ func EnsureConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(homedir, ".fl")
+	path := filepath.Join(homedir, configDir)
 	// check if the directory exists
 	_, err = os.Stat(path)
 	if os.IsNotExist(err) {
