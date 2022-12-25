@@ -33,7 +33,7 @@ func (sh *FLDockerShell) ComposeUp(composeFilePath string) error {
 }
 
 func (sh *FLDockerShell) ComposeDown(composeFilePath string) error {
-	return runShellCmd("docker", "compose", "-f", composeFilePath, "down", "-d")
+	return runShellCmd("docker", "compose", "-f", composeFilePath, "down")
 }
 
 func runShellCmd(cmd string, args ...string) error {

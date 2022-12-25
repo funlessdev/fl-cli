@@ -24,32 +24,16 @@ import (
 type Down struct {
 }
 
-func (r *Down) Run(ctx context.Context, remover deploy.DockerRemover, logger log.FLogger) error {
+func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Removing local FunLess deployment...\n")
 
-	cli, err := setupDockerClient()
+	composeFilePath, err := getComposeFile()
 	if err != nil {
 		return err
 	}
-	remover.WithDockerClient(cli)
 
-	_ = logger.StartSpinner("Removing Core container... ☠️")
-	if err := logger.StopSpinner(remover.RemoveCoreContainer(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("Removing Worker container... 🔪")
-	if err := logger.StopSpinner(remover.RemoveWorkerContainer(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("Removing Prometheus container... ⚰️")
-	if err := logger.StopSpinner(remover.RemovePromContainer(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("Removing fl network... ✂️")
-	if err := logger.StopSpinner(remover.RemoveFLNetwork(ctx)); err != nil {
+	err = dk.ComposeDown(composeFilePath)
+	if err != nil {
 		return err
 	}
 

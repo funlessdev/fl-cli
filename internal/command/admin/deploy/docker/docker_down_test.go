@@ -22,73 +22,41 @@ import (
 	"github.com/funlessdev/fl-cli/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDockerDownRun(t *testing.T) {
-	down := Down{}
+	realGetComposeFile := getComposeFile
+	getComposeFile = func() (string, error) {
+		return "", errors.New("get compose error")
+	}
+	defer func() {
+		getComposeFile = realGetComposeFile
+	}()
+
+	dwn := Down{}
 	ctx := context.TODO()
 
-	mockRemover := mocks.NewDockerRemover(t)
+	mockDockerShell := mocks.NewDockerShell(t)
 	_, logger := testLogger()
 
-	t.Run("should return error when removing Core fails", func(t *testing.T) {
-		mockRemover.On("WithDockerClient", mock.Anything).Return()
-		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(errors.New("error")).Once()
-
-		err := down.Run(ctx, mockRemover, logger)
-		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemoveCoreContainer", 1)
+	t.Run("should return error when setup fails", func(t *testing.T) {
+		err := dwn.Run(ctx, mockDockerShell, logger)
+		assert.Error(t, err, "get compose error")
 	})
 
-	t.Run("should return error when removing Worker fails", func(t *testing.T) {
-		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(nil)
-		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(errors.New("error")).Once()
+	t.Run("should return error when compose up fails", func(t *testing.T) {
+		getComposeFile = func() (string, error) {
+			return "", nil
+		}
 
-		err := down.Run(ctx, mockRemover, logger)
-		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemoveWorkerContainer", 1)
+		mockDockerShell.On("ComposeDown", mock.Anything).Return(errors.New("compose up error")).Once()
+		err := dwn.Run(ctx, mockDockerShell, logger)
+		assert.Error(t, err, "compose up error")
 	})
 
-	t.Run("should return error when removing Prometheus fails", func(t *testing.T) {
-		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(nil)
-		mockRemover.On("RemovePromContainer", mock.Anything).Return(errors.New("error")).Once()
-
-		err := down.Run(ctx, mockRemover, logger)
-		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemovePromContainer", 1)
-	})
-
-	t.Run("should return error when removing FL network fails", func(t *testing.T) {
-		mockRemover.On("RemovePromContainer", mock.Anything).Return(nil)
-		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(errors.New("error")).Once()
-
-		err := down.Run(ctx, mockRemover, logger)
-		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemoveFLNetwork", 1)
-	})
-
-	t.Run("successful prints when everything goes well", func(t *testing.T) {
-		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(nil)
-
-		outbuf, testLogger := testLogger()
-		err := down.Run(ctx, mockRemover, testLogger)
-
-		expectedOutput := `Removing local FunLess deployment...
-
-Removing Core container... ☠️
-done
-Removing Worker container... 🔪
-done
-Removing Prometheus container... ⚰️
-done
-Removing fl network... ✂️
-done
-
-All clear! 👍
-`
+	t.Run("should complete successfully when compose up succeeds", func(t *testing.T) {
+		mockDockerShell.On("ComposeDown", mock.Anything).Return(nil).Once()
+		err := dwn.Run(ctx, mockDockerShell, logger)
 		assert.NoError(t, err)
-		assert.Equal(t, expectedOutput, outbuf.String())
 	})
-
 }

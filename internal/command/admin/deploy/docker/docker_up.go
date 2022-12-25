@@ -16,61 +16,34 @@ package admin_deploy_docker
 
 import (
 	"context"
-	"fmt"
+	"io"
+	"net/http"
 
-	"github.com/docker/docker/client"
-	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
-	"github.com/funlessdev/fl-cli/pkg/docker"
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
+
+const dockerComposeYmlUrl = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/docker-compose.yml"
 
 type Up struct {
 	CoreImage   string `name:"core" short:"c" help:"core docker image to deploy" default:"${default_core_image}"`
 	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
 }
 
-func (d *Up) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
+func (d *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Deploying FunLess locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	if err := setupDev(d.CoreImage, d.WorkerImage, deployer); err != nil {
+	composeFilePath, err := getComposeFile()
+	if err != nil {
 		return logger.StopSpinner(err)
 	}
+	logger.StopSpinner(nil)
 
-	if err := logger.StopSpinner(deployer.CreateFLNetwork(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Core image (%s) 🐋", d.CoreImage))
-	if err := logger.StopSpinner(deployer.PullCoreImage(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Worker image (%s) 🐋", d.WorkerImage))
-	if err := logger.StopSpinner(deployer.PullWorkerImage(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("pulling Prometheus image 🐋")
-	if err := logger.StopSpinner(deployer.PullPromImage(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("starting Core container 🎛️")
-
-	if err := logger.StopSpinner(deployer.StartCore(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("starting Worker container 👷")
-	if err := logger.StopSpinner(deployer.StartWorker(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("starting Prometheus container 📊")
-	if err := logger.StopSpinner(deployer.StartProm(ctx)); err != nil {
+	err = dk.ComposeUp(composeFilePath)
+	if err != nil {
 		return err
 	}
 
@@ -80,22 +53,23 @@ func (d *Up) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log
 	return nil
 }
 
-func setupDev(core string, worker string, deployer deploy.DockerDeployer) error {
-	deployer.WithImages(core, worker)
-
-	c, err := setupDockerClient()
-	if err != nil {
-		return err
+var getComposeFile = func() (string, error) {
+	// Try to read from config dir
+	_, path, err := homedir.ReadFromConfigDir("docker-compose.yml")
+	if err == nil {
+		return path, nil
 	}
 
-	deployer.WithDockerClient(c)
-	return deployer.WithLogs(pkg.LocalLogsPath)
-}
-
-func setupDockerClient() (docker.DockerClient, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+	// if file doesn't exist or unreadable, download it
+	resp, err := http.Get(dockerComposeYmlUrl)
 	if err != nil {
-		return docker.DockerClient{}, err
+		return "", err
 	}
-	return docker.NewDockerClient(cli), nil
+
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return homedir.WriteToConfigDir("docker-compose.yml", content, true)
 }

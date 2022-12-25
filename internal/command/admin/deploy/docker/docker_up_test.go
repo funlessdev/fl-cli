@@ -24,113 +24,42 @@ import (
 	"github.com/funlessdev/fl-cli/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDockerUpRun(t *testing.T) {
+	realGetComposeFile := getComposeFile
+	getComposeFile = func() (string, error) {
+		return "", errors.New("get compose error")
+	}
+	defer func() {
+		getComposeFile = realGetComposeFile
+	}()
+
 	up := Up{}
 	ctx := context.TODO()
 
-	deployer := mocks.NewDockerDeployer(t)
+	mockDockerShell := mocks.NewDockerShell(t)
 	_, logger := testLogger()
 
-	t.Run("should return error when setup client fails", func(t *testing.T) {
-		deployer.On("WithImages", mock.Anything, mock.Anything).Return()
-		deployer.On("WithDockerClient", mock.Anything, mock.Anything).Return()
-		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(errors.New("error")).Once()
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-		deployer.AssertExpectations(t)
+	t.Run("should return error when setup fails", func(t *testing.T) {
+		err := up.Run(ctx, mockDockerShell, logger)
+		assert.Error(t, err, "get compose error")
 	})
 
-	t.Run("should return error when docker network create fails", func(t *testing.T) {
-		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(nil)
-		deployer.On("CreateFLNetwork", ctx).Return(errors.New("error")).Once()
+	t.Run("should return error when compose up fails", func(t *testing.T) {
+		getComposeFile = func() (string, error) {
+			return "", nil
+		}
 
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
+		mockDockerShell.On("ComposeUp", mock.Anything).Return(errors.New("compose up error")).Once()
+		err := up.Run(ctx, mockDockerShell, logger)
+		assert.Error(t, err, "compose up error")
 	})
 
-	t.Run("should return error when pulling core image fails", func(t *testing.T) {
-		deployer.On("CreateFLNetwork", ctx).Return(nil)
-		deployer.On("PullCoreImage", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when pulling worker image fails", func(t *testing.T) {
-		deployer.On("PullCoreImage", ctx).Return(nil)
-		deployer.On("PullWorkerImage", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when pulling prometheus image fails", func(t *testing.T) {
-		deployer.On("PullWorkerImage", ctx).Return(nil)
-		deployer.On("PullPromImage", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when starting core fails", func(t *testing.T) {
-		deployer.On("PullPromImage", ctx).Return(nil)
-		deployer.On("StartCore", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when starting worker fails", func(t *testing.T) {
-		deployer.On("StartCore", ctx).Return(nil)
-		deployer.On("StartWorker", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when starting prometheus fails", func(t *testing.T) {
-		deployer.On("StartWorker", ctx).Return(nil)
-		deployer.On("StartProm", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-	t.Run("successful prints when everything goes well", func(t *testing.T) {
-		deployer.On("StartProm", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-
-		outbuf, testLogger := testLogger()
-
-		err := up.Run(ctx, deployer, testLogger)
-		require.NoError(t, err)
-
-		expectedOutput := `Deploying FunLess locally...
-
-Setting things up...
-done
-pulling Core image () 🐋
-done
-pulling Worker image () 🐋
-done
-pulling Prometheus image 🐋
-done
-starting Core container 🎛️
-done
-starting Worker container 👷
-done
-starting Prometheus container 📊
-done
-
-Deployment complete!
-You can now start using FunLess! 🎉
-`
+	t.Run("should complete successfully when compose up succeeds", func(t *testing.T) {
+		mockDockerShell.On("ComposeUp", mock.Anything).Return(nil).Once()
+		err := up.Run(ctx, mockDockerShell, logger)
 		assert.NoError(t, err)
-		assert.Equal(t, expectedOutput, outbuf.String())
-
 	})
 }
 
