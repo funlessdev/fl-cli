@@ -25,12 +25,12 @@ import (
 )
 
 func TestDockerDownRun(t *testing.T) {
-	realGetComposeFile := getComposeFile
-	getComposeFile = func() (string, error) {
+	realGetFileInConfigDir := getFileInConfigDir
+	getFileInConfigDir = func(string, string) (string, error) {
 		return "", errors.New("get compose error")
 	}
 	defer func() {
-		getComposeFile = realGetComposeFile
+		getFileInConfigDir = realGetFileInConfigDir
 	}()
 
 	dwn := Down{}
@@ -45,7 +45,7 @@ func TestDockerDownRun(t *testing.T) {
 	})
 
 	t.Run("should return error when compose up fails", func(t *testing.T) {
-		getComposeFile = func() (string, error) {
+		getFileInConfigDir = func(string, string) (string, error) {
 			return "", nil
 		}
 

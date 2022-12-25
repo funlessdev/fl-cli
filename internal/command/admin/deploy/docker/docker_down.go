@@ -27,7 +27,7 @@ type Down struct {
 func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Removing local FunLess deployment...\n")
 
-	composeFilePath, err := getComposeFile()
+	composeFilePath, err := getFileInConfigDir(dockerComposeYmlUrl, "docker-compose.yml")
 	if err != nil {
 		return err
 	}

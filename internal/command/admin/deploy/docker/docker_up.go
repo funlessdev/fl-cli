@@ -18,13 +18,18 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-const dockerComposeYmlUrl = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/docker-compose.yml"
+const (
+	dockerComposeYmlUrl    = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/docker-compose.yml"
+	prometheusConfigYmlUrl = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/prometheus/config.yml"
+)
 
 type Up struct {
 	CoreImage   string `name:"core" short:"c" help:"core docker image to deploy" default:"${default_core_image}"`
@@ -36,14 +41,17 @@ func (d *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	composeFilePath, err := getComposeFile()
+	composeFilePath, err := getFileInConfigDir(dockerComposeYmlUrl, "docker-compose.yml")
 	if err != nil {
+		return logger.StopSpinner(err)
+	}
+
+	if _, err := getFileInConfigDir(prometheusConfigYmlUrl, "prometheus/config.yml"); err != nil {
 		return logger.StopSpinner(err)
 	}
 	_ = logger.StopSpinner(nil)
 
-	err = dk.ComposeUp(composeFilePath)
-	if err != nil {
+	if err := dk.ComposeUp(composeFilePath); err != nil {
 		return err
 	}
 
@@ -53,15 +61,15 @@ func (d *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 	return nil
 }
 
-var getComposeFile = func() (string, error) {
+var getFileInConfigDir = func(url string, file string) (string, error) {
 	// Try to read from config dir
-	_, path, err := homedir.ReadFromConfigDir("docker-compose.yml")
+	_, path, err := homedir.ReadFromConfigDir(file)
 	if err == nil {
 		return path, nil
 	}
 
 	// if file doesn't exist or unreadable, download it
-	resp, err := http.Get(dockerComposeYmlUrl)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -71,5 +79,13 @@ var getComposeFile = func() (string, error) {
 		return "", err
 	}
 
-	return homedir.WriteToConfigDir("docker-compose.yml", content, true)
+	// if we are in a sub folder, create it
+	parentDir := filepath.Dir(file)
+	if parentDir != pkg.ConfigDir {
+		if _, err := homedir.CreateDirInConfigDir(parentDir); err != nil {
+			return "", err
+		}
+	}
+
+	return homedir.WriteToConfigDir(file, content, true)
 }
