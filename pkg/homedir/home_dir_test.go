@@ -39,8 +39,7 @@ func TestEnsureConfigDir(t *testing.T) {
 		path, err := EnsureConfigDir()
 		assert.NoError(t, err)
 		assert.Equal(t, filepath.Join(homedirPath, ".fl"), path)
-		_, err = os.Stat(path)
-		assert.NoError(t, err)
+		assert.FileExists(t, path)
 	})
 
 	t.Run("should return the path to the config directory if it exists", func(t *testing.T) {
@@ -68,15 +67,13 @@ func TestWriteToConfigDir(t *testing.T) {
 		path, err := WriteToConfigDir("test", []byte("test"), false)
 		assert.NoError(t, err)
 		assert.Equal(t, filepath.Join(homedirPath, ".fl", "test"), path)
-		_, err = os.Stat(path)
-		assert.NoError(t, err)
+		assert.FileExists(t, path)
 	})
 
 	t.Run("should overwrite the file if overwrite is true", func(t *testing.T) {
 		path, err := WriteToConfigDir("test", []byte("test"), true)
 		assert.NoError(t, err)
-		_, err = os.Stat(path)
-		assert.NoError(t, err)
+		assert.FileExists(t, path)
 	})
 
 	t.Run("should return an error if the file already exists and overwrite is false", func(t *testing.T) {
@@ -117,5 +114,31 @@ func TestReadFromConfigDir(t *testing.T) {
 		_, _, err = ReadFromConfigDir("test-dir")
 		assert.Error(t, err)
 	})
+}
 
+func TestCreateDirInConfigDir(t *testing.T) {
+	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
+	require.NoError(t, err)
+
+	getHomeDir = func() (string, error) {
+		return homedirPath, err
+	}
+	defer func() {
+		getHomeDir = os.UserHomeDir
+		os.RemoveAll(homedirPath)
+	}()
+
+	t.Run("should create the directory in the config directory", func(t *testing.T) {
+		path, err := CreateDirInConfigDir("test")
+		assert.NoError(t, err)
+		assert.Equal(t, filepath.Join(homedirPath, ".fl", "test"), path)
+		assert.DirExists(t, path)
+	})
+
+	t.Run("should return no error if the directory already exists", func(t *testing.T) {
+		path, err := CreateDirInConfigDir("test")
+		assert.NoError(t, err)
+		assert.Equal(t, filepath.Join(homedirPath, ".fl", "test"), path)
+		assert.DirExists(t, path)
+	})
 }

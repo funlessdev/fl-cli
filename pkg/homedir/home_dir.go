@@ -18,9 +18,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-)
 
-const configDir = ".fl"
+	"github.com/funlessdev/fl-cli/pkg"
+)
 
 var getHomeDir = os.UserHomeDir
 
@@ -31,7 +31,7 @@ func EnsureConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(homedir, configDir)
+	path := filepath.Join(homedir, pkg.ConfigDir)
 	// check if the directory exists
 	_, err = os.Stat(path)
 	if os.IsNotExist(err) {
@@ -79,4 +79,22 @@ func ReadFromConfigDir(filename string) ([]byte, string, error) {
 
 	data, err := os.ReadFile(path)
 	return data, path, err
+}
+
+func CreateDirInConfigDir(dirName string) (string, error) {
+	homedir, err := EnsureConfigDir()
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(homedir, dirName)
+	// check if the directory exists
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	}
+
+	err = os.Mkdir(path, 0600)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
 }

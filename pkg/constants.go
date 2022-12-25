@@ -14,22 +14,25 @@
 
 package pkg
 
-const CoreDevSecretKey = "dev-secret-key"
-
-const CoreImg = "ghcr.io/funlessdev/core:latest"
-const WorkerImg = "ghcr.io/funlessdev/worker:latest"
-const PrometheusImg = "giusdp/fl-prometheus:latest"
-
-const CoreContName = "fl-core"
-const WorkerContName = "fl-worker"
-const PrometheusContName = "prometheus"
-const FLNet = "fl-net"
-
 var FLBuilderImages = map[string]string{
 	"js":   "ghcr.io/funlessdev/fl-js-builder:latest",
 	"rust": "ghcr.io/funlessdev/fl-rust-builder:latest",
 }
 
-const LocalLogsPath = "funless-logs"
+const (
+	CoreDevSecretKey = "dev-secret-key"
 
-const DefaultTemplateRepository = "https://github.com/funlessdev/fl-templates.git"
+	CoreImg       = "ghcr.io/funlessdev/core:latest"
+	WorkerImg     = "ghcr.io/funlessdev/worker:latest"
+	PrometheusImg = "giusdp/fl-prometheus:latest"
+
+	CoreContName       = "fl-core"
+	WorkerContName     = "fl-worker"
+	PrometheusContName = "prometheus"
+	FLNet              = "fl-net"
+	LocalLogsPath      = "funless-logs"
+
+	DefaultTemplateRepository = "https://github.com/funlessdev/fl-templates.git"
+
+	ConfigDir = ".fl"
+)
