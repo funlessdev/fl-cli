@@ -39,15 +39,14 @@ func TestEnsureConfigDir(t *testing.T) {
 		path, err := EnsureConfigDir()
 		assert.NoError(t, err)
 		assert.Equal(t, filepath.Join(homedirPath, ".fl"), path)
-		assert.FileExists(t, path)
+		assert.DirExists(t, path)
 	})
 
 	t.Run("should return the path to the config directory if it exists", func(t *testing.T) {
 		path, err := EnsureConfigDir()
 		assert.NoError(t, err)
 		assert.Equal(t, filepath.Join(homedirPath, ".fl"), path)
-		_, err = os.Stat(path)
-		assert.NoError(t, err)
+		assert.DirExists(t, path)
 	})
 }
 
