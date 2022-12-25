@@ -43,39 +43,40 @@ func EnsureConfigDir() (string, error) {
 	return path, nil
 }
 
-func WriteToConfigDir(filename string, data []byte, overwrite bool) error {
+// WriteToConfigDir writes the data to the file in the config directory.
+// It returns the path to the file.
+func WriteToConfigDir(filename string, data []byte, overwrite bool) (string, error) {
 	homedir, err := EnsureConfigDir()
 	if err != nil {
-		return err
+		return "", err
 	}
 	path := filepath.Join(homedir, filename)
 	if _, err := os.Stat(path); err == nil {
 		if overwrite {
 			os.Remove(path)
 		} else {
-			return errors.New("file already exists and overwrite is false")
+			return "", errors.New("file already exists and overwrite is false")
 		}
 	}
 
 	if err := os.WriteFile(path, data, 0600); err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return path, nil
 }
 
-func ReadFromConfigDir(filename string) ([]byte, error) {
+// ReadFromConfigDir reads the file from the config directory.
+// It returns the file content and the path to the file.
+func ReadFromConfigDir(filename string) ([]byte, string, error) {
 	homedir, err := EnsureConfigDir()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	path := filepath.Join(homedir, filename)
 	if _, err := os.Stat(path); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+	return data, path, err
 }

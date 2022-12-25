@@ -65,21 +65,22 @@ func TestWriteToConfigDir(t *testing.T) {
 	}()
 
 	t.Run("should write the file to the config directory", func(t *testing.T) {
-		err := WriteToConfigDir("test", []byte("test"), false)
+		path, err := WriteToConfigDir("test", []byte("test"), false)
 		assert.NoError(t, err)
-		_, err = os.Stat(filepath.Join(homedirPath, ".fl", "test"))
+		assert.Equal(t, filepath.Join(homedirPath, ".fl", "test"), path)
+		_, err = os.Stat(path)
 		assert.NoError(t, err)
 	})
 
 	t.Run("should overwrite the file if overwrite is true", func(t *testing.T) {
-		err := WriteToConfigDir("test", []byte("test"), true)
+		path, err := WriteToConfigDir("test", []byte("test"), true)
 		assert.NoError(t, err)
-		_, err = os.Stat(filepath.Join(homedirPath, ".fl", "test"))
+		_, err = os.Stat(path)
 		assert.NoError(t, err)
 	})
 
 	t.Run("should return an error if the file already exists and overwrite is false", func(t *testing.T) {
-		err := WriteToConfigDir("test", []byte("test"), false)
+		_, err := WriteToConfigDir("test", []byte("test"), false)
 		assert.Error(t, err)
 	})
 }
@@ -97,22 +98,23 @@ func TestReadFromConfigDir(t *testing.T) {
 	}()
 
 	t.Run("should return an error if the file does not exist", func(t *testing.T) {
-		_, err := ReadFromConfigDir("test")
+		_, _, err := ReadFromConfigDir("test")
 		assert.Error(t, err)
 	})
 
 	t.Run("should return the file content if the file exists", func(t *testing.T) {
-		err := WriteToConfigDir("test", []byte("test"), false)
+		_, err := WriteToConfigDir("test", []byte("test"), false)
 		assert.NoError(t, err)
-		content, err := ReadFromConfigDir("test")
+		content, path, err := ReadFromConfigDir("test")
 		assert.NoError(t, err)
 		assert.Equal(t, []byte("test"), content)
+		assert.Equal(t, filepath.Join(homedirPath, ".fl", "test"), path)
 	})
 
 	t.Run("should return an error if the file is a directory", func(t *testing.T) {
 		err := os.Mkdir(filepath.Join(homedirPath, ".fl", "test-dir"), 0755)
 		assert.NoError(t, err)
-		_, err = ReadFromConfigDir("test-dir")
+		_, _, err = ReadFromConfigDir("test-dir")
 		assert.Error(t, err)
 	})
 
