@@ -53,8 +53,7 @@ func TestAdminDevRun(t *testing.T) {
 	admCmd.Deploy.Docker.Up.CoreImage = pkg.CoreImg
 	admCmd.Deploy.Docker.Up.WorkerImage = pkg.WorkerImg
 
-	deployer := deploy.NewDockerDeployer(flNet, coreName, workerName, promName)
-	remover := deploy.NewDockerRemover(flNet, coreName, workerName, promName)
+	dockerShell := &deploy.FLDockerShell{}
 
 	b := log.NewLoggerBuilder()
 	var outbuf bytes.Buffer
@@ -63,7 +62,7 @@ func TestAdminDevRun(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("should successfully deploy and remove funless when no errors occurr", func(t *testing.T) {
-		err := admCmd.Deploy.Docker.Up.Run(ctx, deployer, logger)
+		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
 		assert.NoError(t, err)
 
 		assertContainer(t, flDocker, coreName)
@@ -71,7 +70,7 @@ func TestAdminDevRun(t *testing.T) {
 		assertContainer(t, flDocker, promName)
 		assertNetwork(t, flDocker, flNet)
 
-		err = admCmd.Deploy.Docker.Down.Run(ctx, remover, logger)
+		err = admCmd.Deploy.Docker.Down.Run(ctx, dockerShell, logger)
 		assert.NoError(t, err)
 
 		assertNetworkRemoved(t, flDocker, flNet)
@@ -82,10 +81,7 @@ func TestAdminDevRun(t *testing.T) {
 
 	t.Run("should successfully deploy without creating networks when they already exist", func(t *testing.T) {
 
-		_ = deployer.CreateFLNetwork(ctx)
-		assertNetwork(t, flDocker, flNet)
-
-		err := admCmd.Deploy.Docker.Up.Run(ctx, deployer, logger)
+		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
 		assert.NoError(t, err)
 
 		assertContainer(t, flDocker, coreName)
@@ -93,7 +89,7 @@ func TestAdminDevRun(t *testing.T) {
 		assertContainer(t, flDocker, promName)
 		assertNetwork(t, flDocker, flNet)
 
-		err = admCmd.Deploy.Docker.Down.Run(ctx, remover, logger)
+		err = admCmd.Deploy.Docker.Down.Run(ctx, dockerShell, logger)
 		assert.NoError(t, err)
 
 		assertNetworkRemoved(t, flDocker, flNet)
@@ -103,15 +99,15 @@ func TestAdminDevRun(t *testing.T) {
 	})
 
 	t.Run("should fail when core is already running", func(t *testing.T) {
-		_ = deployer.CreateFLNetwork(ctx)
-		_ = deployer.PullCoreImage(ctx)
-		_ = deployer.StartCore(ctx)
+		// _ = deployer.CreateFLNetwork(ctx)
+		// _ = deployer.PullCoreImage(ctx)
+		// _ = deployer.StartCore(ctx)
 		assertContainer(t, flDocker, coreName)
 
-		err := admCmd.Deploy.Docker.Up.Run(ctx, deployer, logger)
+		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
 		assert.Error(t, err)
 
-		err = admCmd.Deploy.Docker.Down.Run(ctx, remover, logger)
+		err = admCmd.Deploy.Docker.Down.Run(ctx, dockerShell, logger)
 		assert.NoError(t, err)
 
 		assertNetworkRemoved(t, flDocker, flNet)
@@ -126,7 +122,7 @@ func TestAdminDevRun(t *testing.T) {
 
 		os.RemoveAll(logFolder) // cleanup folder from previous test runs
 
-		err = admCmd.Deploy.Docker.Up.Run(ctx, deployer, logger)
+		err = admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
 		assert.NoError(t, err)
 
 		assert.DirExists(t, logFolder)
@@ -134,7 +130,7 @@ func TestAdminDevRun(t *testing.T) {
 		assert.NoError(t, err)
 		assert.GreaterOrEqual(t, len(files), 0)
 
-		err = admCmd.Deploy.Docker.Down.Run(ctx, remover, logger)
+		err = admCmd.Deploy.Docker.Down.Run(ctx, dockerShell, logger)
 		assert.NoError(t, err)
 
 		assertNetworkRemoved(t, flDocker, flNet)

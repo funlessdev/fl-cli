@@ -40,7 +40,7 @@ func (d *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 	if err != nil {
 		return logger.StopSpinner(err)
 	}
-	logger.StopSpinner(nil)
+	_ = logger.StopSpinner(nil)
 
 	err = dk.ComposeUp(composeFilePath)
 	if err != nil {
