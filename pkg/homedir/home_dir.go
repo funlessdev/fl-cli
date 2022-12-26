@@ -22,12 +22,12 @@ import (
 	"github.com/funlessdev/fl-cli/pkg"
 )
 
-var getHomeDir = os.UserHomeDir
+var GetHomeDir = os.UserHomeDir
 
 // EnsureConfigDir return the path to the config directory.
 // It creates it if needed.
 func EnsureConfigDir() (string, error) {
-	homedir, err := getHomeDir()
+	homedir, err := GetHomeDir()
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +59,7 @@ func WriteToConfigDir(filename string, data []byte, overwrite bool) (string, err
 		}
 	}
 
-	if err := os.WriteFile(path, data, 0600); err != nil {
+	if err := os.WriteFile(path, data, 0755); err != nil {
 		return "", err
 	}
 	return path, nil
@@ -92,7 +92,7 @@ func CreateDirInConfigDir(dirName string) (string, error) {
 		return path, nil
 	}
 
-	err = os.Mkdir(path, 0600)
+	err = os.Mkdir(path, 0755)
 	if err != nil {
 		return "", err
 	}

@@ -17,46 +17,66 @@ package admin_deploy_docker
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDockerDownRun(t *testing.T) {
-	realGetFileInConfigDir := getFileInConfigDir
-	getFileInConfigDir = func(string, string) (string, error) {
-		return "", errors.New("get compose error")
+	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
+	require.NoError(t, err)
+
+	homedir.GetHomeDir = func() (string, error) {
+		return homedirPath, nil
 	}
 	defer func() {
-		getFileInConfigDir = realGetFileInConfigDir
+		homedir.GetHomeDir = os.UserHomeDir
+		os.RemoveAll(homedirPath)
 	}()
 
-	dwn := Down{}
+	down := Down{}
 	ctx := context.TODO()
 
 	mockDockerShell := mocks.NewDockerShell(t)
-	_, logger := testLogger()
+	out, logger := testLogger()
 
 	t.Run("should return error when setup fails", func(t *testing.T) {
-		err := dwn.Run(ctx, mockDockerShell, logger)
-		assert.Error(t, err, "get compose error")
-	})
-
-	t.Run("should return error when compose up fails", func(t *testing.T) {
-		getFileInConfigDir = func(string, string) (string, error) {
-			return "", nil
+		homedir.GetHomeDir = func() (string, error) {
+			return "", errors.New("some home error")
 		}
+		err := down.Run(ctx, mockDockerShell, logger)
+		require.Error(t, err)
 
-		mockDockerShell.On("ComposeDown", mock.Anything).Return(errors.New("compose up error")).Once()
-		err := dwn.Run(ctx, mockDockerShell, logger)
-		assert.Error(t, err, "compose up error")
+		homedir.GetHomeDir = func() (string, error) {
+			return homedirPath, nil
+		}
 	})
 
-	t.Run("should complete successfully when compose up succeeds", func(t *testing.T) {
-		mockDockerShell.On("ComposeDown", mock.Anything).Return(nil).Once()
-		err := dwn.Run(ctx, mockDockerShell, logger)
-		assert.NoError(t, err)
+	t.Run("should return error when compose down fails", func(t *testing.T) {
+		path, err := downloadDockerCompose()
+		require.NoError(t, err)
+
+		out.Reset()
+		mockDockerShell.On("ComposeDown", path).Return(errors.New("some compose down error")).Once()
+
+		err = down.Run(ctx, mockDockerShell, logger)
+		require.Error(t, err)
+	})
+
+	t.Run("should remove docker-compose.yml when succeds", func(t *testing.T) {
+		path, err := downloadDockerCompose()
+		require.NoError(t, err)
+
+		out.Reset()
+		mockDockerShell.On("ComposeDown", path).Return(nil)
+
+		err = down.Run(ctx, mockDockerShell, logger)
+		require.NoError(t, err)
+		require.Contains(t, out.String(), "\nAll clear!")
+
+		require.NoFileExists(t, path)
 	})
 }

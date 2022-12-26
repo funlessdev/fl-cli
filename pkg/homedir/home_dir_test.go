@@ -27,11 +27,11 @@ func TestEnsureConfigDir(t *testing.T) {
 	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
 	require.NoError(t, err)
 
-	getHomeDir = func() (string, error) {
+	GetHomeDir = func() (string, error) {
 		return homedirPath, err
 	}
 	defer func() {
-		getHomeDir = os.UserHomeDir
+		GetHomeDir = os.UserHomeDir
 		os.RemoveAll(homedirPath)
 	}()
 
@@ -54,11 +54,11 @@ func TestWriteToConfigDir(t *testing.T) {
 	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
 	require.NoError(t, err)
 
-	getHomeDir = func() (string, error) {
+	GetHomeDir = func() (string, error) {
 		return homedirPath, err
 	}
 	defer func() {
-		getHomeDir = os.UserHomeDir
+		GetHomeDir = os.UserHomeDir
 		os.RemoveAll(homedirPath)
 	}()
 
@@ -85,11 +85,11 @@ func TestReadFromConfigDir(t *testing.T) {
 	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
 	require.NoError(t, err)
 
-	getHomeDir = func() (string, error) {
+	GetHomeDir = func() (string, error) {
 		return homedirPath, err
 	}
 	defer func() {
-		getHomeDir = os.UserHomeDir
+		GetHomeDir = os.UserHomeDir
 		os.RemoveAll(homedirPath)
 	}()
 
@@ -119,11 +119,11 @@ func TestCreateDirInConfigDir(t *testing.T) {
 	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
 	require.NoError(t, err)
 
-	getHomeDir = func() (string, error) {
+	GetHomeDir = func() (string, error) {
 		return homedirPath, err
 	}
 	defer func() {
-		getHomeDir = os.UserHomeDir
+		GetHomeDir = os.UserHomeDir
 		os.RemoveAll(homedirPath)
 	}()
 

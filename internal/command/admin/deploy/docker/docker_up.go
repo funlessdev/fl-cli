@@ -16,9 +16,10 @@ package admin_deploy_docker
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
-	"path/filepath"
+	"strings"
 
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
@@ -36,19 +37,25 @@ type Up struct {
 	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
 }
 
-func (d *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
+func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Deploying FunLess locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	composeFilePath, err := getFileInConfigDir(dockerComposeYmlUrl, "docker-compose.yml")
+	composeFilePath, err := downloadDockerCompose()
 	if err != nil {
 		return logger.StopSpinner(err)
 	}
 
-	if _, err := getFileInConfigDir(prometheusConfigYmlUrl, "prometheus/config.yml"); err != nil {
+	// if another core image is specified, we have to replace it in the compose file
+	if err := replaceImages(u.CoreImage, u.WorkerImage); err != nil {
 		return logger.StopSpinner(err)
 	}
+
+	if err := downloadPrometheusConfig(); err != nil {
+		return logger.StopSpinner(err)
+	}
+
 	_ = logger.StopSpinner(nil)
 
 	if err := dk.ComposeUp(composeFilePath); err != nil {
@@ -61,15 +68,14 @@ func (d *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 	return nil
 }
 
-var getFileInConfigDir = func(url string, file string) (string, error) {
-	// Try to read from config dir
-	_, path, err := homedir.ReadFromConfigDir(file)
-	if err == nil {
+func downloadDockerCompose() (string, error) {
+	// Check if it's already present
+	if _, path, err := homedir.ReadFromConfigDir("docker-compose.yml"); err == nil {
 		return path, nil
 	}
 
-	// if file doesn't exist or unreadable, download it
-	resp, err := http.Get(url)
+	// Download docker-compose.yml
+	resp, err := http.Get(dockerComposeYmlUrl)
 	if err != nil {
 		return "", err
 	}
@@ -79,13 +85,52 @@ var getFileInConfigDir = func(url string, file string) (string, error) {
 		return "", err
 	}
 
-	// if we are in a sub folder, create it
-	parentDir := filepath.Dir(file)
-	if parentDir != pkg.ConfigDir {
-		if _, err := homedir.CreateDirInConfigDir(parentDir); err != nil {
-			return "", err
-		}
+	return homedir.WriteToConfigDir("docker-compose.yml", content, true)
+}
+
+func downloadPrometheusConfig() error {
+	// Check if it's already present
+	if _, _, err := homedir.ReadFromConfigDir("prometheus/config.yml"); err == nil {
+		return nil
 	}
 
-	return homedir.WriteToConfigDir(file, content, true)
+	// Download prometheus/config.yml
+	resp, err := http.Get(prometheusConfigYmlUrl)
+	if err != nil {
+		return err
+	}
+
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if _, err := homedir.CreateDirInConfigDir("prometheus"); err != nil {
+		return err
+	}
+
+	_, err = homedir.WriteToConfigDir("prometheus/config.yml", content, true)
+	return err
+}
+
+func replaceImages(core string, worker string) error {
+	if core == pkg.CoreImg && worker == pkg.WorkerImg {
+		return nil
+	}
+
+	content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
+	if err != nil {
+		return errors.New("unable to read docker-compose.yml")
+	}
+
+	newCompose := string(content)
+	if core != pkg.CoreImg {
+		newCompose = strings.Replace(string(content), pkg.CoreImg, core, 1)
+	}
+	if worker != pkg.WorkerImg {
+		newCompose = strings.Replace(newCompose, pkg.WorkerImg, worker, 1)
+	}
+
+	_, err = homedir.WriteToConfigDir("docker-compose.yml", []byte(newCompose), true)
+	return err
 }

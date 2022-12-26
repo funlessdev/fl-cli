@@ -78,10 +78,9 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(kubernetesRemover, (*deploy.KubernetesRemover)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
-			"version":                  version,
-			"default_core_image":       pkg.CoreImg,
-			"default_worker_image":     pkg.WorkerImg,
-			"default_prometheus_image": pkg.PrometheusImg,
+			"version":              version,
+			"default_core_image":   pkg.CoreImg,
+			"default_worker_image": pkg.WorkerImg,
 		},
 		kong.UsageOnError(),
 	)

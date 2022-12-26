@@ -16,21 +16,24 @@ package admin_deploy_docker
 
 import (
 	"context"
+	"errors"
+	"os"
 
 	"github.com/funlessdev/fl-cli/pkg/deploy"
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type Down struct {
-}
+type Down struct{}
 
 func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Removing local FunLess deployment...\n")
 
-	composeFilePath, err := getFileInConfigDir(dockerComposeYmlUrl, "docker-compose.yml")
+	_, composeFilePath, err := homedir.ReadFromConfigDir("docker-compose.yml")
 	if err != nil {
-		return err
+		return errors.New("unable to read docker-compose.yml file")
 	}
+	defer os.Remove(composeFilePath)
 
 	err = dk.ComposeDown(composeFilePath)
 	if err != nil {

@@ -20,19 +20,10 @@ var FLBuilderImages = map[string]string{
 }
 
 const (
-	CoreDevSecretKey = "dev-secret-key"
-
 	CoreImg       = "ghcr.io/funlessdev/core:latest"
 	WorkerImg     = "ghcr.io/funlessdev/worker:latest"
-	PrometheusImg = "giusdp/fl-prometheus:latest"
-
-	CoreContName       = "fl-core"
-	WorkerContName     = "fl-worker"
-	PrometheusContName = "prometheus"
-	FLNet              = "fl-net"
-	LocalLogsPath      = "funless-logs"
+	LocalLogsPath = "funless-logs"
 
 	DefaultTemplateRepository = "https://github.com/funlessdev/fl-templates.git"
-
-	ConfigDir = ".fl"
+	ConfigDir                 = ".fl"
 )
