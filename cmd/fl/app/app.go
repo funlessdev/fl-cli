@@ -43,8 +43,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 	ctx := context.Background()
 
 	logger, err := buildLogger()
-	dockerDeployer := buildDockerDeployer()
-	dockerRemover := buildDockerRemover()
+	dockerShell := buildDockerShell()
 
 	kubernetesDeployer := deploy.NewKubernetesDeployer()
 	kubernetesRemover := deploy.NewKubernetesRemover()
@@ -74,16 +73,14 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
-		kong.BindTo(dockerDeployer, (*deploy.DockerDeployer)(nil)),
-		kong.BindTo(dockerRemover, (*deploy.DockerRemover)(nil)),
+		kong.BindTo(dockerShell, (*deploy.DockerShell)(nil)),
 		kong.BindTo(kubernetesDeployer, (*deploy.KubernetesDeployer)(nil)),
 		kong.BindTo(kubernetesRemover, (*deploy.KubernetesRemover)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.Vars{
-			"version":                  version,
-			"default_core_image":       pkg.CoreImg,
-			"default_worker_image":     pkg.WorkerImg,
-			"default_prometheus_image": pkg.PrometheusImg,
+			"version":              version,
+			"default_core_image":   pkg.CoreImg,
+			"default_worker_image": pkg.WorkerImg,
 		},
 		kong.UsageOnError(),
 	)
@@ -100,10 +97,6 @@ func buildLogger() (log.FLogger, error) {
 	return logger, err
 }
 
-func buildDockerDeployer() deploy.DockerDeployer {
-	return deploy.NewDockerDeployer(pkg.FLNet, pkg.CoreContName, pkg.WorkerContName, pkg.PrometheusContName)
-}
-
-func buildDockerRemover() deploy.DockerRemover {
-	return deploy.NewDockerRemover(pkg.FLNet, pkg.CoreContName, pkg.WorkerContName, pkg.PrometheusContName)
+func buildDockerShell() deploy.DockerShell {
+	return &deploy.FLDockerShell{}
 }

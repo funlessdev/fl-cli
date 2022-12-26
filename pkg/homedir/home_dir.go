@@ -18,20 +18,20 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+
+	"github.com/funlessdev/fl-cli/pkg"
 )
 
-const configDir = ".fl"
-
-var getHomeDir = os.UserHomeDir
+var GetHomeDir = os.UserHomeDir
 
 // EnsureConfigDir return the path to the config directory.
 // It creates it if needed.
 func EnsureConfigDir() (string, error) {
-	homedir, err := getHomeDir()
+	homedir, err := GetHomeDir()
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(homedir, configDir)
+	path := filepath.Join(homedir, pkg.ConfigDir)
 	// check if the directory exists
 	_, err = os.Stat(path)
 	if os.IsNotExist(err) {
@@ -43,39 +43,58 @@ func EnsureConfigDir() (string, error) {
 	return path, nil
 }
 
-func WriteToConfigDir(filename string, data []byte, overwrite bool) error {
+// WriteToConfigDir writes the data to the file in the config directory.
+// It returns the path to the file.
+func WriteToConfigDir(filename string, data []byte, overwrite bool) (string, error) {
 	homedir, err := EnsureConfigDir()
 	if err != nil {
-		return err
+		return "", err
 	}
 	path := filepath.Join(homedir, filename)
 	if _, err := os.Stat(path); err == nil {
 		if overwrite {
 			os.Remove(path)
 		} else {
-			return errors.New("file already exists and overwrite is false")
+			return "", errors.New("file already exists and overwrite is false")
 		}
 	}
 
-	if err := os.WriteFile(path, data, 0600); err != nil {
-		return err
+	if err := os.WriteFile(path, data, 0755); err != nil {
+		return "", err
 	}
-	return nil
+	return path, nil
 }
 
-func ReadFromConfigDir(filename string) ([]byte, error) {
+// ReadFromConfigDir reads the file from the config directory.
+// It returns the file content and the path to the file.
+func ReadFromConfigDir(filename string) ([]byte, string, error) {
 	homedir, err := EnsureConfigDir()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	path := filepath.Join(homedir, filename)
 	if _, err := os.Stat(path); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	data, err := os.ReadFile(path)
+	return data, path, err
+}
+
+func CreateDirInConfigDir(dirName string) (string, error) {
+	homedir, err := EnsureConfigDir()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return data, nil
+	path := filepath.Join(homedir, dirName)
+	// check if the directory exists
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	}
+
+	err = os.Mkdir(path, 0755)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
 }

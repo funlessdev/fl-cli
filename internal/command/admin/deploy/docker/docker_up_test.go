@@ -18,120 +18,198 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDockerUpRun(t *testing.T) {
+	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
+	require.NoError(t, err)
+
+	defer func() {
+		homedir.GetHomeDir = os.UserHomeDir
+		os.RemoveAll(homedirPath)
+	}()
+
 	up := Up{}
 	ctx := context.TODO()
 
-	deployer := mocks.NewDockerDeployer(t)
-	_, logger := testLogger()
+	mockDockerShell := mocks.NewDockerShell(t)
+	out, logger := testLogger()
 
-	t.Run("should return error when setup client fails", func(t *testing.T) {
-		deployer.On("WithImages", mock.Anything, mock.Anything).Return()
-		deployer.On("WithDockerClient", mock.Anything, mock.Anything).Return()
-		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(errors.New("error")).Once()
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-		deployer.AssertExpectations(t)
-	})
-
-	t.Run("should return error when docker network create fails", func(t *testing.T) {
-		deployer.On("WithLogs", mock.Anything, mock.Anything).Return(nil)
-		deployer.On("CreateFLNetwork", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
+	t.Run("should return error when setup fails", func(t *testing.T) {
+		homedir.GetHomeDir = func() (string, error) {
+			return "", errors.New("some home error")
+		}
+		err := up.Run(ctx, mockDockerShell, logger)
 		require.Error(t, err)
 	})
 
-	t.Run("should return error when pulling core image fails", func(t *testing.T) {
-		deployer.On("CreateFLNetwork", ctx).Return(nil)
-		deployer.On("PullCoreImage", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when pulling worker image fails", func(t *testing.T) {
-		deployer.On("PullCoreImage", ctx).Return(nil)
-		deployer.On("PullWorkerImage", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when pulling prometheus image fails", func(t *testing.T) {
-		deployer.On("PullWorkerImage", ctx).Return(nil)
-		deployer.On("PullPromImage", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when starting core fails", func(t *testing.T) {
-		deployer.On("PullPromImage", ctx).Return(nil)
-		deployer.On("StartCore", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when starting worker fails", func(t *testing.T) {
-		deployer.On("StartCore", ctx).Return(nil)
-		deployer.On("StartWorker", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-
-	t.Run("should return error when starting prometheus fails", func(t *testing.T) {
-		deployer.On("StartWorker", ctx).Return(nil)
-		deployer.On("StartProm", ctx).Return(errors.New("error")).Once()
-
-		err := up.Run(ctx, deployer, logger)
-		require.Error(t, err)
-	})
-	t.Run("successful prints when everything goes well", func(t *testing.T) {
-		deployer.On("StartProm", ctx).Return(func(ctx context.Context) error {
-			return nil
-		})
-
-		outbuf, testLogger := testLogger()
-
-		err := up.Run(ctx, deployer, testLogger)
+	t.Run("should complete successfully when no error occurs", func(t *testing.T) {
+		homedir.GetHomeDir = func() (string, error) {
+			return homedirPath, nil
+		}
+		mockDockerShell.On("ComposeUp", mock.Anything).Return(nil).Once()
+		err := up.Run(ctx, mockDockerShell, logger)
 		require.NoError(t, err)
 
-		expectedOutput := `Deploying FunLess locally...
-
-Setting things up...
-done
-pulling Core image () 🐋
-done
-pulling Worker image () 🐋
-done
-pulling Prometheus image 🐋
-done
-starting Core container 🎛️
-done
-starting Worker container 👷
-done
-starting Prometheus container 📊
-done
-
-Deployment complete!
-You can now start using FunLess! 🎉
-`
-		assert.NoError(t, err)
-		assert.Equal(t, expectedOutput, outbuf.String())
-
+		require.Contains(t, out.String(), "\nDeployment complete!")
 	})
+
+	t.Run("should return error when compose up fails", func(t *testing.T) {
+		out.Reset()
+		mockDockerShell.On("ComposeUp", mock.Anything).Return(errors.New("compose up error")).Once()
+		err := up.Run(ctx, mockDockerShell, logger)
+		require.Error(t, err)
+	})
+
+	t.Run("should modify docker-compose.yml when given custom core/worker", func(t *testing.T) {
+		out.Reset()
+		mockDockerShell.On("ComposeUp", mock.Anything).Return(nil).Once()
+		_, path, err := homedir.ReadFromConfigDir("docker-compose.yml")
+		require.NoError(t, err)
+		os.Remove(path)
+
+		up.CoreImage = "custom-core"
+		up.WorkerImage = "custom-worker"
+		err = up.Run(ctx, mockDockerShell, logger)
+		require.NoError(t, err)
+
+		require.Contains(t, out.String(), "\nDeployment complete!")
+		content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
+		require.NoError(t, err)
+		require.Contains(t, string(content), "custom-core")
+		require.Contains(t, string(content), "custom-worker")
+	})
+}
+
+func Test_downloadDockerCompose(t *testing.T) {
+	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
+	require.NoError(t, err)
+
+	homedir.GetHomeDir = func() (string, error) {
+		return homedirPath, err
+	}
+	defer func() {
+		homedir.GetHomeDir = os.UserHomeDir
+		os.RemoveAll(homedirPath)
+	}()
+
+	// Download it for the first time
+	path, err := downloadDockerCompose()
+	require.NoError(t, err)
+	require.FileExists(t, path)
+
+	// Now that it exists it should not give errors
+	path, err = downloadDockerCompose()
+	require.NoError(t, err)
+	require.FileExists(t, path)
+}
+
+func Test_downloadPrometheusConfig(t *testing.T) {
+	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
+	require.NoError(t, err)
+
+	homedir.GetHomeDir = func() (string, error) {
+		return homedirPath, err
+	}
+	defer func() {
+		homedir.GetHomeDir = os.UserHomeDir
+		os.RemoveAll(homedirPath)
+	}()
+
+	err = downloadPrometheusConfig()
+	require.NoError(t, err)
+
+	require.DirExists(t, filepath.Join(homedirPath, ".fl", "prometheus"))
+	require.FileExists(t, filepath.Join(homedirPath, ".fl", "prometheus", "config.yml"))
+
+	err = downloadPrometheusConfig()
+	require.NoError(t, err)
+}
+
+func Test_replaceImages(t *testing.T) {
+	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
+	require.NoError(t, err)
+
+	homedir.GetHomeDir = func() (string, error) {
+		return homedirPath, err
+	}
+	defer func() {
+		homedir.GetHomeDir = os.UserHomeDir
+		os.RemoveAll(homedirPath)
+	}()
+
+	t.Run("should return error when docker-compose.yml file is not found", func(t *testing.T) {
+		err := replaceImages("core-test", "worker-test")
+		require.Error(t, err)
+	})
+
+	t.Run("should swap core image when different from default", func(t *testing.T) {
+		path, err := downloadDockerCompose()
+		require.NoError(t, err)
+		defer os.Remove(path)
+
+		err = replaceImages("core-test", pkg.WorkerImg)
+		require.NoError(t, err)
+
+		content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
+		require.NoError(t, err)
+
+		expected := `  core:
+    image: core-test`
+		expectedWorker := `  worker:
+    image: ghcr.io/funlessdev/worker:latest`
+		require.Contains(t, string(content), expected, "core image should be the one provided")
+		require.Contains(t, string(content), expectedWorker, "worker image should be the default")
+	})
+
+	t.Run("should swap worker image when different from default", func(t *testing.T) {
+		path, err := downloadDockerCompose()
+		require.NoError(t, err)
+		defer os.Remove(path)
+
+		err = replaceImages(pkg.CoreImg, "worker-test")
+		require.NoError(t, err)
+
+		content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
+		require.NoError(t, err)
+
+		expected := `  core:
+    image: ghcr.io/funlessdev/core:latest`
+		expectedWorker := `  worker:
+    image: worker-test`
+		require.Contains(t, string(content), expected, "core image should be the default")
+		require.Contains(t, string(content), expectedWorker, "worker image should be the one provided")
+	})
+
+	t.Run("should swap both images when different from default", func(t *testing.T) {
+		path, err := downloadDockerCompose()
+		require.NoError(t, err)
+		defer os.Remove(path)
+
+		err = replaceImages("core-test", "worker-test")
+		require.NoError(t, err)
+
+		content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
+		require.NoError(t, err)
+
+		expected := `  core:
+    image: core-test`
+		expectedWorker := `  worker:
+    image: worker-test`
+		require.Contains(t, string(content), expected, "core image should be the one provided")
+		require.Contains(t, string(content), expectedWorker, "worker image should be the one provided")
+	})
+
 }
 
 func testLogger() (*bytes.Buffer, log.FLogger) {

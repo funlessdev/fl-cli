@@ -16,40 +16,27 @@ package admin_deploy_docker
 
 import (
 	"context"
+	"errors"
+	"os"
 
 	"github.com/funlessdev/fl-cli/pkg/deploy"
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type Down struct {
-}
+type Down struct{}
 
-func (r *Down) Run(ctx context.Context, remover deploy.DockerRemover, logger log.FLogger) error {
+func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Removing local FunLess deployment...\n")
 
-	cli, err := setupDockerClient()
+	_, composeFilePath, err := homedir.ReadFromConfigDir("docker-compose.yml")
 	if err != nil {
-		return err
+		return errors.New("unable to read docker-compose.yml file")
 	}
-	remover.WithDockerClient(cli)
+	defer os.Remove(composeFilePath)
 
-	_ = logger.StartSpinner("Removing Core container... ☠️")
-	if err := logger.StopSpinner(remover.RemoveCoreContainer(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("Removing Worker container... 🔪")
-	if err := logger.StopSpinner(remover.RemoveWorkerContainer(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("Removing Prometheus container... ⚰️")
-	if err := logger.StopSpinner(remover.RemovePromContainer(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("Removing fl network... ✂️")
-	if err := logger.StopSpinner(remover.RemoveFLNetwork(ctx)); err != nil {
+	err = dk.ComposeDown(composeFilePath)
+	if err != nil {
 		return err
 	}
 

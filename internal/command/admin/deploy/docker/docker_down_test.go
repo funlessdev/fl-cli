@@ -17,78 +17,66 @@ package admin_deploy_docker
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDockerDownRun(t *testing.T) {
+	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
+	require.NoError(t, err)
+
+	homedir.GetHomeDir = func() (string, error) {
+		return homedirPath, nil
+	}
+	defer func() {
+		homedir.GetHomeDir = os.UserHomeDir
+		os.RemoveAll(homedirPath)
+	}()
+
 	down := Down{}
 	ctx := context.TODO()
 
-	mockRemover := mocks.NewDockerRemover(t)
-	_, logger := testLogger()
+	mockDockerShell := mocks.NewDockerShell(t)
+	out, logger := testLogger()
 
-	t.Run("should return error when removing Core fails", func(t *testing.T) {
-		mockRemover.On("WithDockerClient", mock.Anything).Return()
-		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(errors.New("error")).Once()
-
-		err := down.Run(ctx, mockRemover, logger)
+	t.Run("should return error when setup fails", func(t *testing.T) {
+		homedir.GetHomeDir = func() (string, error) {
+			return "", errors.New("some home error")
+		}
+		err := down.Run(ctx, mockDockerShell, logger)
 		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemoveCoreContainer", 1)
+
+		homedir.GetHomeDir = func() (string, error) {
+			return homedirPath, nil
+		}
 	})
 
-	t.Run("should return error when removing Worker fails", func(t *testing.T) {
-		mockRemover.On("RemoveCoreContainer", mock.Anything).Return(nil)
-		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(errors.New("error")).Once()
+	t.Run("should return error when compose down fails", func(t *testing.T) {
+		path, err := downloadDockerCompose()
+		require.NoError(t, err)
 
-		err := down.Run(ctx, mockRemover, logger)
+		out.Reset()
+		mockDockerShell.On("ComposeDown", path).Return(errors.New("some compose down error")).Once()
+
+		err = down.Run(ctx, mockDockerShell, logger)
 		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemoveWorkerContainer", 1)
 	})
 
-	t.Run("should return error when removing Prometheus fails", func(t *testing.T) {
-		mockRemover.On("RemoveWorkerContainer", mock.Anything).Return(nil)
-		mockRemover.On("RemovePromContainer", mock.Anything).Return(errors.New("error")).Once()
+	t.Run("should remove docker-compose.yml when succeds", func(t *testing.T) {
+		path, err := downloadDockerCompose()
+		require.NoError(t, err)
 
-		err := down.Run(ctx, mockRemover, logger)
-		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemovePromContainer", 1)
+		out.Reset()
+		mockDockerShell.On("ComposeDown", path).Return(nil)
+
+		err = down.Run(ctx, mockDockerShell, logger)
+		require.NoError(t, err)
+		require.Contains(t, out.String(), "\nAll clear!")
+
+		require.NoFileExists(t, path)
 	})
-
-	t.Run("should return error when removing FL network fails", func(t *testing.T) {
-		mockRemover.On("RemovePromContainer", mock.Anything).Return(nil)
-		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(errors.New("error")).Once()
-
-		err := down.Run(ctx, mockRemover, logger)
-		require.Error(t, err)
-		mockRemover.AssertNumberOfCalls(t, "RemoveFLNetwork", 1)
-	})
-
-	t.Run("successful prints when everything goes well", func(t *testing.T) {
-		mockRemover.On("RemoveFLNetwork", mock.Anything).Return(nil)
-
-		outbuf, testLogger := testLogger()
-		err := down.Run(ctx, mockRemover, testLogger)
-
-		expectedOutput := `Removing local FunLess deployment...
-
-Removing Core container... ☠️
-done
-Removing Worker container... 🔪
-done
-Removing Prometheus container... ⚰️
-done
-Removing fl network... ✂️
-done
-
-All clear! 👍
-`
-		assert.NoError(t, err)
-		assert.Equal(t, expectedOutput, outbuf.String())
-	})
-
 }

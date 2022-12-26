@@ -19,7 +19,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/docker"
@@ -64,103 +63,103 @@ func TestImageHandling(t *testing.T) {
 	})
 }
 
-func TestContainerHandler(t *testing.T) {
-	// If the environment variable is not set, we skip the test. (NOTE: with "run test" in vscode you're not passing the env var)
-	runIntegration := os.Getenv("INTEGRATION_TESTS")
-	if runIntegration == "" {
-		t.Skip("set INTEGRATION_TESTS (optionally with DOCKER_HOST) to run this test")
-	}
+// func TestContainerHandler(t *testing.T) {
+// 	// If the environment variable is not set, we skip the test. (NOTE: with "run test" in vscode you're not passing the env var)
+// 	runIntegration := os.Getenv("INTEGRATION_TESTS")
+// 	if runIntegration == "" {
+// 		t.Skip("set INTEGRATION_TESTS (optionally with DOCKER_HOST) to run this test")
+// 	}
 
-	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
-	require.NoError(t, err)
-	ctx := context.TODO()
-	flDocker := docker.NewDockerClient(dockerClient)
+// 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
+// 	require.NoError(t, err)
+// 	ctx := context.TODO()
+// 	flDocker := docker.NewDockerClient(dockerClient)
 
-	t.Run("Exists should return false when a container is not present", func(t *testing.T) {
-		exists, id, err := flDocker.CtrExists(ctx, "should_not_have_this_container")
-		require.NoError(t, err)
-		require.Empty(t, id)
-		require.False(t, exists, "container should not exist")
-	})
+// 	t.Run("Exists should return false when a container is not present", func(t *testing.T) {
+// 		exists, id, err := flDocker.CtrExists(ctx, "should_not_have_this_container")
+// 		require.NoError(t, err)
+// 		require.Empty(t, id)
+// 		require.False(t, exists, "container should not exist")
+// 	})
 
-	t.Run("RunAsync should return an error if the image is not present", func(t *testing.T) {
-		conf := docker.ContainerConfigs{
-			ContName: "test_container",
-			Container: &container.Config{
-				Image: "should_not_have/this_image:for_sure",
-			},
-		}
-		err := flDocker.RunAsync(ctx, conf)
-		require.Error(t, err)
-	})
+// 	t.Run("RunAsync should return an error if the image is not present", func(t *testing.T) {
+// 		conf := docker.ContainerConfigs{
+// 			ContName: "test_container",
+// 			Container: &container.Config{
+// 				Image: "should_not_have/this_image:for_sure",
+// 			},
+// 		}
+// 		err := flDocker.RunAsync(ctx, conf)
+// 		require.Error(t, err)
+// 	})
 
-	t.Run("RunAndWait should return an error if the image is not present", func(t *testing.T) {
-		conf := docker.ContainerConfigs{
-			ContName: "test_container",
-			Container: &container.Config{
-				Image: "should_not_have/this_image:for_sure",
-			},
-		}
-		err := flDocker.RunAndWait(ctx, conf)
-		require.Error(t, err)
-	})
+// 	t.Run("RunAndWait should return an error if the image is not present", func(t *testing.T) {
+// 		conf := docker.ContainerConfigs{
+// 			ContName: "test_container",
+// 			Container: &container.Config{
+// 				Image: "should_not_have/this_image:for_sure",
+// 			},
+// 		}
+// 		err := flDocker.RunAndWait(ctx, conf)
+// 		require.Error(t, err)
+// 	})
 
-	t.Run("RunAndWait should return nil and remove the container when success", func(t *testing.T) {
-		t.Log("DEBUG: Pulling image hello-world! It might take some time...")
-		_ = flDocker.Pull(ctx, "hello-world:latest")
+// 	t.Run("RunAndWait should return nil and remove the container when success", func(t *testing.T) {
+// 		t.Log("DEBUG: Pulling image hello-world! It might take some time...")
+// 		_ = flDocker.Pull(ctx, "hello-world:latest")
 
-		contName := "test_container"
+// 		contName := "test_container"
 
-		conf := docker.ContainerConfigs{
-			ContName: contName,
-			Container: &container.Config{
-				Image: "hello-world:latest",
-			},
-		}
-		t.Log("DEBUG: running container hello-world")
-		err := flDocker.RunAndWait(ctx, conf)
-		require.NoError(t, err)
+// 		conf := docker.ContainerConfigs{
+// 			ContName: contName,
+// 			Container: &container.Config{
+// 				Image: "hello-world:latest",
+// 			},
+// 		}
+// 		t.Log("DEBUG: running container hello-world")
+// 		err := flDocker.RunAndWait(ctx, conf)
+// 		require.NoError(t, err)
 
-		t.Log("DEBUG: checking if container hello-world is still present")
-		exists, id, err := flDocker.CtrExists(ctx, contName)
-		assert.NoError(t, err)
-		assert.False(t, exists)
-		assert.Empty(t, id)
-	})
+// 		t.Log("DEBUG: checking if container hello-world is still present")
+// 		exists, id, err := flDocker.CtrExists(ctx, contName)
+// 		assert.NoError(t, err)
+// 		assert.False(t, exists)
+// 		assert.Empty(t, id)
+// 	})
 
-	t.Run("RunAsync should return nil immediately and the container stays up when success", func(t *testing.T) {
-		t.Log("DEBUG: Pulling Prometheys image! It might take some time...")
-		_ = flDocker.Pull(ctx, pkg.PrometheusImg)
+// 	t.Run("RunAsync should return nil immediately and the container stays up when success", func(t *testing.T) {
+// 		t.Log("DEBUG: Pulling Prometheys image! It might take some time...")
+// 		_ = flDocker.Pull(ctx, pkg.PrometheusImg)
 
-		contName := "test_prom_cont"
+// 		contName := "test_prom_cont"
 
-		conf := docker.ContainerConfigs{
-			ContName: contName,
-			Container: &container.Config{
-				Image: pkg.PrometheusImg,
-			},
-		}
-		t.Log("DEBUG: running core container")
-		err := flDocker.RunAsync(ctx, conf)
-		assert.NoError(t, err)
+// 		conf := docker.ContainerConfigs{
+// 			ContName: contName,
+// 			Container: &container.Config{
+// 				Image: pkg.PrometheusImg,
+// 			},
+// 		}
+// 		t.Log("DEBUG: running core container")
+// 		err := flDocker.RunAsync(ctx, conf)
+// 		assert.NoError(t, err)
 
-		t.Log("DEBUG: checking if container is still present")
-		exists, id, err := flDocker.CtrExists(ctx, contName)
-		assert.NoError(t, err)
-		assert.True(t, exists)
-		assert.NotEmpty(t, id)
+// 		t.Log("DEBUG: checking if container is still present")
+// 		exists, id, err := flDocker.CtrExists(ctx, contName)
+// 		assert.NoError(t, err)
+// 		assert.True(t, exists)
+// 		assert.NotEmpty(t, id)
 
-		t.Log("DEBUG: removing container")
-		err = flDocker.RemoveCtr(ctx, contName)
-		assert.NoError(t, err)
+// 		t.Log("DEBUG: removing container")
+// 		err = flDocker.RemoveCtr(ctx, contName)
+// 		assert.NoError(t, err)
 
-		t.Log("DEBUG: checking if container is still present")
-		exists, id, err = flDocker.CtrExists(ctx, contName)
-		assert.NoError(t, err)
-		assert.False(t, exists)
-		assert.Empty(t, id)
-	})
-}
+// 		t.Log("DEBUG: checking if container is still present")
+// 		exists, id, err = flDocker.CtrExists(ctx, contName)
+// 		assert.NoError(t, err)
+// 		assert.False(t, exists)
+// 		assert.Empty(t, id)
+// 	})
+// }
 
 func TestNetworkHandler(t *testing.T) {
 	// If the environment variable is not set, we skip the test. (NOTE: with "run test" in vscode you're not passing the env var)

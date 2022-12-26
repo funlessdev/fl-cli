@@ -16,13 +16,20 @@ package admin_deploy_docker
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"io"
+	"net/http"
+	"strings"
 
-	"github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
-	"github.com/funlessdev/fl-cli/pkg/docker"
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
+)
+
+const (
+	dockerComposeYmlUrl    = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/docker-compose.yml"
+	prometheusConfigYmlUrl = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/prometheus/config.yml"
 )
 
 type Up struct {
@@ -30,47 +37,28 @@ type Up struct {
 	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
 }
 
-func (d *Up) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log.FLogger) error {
+func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Deploying FunLess locally...\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	if err := setupDev(d.CoreImage, d.WorkerImage, deployer); err != nil {
+	composeFilePath, err := downloadDockerCompose()
+	if err != nil {
 		return logger.StopSpinner(err)
 	}
 
-	if err := logger.StopSpinner(deployer.CreateFLNetwork(ctx)); err != nil {
-		return err
+	// if another core image is specified, we have to replace it in the compose file
+	if err := replaceImages(u.CoreImage, u.WorkerImage); err != nil {
+		return logger.StopSpinner(err)
 	}
 
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Core image (%s) 🐋", d.CoreImage))
-	if err := logger.StopSpinner(deployer.PullCoreImage(ctx)); err != nil {
-		return err
+	if err := downloadPrometheusConfig(); err != nil {
+		return logger.StopSpinner(err)
 	}
 
-	_ = logger.StartSpinner(fmt.Sprintf("pulling Worker image (%s) 🐋", d.WorkerImage))
-	if err := logger.StopSpinner(deployer.PullWorkerImage(ctx)); err != nil {
-		return err
-	}
+	_ = logger.StopSpinner(nil)
 
-	_ = logger.StartSpinner("pulling Prometheus image 🐋")
-	if err := logger.StopSpinner(deployer.PullPromImage(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("starting Core container 🎛️")
-
-	if err := logger.StopSpinner(deployer.StartCore(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("starting Worker container 👷")
-	if err := logger.StopSpinner(deployer.StartWorker(ctx)); err != nil {
-		return err
-	}
-
-	_ = logger.StartSpinner("starting Prometheus container 📊")
-	if err := logger.StopSpinner(deployer.StartProm(ctx)); err != nil {
+	if err := dk.ComposeUp(composeFilePath); err != nil {
 		return err
 	}
 
@@ -80,22 +68,69 @@ func (d *Up) Run(ctx context.Context, deployer deploy.DockerDeployer, logger log
 	return nil
 }
 
-func setupDev(core string, worker string, deployer deploy.DockerDeployer) error {
-	deployer.WithImages(core, worker)
+func downloadDockerCompose() (string, error) {
+	// Check if it's already present
+	if _, path, err := homedir.ReadFromConfigDir("docker-compose.yml"); err == nil {
+		return path, nil
+	}
 
-	c, err := setupDockerClient()
+	// Download docker-compose.yml
+	resp, err := http.Get(dockerComposeYmlUrl)
+	if err != nil {
+		return "", err
+	}
+
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return homedir.WriteToConfigDir("docker-compose.yml", content, true)
+}
+
+func downloadPrometheusConfig() error {
+	// Check if it's already present
+	if _, _, err := homedir.ReadFromConfigDir("prometheus/config.yml"); err == nil {
+		return nil
+	}
+
+	// Download prometheus/config.yml
+	resp, err := http.Get(prometheusConfigYmlUrl)
 	if err != nil {
 		return err
 	}
 
-	deployer.WithDockerClient(c)
-	return deployer.WithLogs(pkg.LocalLogsPath)
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if _, err := homedir.CreateDirInConfigDir("prometheus"); err != nil {
+		return err
+	}
+
+	_, err = homedir.WriteToConfigDir("prometheus/config.yml", content, true)
+	return err
 }
 
-func setupDockerClient() (docker.DockerClient, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
-	if err != nil {
-		return docker.DockerClient{}, err
+func replaceImages(core string, worker string) error {
+	if core == pkg.CoreImg && worker == pkg.WorkerImg {
+		return nil
 	}
-	return docker.NewDockerClient(cli), nil
+
+	content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
+	if err != nil {
+		return errors.New("unable to read docker-compose.yml")
+	}
+
+	newCompose := string(content)
+	if core != pkg.CoreImg {
+		newCompose = strings.Replace(string(content), pkg.CoreImg, core, 1)
+	}
+	if worker != pkg.WorkerImg {
+		newCompose = strings.Replace(newCompose, pkg.WorkerImg, worker, 1)
+	}
+
+	_, err = homedir.WriteToConfigDir("docker-compose.yml", []byte(newCompose), true)
+	return err
 }
