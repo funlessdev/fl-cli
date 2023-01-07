@@ -16,14 +16,14 @@ package mod
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type Get struct {
-	Name string `arg:"" help:"name of the module"`
+	Name  string `arg:"" help:"name of the module"`
+	Count bool   `name:"count" short:"c" default:"false" help:"return number of results"`
 }
 
 func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
@@ -33,12 +33,22 @@ func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.
 	}
 
 	data := res.GetData()
+	name := data.Name
+	functions := data.Functions
 
-	decodedRes, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
+	logger.Infof("Module: %s\n", name)
+	logger.Info("Functions:\n")
 
-	logger.Info(string(decodedRes))
+	for _, v := range functions {
+		logger.Info(v)
+	}
+
+	if g.Count {
+		logger.Infof("Count: %d\n", len(functions))
+	}
+
 	return nil
 }
