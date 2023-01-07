@@ -14,6 +14,25 @@
 
 package mod
 
+import (
+	"context"
+
+	"github.com/funlessdev/fl-cli/pkg/client"
+	"github.com/funlessdev/fl-cli/pkg/log"
+)
+
 type Delete struct {
 	Name string `arg:"" help:"name of the module to delete"`
+}
+
+func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
+	err := modHandler.Delete(ctx, d.Name)
+
+	if err != nil {
+		return err
+	}
+
+	logger.Infof("\nSuccessfully deleted module %s.", d.Name)
+
+	return nil
 }

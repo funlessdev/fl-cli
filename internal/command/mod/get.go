@@ -14,6 +14,31 @@
 
 package mod
 
+import (
+	"context"
+	"encoding/json"
+
+	"github.com/funlessdev/fl-cli/pkg/client"
+	"github.com/funlessdev/fl-cli/pkg/log"
+)
+
 type Get struct {
 	Name string `arg:"" help:"name of the module"`
+}
+
+func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
+	res, err := modHandler.Get(ctx, g.Name)
+	if err != nil {
+		return extractError(err)
+	}
+
+	data := res.GetData()
+
+	decodedRes, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	logger.Info(string(decodedRes))
+	return nil
 }

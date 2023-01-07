@@ -14,6 +14,25 @@
 
 package mod
 
+import (
+	"context"
+
+	"github.com/funlessdev/fl-cli/pkg/client"
+	"github.com/funlessdev/fl-cli/pkg/log"
+)
+
 type Create struct {
 	Name string `arg:"" help:"name of the module to create"`
+}
+
+func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
+	err := modHandler.Create(ctx, c.Name)
+
+	if err != nil {
+		return err
+	}
+
+	logger.Infof("\nSuccessfully created module %s.", c.Name)
+
+	return nil
 }
