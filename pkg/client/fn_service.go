@@ -22,10 +22,10 @@ import (
 )
 
 type FnHandler interface {
-	Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (openapi.FunctionInvocationSuccess, error)
-	Create(ctx context.Context, fnName string, fnNamespace string, code *os.File) (openapi.FunctionCreationSuccess, error)
-	Delete(ctx context.Context, fnName string, fnNamespace string) (openapi.FunctionDeletionSuccess, error)
-	List(ctx context.Context, namespace string) (openapi.FunctionListSuccess, error)
+	Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeFunction200Response, error)
+	Create(ctx context.Context, fnName string, fnMod string, code *os.File) error
+	Delete(ctx context.Context, fnName string, fnMod string) error
+	Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error
 }
 
 type FnService struct {
@@ -34,52 +34,33 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
-func (fn *FnService) Invoke(ctx context.Context, fnName string, fnNamespace string, fnArgs map[string]interface{}) (openapi.FunctionInvocationSuccess, error) {
-	apiService := fn.Client.ApiClient.DefaultApi
-	requestBody := openapi.FunctionInvocation{
-		Function:  &fnName,
-		Namespace: &fnNamespace,
-		Args:      fnArgs,
+func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeFunction200Response, error) {
+	apiService := fn.Client.ApiClient.FunctionsApi
+	invokeFunctionRequest := openapi.InvokeFunctionRequest{
+		Args: fnArgs,
 	}
-	request := apiService.V1FnInvokePost(ctx).FunctionInvocation(requestBody)
-	response, _, err := apiService.V1FnInvokePostExecute(request)
-	if err != nil {
-		return openapi.FunctionInvocationSuccess{}, err
-	}
+	request := apiService.InvokeFunction(ctx, fnMod, fnName).InvokeFunctionRequest(invokeFunctionRequest)
+	response, _, err := request.Execute()
 	return *response, err
 }
 
-func (fn *FnService) Create(ctx context.Context, fnName string, fnNamespace string, code *os.File) (openapi.FunctionCreationSuccess, error) {
-	apiService := fn.Client.ApiClient.DefaultApi
-	request := apiService.V1FnCreatePost(ctx).Name(fnName).Namespace(fnNamespace).Code(code)
-	response, _, err := apiService.V1FnCreatePostExecute(request)
-
-	if err != nil {
-		return openapi.FunctionCreationSuccess{}, err
-	}
-	return *response, err
+func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, code *os.File) error {
+	apiService := fn.Client.ApiClient.FunctionsApi
+	request := apiService.CreateFunction(ctx, fnMod).Name(fnName).Code(code)
+	_, err := request.Execute()
+	return err
 }
 
-func (fn *FnService) Delete(ctx context.Context, fnName string, fnNamespace string) (openapi.FunctionDeletionSuccess, error) {
-	apiService := fn.Client.ApiClient.DefaultApi
-	requestBody := openapi.FunctionDeletion{
-		Name:      &fnName,
-		Namespace: &fnNamespace,
-	}
-	request := apiService.V1FnDeleteDelete(ctx).FunctionDeletion(requestBody)
-	response, _, err := apiService.V1FnDeleteDeleteExecute(request)
-	if err != nil {
-		return openapi.FunctionDeletionSuccess{}, err
-	}
-	return *response, err
+func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) error {
+	apiService := fn.Client.ApiClient.FunctionsApi
+	request := apiService.DeleteFunction(ctx, fnMod, fnName)
+	_, err := request.Execute()
+	return err
 }
 
-func (fn *FnService) List(ctx context.Context, namespace string) (openapi.FunctionListSuccess, error) {
-	apiService := fn.Client.ApiClient.DefaultApi
-	request := apiService.V1FnListFnNamespaceGet(ctx, namespace)
-	response, _, err := apiService.V1FnListFnNamespaceGetExecute(request)
-	if err != nil {
-		return openapi.FunctionListSuccess{}, err
-	}
-	return *response, err
+func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error {
+	apiService := fn.Client.ApiClient.FunctionsApi
+	request := apiService.UpdateFunction(ctx, fnMod, fnName).Code(code).Name(newName)
+	_, err := request.Execute()
+	return err
 }
