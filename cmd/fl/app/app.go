@@ -62,6 +62,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		return nil, err
 	}
 	fnSvc := &client.FnService{Client: flClient}
+	modSvc := &client.ModService{Client: flClient}
 
 	kong_ctx := kong.Parse(&cli,
 		kong.Name("fl"),
@@ -74,6 +75,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		}),
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
+		kong.BindTo(modSvc, (*client.ModHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.BindTo(dockerShell, (*deploy.DockerShell)(nil)),
 		kong.BindTo(kubernetesDeployer, (*deploy.KubernetesDeployer)(nil)),
