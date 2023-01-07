@@ -43,7 +43,7 @@ func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 	_ = logger.StopSpinner(nil)
 
 	_ = logger.StartSpinner("Uploading function...")
-	_, err = fnHandler.Create(ctx, u.Name, u.Namespace, code)
+	err = fnHandler.Create(ctx, u.Name, u.Namespace, code)
 	if err != nil {
 		return logger.StopSpinner(extractError(err))
 	}

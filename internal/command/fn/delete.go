@@ -27,11 +27,11 @@ type Delete struct {
 }
 
 func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
-	res, err := fnHandler.Delete(ctx, f.Name, f.Namespace)
+	err := fnHandler.Delete(ctx, f.Name, f.Namespace)
 	if err != nil {
 		return extractError(err)
 	}
 
-	logger.Info(*res.Result)
+	logger.Infof("\nSuccessfully delete function %s/%s.", f.Namespace, f.Name)
 	return nil
 }

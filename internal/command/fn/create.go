@@ -59,7 +59,7 @@ func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler
 		return logger.StopSpinner(err)
 	}
 
-	_, err = fnHandler.Create(ctx, c.Name, c.Namespace, code)
+	err = fnHandler.Create(ctx, c.Name, c.Namespace, code)
 	if err != nil {
 		return logger.StopSpinner(extractError(err))
 	}
