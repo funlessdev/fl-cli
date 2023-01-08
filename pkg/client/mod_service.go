@@ -38,7 +38,11 @@ func (fn *ModService) Get(ctx context.Context, modName string) (openapi.ShowModu
 	apiService := fn.Client.ApiClient.ModulesApi
 	request := apiService.ShowModuleByName(ctx, modName)
 	response, _, err := request.Execute()
-	return *response, err
+	if err != nil {
+		return *openapi.NewShowModuleByName200Response(), err
+	} else {
+		return *response, nil
+	}
 }
 
 func (fn *ModService) Create(ctx context.Context, modName string) error {
@@ -71,6 +75,9 @@ func (fn *ModService) Update(ctx context.Context, modName string, newName string
 func (fn *ModService) List(ctx context.Context) (openapi.ListModules200Response, error) {
 	apiService := fn.Client.ApiClient.ModulesApi
 	response, _, err := apiService.ListModules(ctx).Execute()
-	return *response, err
-
+	if err != nil {
+		return *openapi.NewListModules200Response(), err
+	} else {
+		return *response, nil
+	}
 }
