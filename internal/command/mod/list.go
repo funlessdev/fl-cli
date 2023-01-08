@@ -16,13 +16,13 @@ package mod
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type List struct {
+	Count bool `name:"count" short:"c" default:"false" help:"return number of results"`
 }
 
 func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
@@ -33,11 +33,12 @@ func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log
 
 	data := res.GetData()
 
-	decodedRes, err := json.Marshal(data)
-	if err != nil {
-		return err
+	for _, v := range data {
+		logger.Info(v)
 	}
 
-	logger.Info(string(decodedRes))
+	if l.Count {
+		logger.Infof("Count: %d\n", len(data))
+	}
 	return nil
 }

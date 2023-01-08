@@ -33,14 +33,14 @@ func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.
 	}
 
 	data := res.GetData()
-	name := data.Name
+	name := *data.Name
 	functions := data.Functions
 
 	if err != nil {
 		return err
 	}
 	logger.Infof("Module: %s\n", name)
-	logger.Info("Functions:\n")
+	logger.Info("Functions:")
 
 	for _, v := range functions {
 		logger.Info(v)
