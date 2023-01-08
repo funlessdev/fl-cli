@@ -27,8 +27,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
-
-	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 func TestFnCreate(t *testing.T) {
@@ -49,7 +47,7 @@ Successfully created function test-ns/test-fn.
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	mockFnHandler := mocks.NewFnHandler(t)
-	mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
+	mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(nil)
 
 	mockBuilder := mocks.NewDockerBuilder(t)
 	mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil)

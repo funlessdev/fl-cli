@@ -24,7 +24,6 @@ import (
 
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	openapi "github.com/funlessdev/fl-client-sdk-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -58,7 +57,7 @@ func TestFnUpload(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{}, errors.New("error")).Once()
+		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(errors.New("error")).Once()
 
 		err := cmd.Run(ctx, mockFnHandler, testLogger)
 		require.Error(t, err)
@@ -82,7 +81,7 @@ Successfully uploaded function test-ns/test-fn 👌
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(openapi.FunctionCreationSuccess{Result: &testFn}, nil)
+		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(nil)
 
 		var outbuf bytes.Buffer
 

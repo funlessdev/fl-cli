@@ -17,6 +17,7 @@ package fn
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -29,7 +30,6 @@ import (
 )
 
 func TestFnDelete(t *testing.T) {
-	testResult := "test-fn"
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testCtx := context.Background()
@@ -42,7 +42,7 @@ func TestFnDelete(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
+		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
@@ -57,7 +57,7 @@ func TestFnDelete(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{Result: &testResult}, nil)
+		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
@@ -65,7 +65,7 @@ func TestFnDelete(t *testing.T) {
 		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, testResult+"\n", (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("\nSuccessfully deleted function %s/%s.", testNs, testFn), (&outbuf).String())
 		mockFnHandler.AssertExpectations(t)
 	})
 
@@ -78,7 +78,7 @@ func TestFnDelete(t *testing.T) {
 		mockFnHandler := mocks.NewFnHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(openapi.FunctionDeletionSuccess{}, e)
+		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(e)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.Error(t, err)
