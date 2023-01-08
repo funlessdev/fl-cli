@@ -226,7 +226,7 @@ func TestModList(t *testing.T) {
 			assert.Equal(t, http.MethodGet, r.Method)
 			assert.Equal(t, "/v1/fn", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
-			result := map[string][]string{"Data": []string{"f1", "f2", "f3"}}
+			result := map[string][]string{"Data": {"f1", "f2", "f3"}}
 			jresult, _ := json.Marshal(result)
 			_, _ = w.Write(jresult)
 		}))
