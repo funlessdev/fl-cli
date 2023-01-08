@@ -41,7 +41,11 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fn
 	}
 	request := apiService.InvokeFunction(ctx, fnMod, fnName).InvokeFunctionRequest(invokeFunctionRequest)
 	response, _, err := request.Execute()
-	return *response, err
+	if err != nil {
+		return *openapi.NewInvokeFunction200Response(), err
+	} else {
+		return *response, nil
+	}
 }
 
 func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, code *os.File) error {
