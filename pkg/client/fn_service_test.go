@@ -30,7 +30,7 @@ import (
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
-func TestInvoke(t *testing.T) {
+func TestFnInvoke(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 	var testArgs map[string]interface{} = map[string]interface{}{"name": "Some name"}
@@ -82,7 +82,7 @@ func TestInvoke(t *testing.T) {
 	})
 }
 
-func TestCreate(t *testing.T) {
+func TestFnCreate(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 	testSource, _ := filepath.Abs("../../test/fixtures/test_code.txt")
@@ -132,7 +132,7 @@ func TestCreate(t *testing.T) {
 	})
 }
 
-func TestDelete(t *testing.T) {
+func TestFnDelete(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 
