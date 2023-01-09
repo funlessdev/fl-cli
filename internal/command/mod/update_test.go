@@ -64,7 +64,7 @@ func TestModUpdate(t *testing.T) {
 		err := cmd.Run(testCtx, mockModHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("\nSuccessfully renamed module %s to %s.", testMod, testNewMod), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("Successfully renamed module %s to %s.\n", testMod, testNewMod), (&outbuf).String())
 		mockModHandler.AssertExpectations(t)
 	})
 

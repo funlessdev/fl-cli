@@ -32,7 +32,7 @@ func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger l
 		return err
 	}
 
-	logger.Infof("\nSuccessfully deleted module %s.", d.Name)
+	logger.Infof("Successfully deleted module %s.\n", d.Name)
 
 	return nil
 }

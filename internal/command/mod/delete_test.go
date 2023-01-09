@@ -61,7 +61,7 @@ func TestModDelete(t *testing.T) {
 		err := cmd.Run(testCtx, mockModHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("\nSuccessfully deleted module %s.", testMod), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("Successfully deleted module %s.\n", testMod), (&outbuf).String())
 		mockModHandler.AssertExpectations(t)
 	})
 

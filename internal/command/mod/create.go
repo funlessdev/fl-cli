@@ -32,7 +32,7 @@ func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger l
 		return err
 	}
 
-	logger.Infof("\nSuccessfully created module %s.", c.Name)
+	logger.Infof("Successfully created module %s.\n", c.Name)
 
 	return nil
 }

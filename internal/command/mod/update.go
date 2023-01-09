@@ -33,7 +33,7 @@ func (u *Update) Run(ctx context.Context, modHandler client.ModHandler, logger l
 		return err
 	}
 
-	logger.Infof("\nSuccessfully renamed module %s to %s.", u.Name, u.NewName)
+	logger.Infof("Successfully renamed module %s to %s.\n", u.Name, u.NewName)
 
 	return nil
 }
