@@ -59,14 +59,14 @@ func (_m *FnHandler) Delete(ctx context.Context, fnName string, fnMod string) er
 }
 
 // Invoke provides a mock function with given fields: ctx, fnName, fnMod, fnArgs
-func (_m *FnHandler) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeFunction200Response, error) {
+func (_m *FnHandler) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeResult, error) {
 	ret := _m.Called(ctx, fnName, fnMod, fnArgs)
 
-	var r0 openapi.InvokeFunction200Response
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, map[string]interface{}) openapi.InvokeFunction200Response); ok {
+	var r0 openapi.InvokeResult
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, map[string]interface{}) openapi.InvokeResult); ok {
 		r0 = rf(ctx, fnName, fnMod, fnArgs)
 	} else {
-		r0 = ret.Get(0).(openapi.InvokeFunction200Response)
+		r0 = ret.Get(0).(openapi.InvokeResult)
 	}
 
 	var r1 error
