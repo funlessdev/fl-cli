@@ -48,8 +48,12 @@ func TestModGet(t *testing.T) {
 		result, err := svc.Get(testCtx, testMod)
 
 		require.NoError(t, err)
-		expected := openapi.ShowModuleByName200ResponseData{Name: &testMod, Functions: []string{}}
-		assert.Equal(t, expected, result.GetData())
+		expected := *openapi.NewSingleModuleResult()
+		expected.Data = openapi.NewSingleModuleResultData()
+		expected.Data.Name = &testMod
+		expected.Data.Functions = []openapi.ModuleNameModule{}
+
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -220,13 +224,16 @@ func TestModUpdate(t *testing.T) {
 
 func TestModList(t *testing.T) {
 	testCtx := context.Background()
+	f1 := "f1"
+	f2 := "f2"
+	f3 := "f3"
 
 	t.Run("should send list request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodGet, r.Method)
 			assert.Equal(t, "/v1/fn", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
-			result := map[string][]string{"Data": {"f1", "f2", "f3"}}
+			result := map[string][]map[string]string{"Data": {{"name": f1}, {"name": f2}, {"name": f3}}}
 			jresult, _ := json.Marshal(result)
 			_, _ = w.Write(jresult)
 		}))
@@ -238,8 +245,9 @@ func TestModList(t *testing.T) {
 		result, err := svc.List(testCtx)
 
 		require.NoError(t, err)
-		expected := []string{"f1", "f2", "f3"}
-		assert.Equal(t, expected, result.GetData())
+		expected := *openapi.NewModuleNamesResult()
+		expected.Data = []openapi.ModuleNameModule{{Name: &f1}, {Name: &f2}, {Name: &f3}}
+		assert.Equal(t, expected, result)
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {

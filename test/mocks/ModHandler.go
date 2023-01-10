@@ -57,14 +57,14 @@ func (_m *ModHandler) Delete(ctx context.Context, modName string) error {
 }
 
 // Get provides a mock function with given fields: ctx, modName
-func (_m *ModHandler) Get(ctx context.Context, modName string) (openapi.ShowModuleByName200Response, error) {
+func (_m *ModHandler) Get(ctx context.Context, modName string) (openapi.SingleModuleResult, error) {
 	ret := _m.Called(ctx, modName)
 
-	var r0 openapi.ShowModuleByName200Response
-	if rf, ok := ret.Get(0).(func(context.Context, string) openapi.ShowModuleByName200Response); ok {
+	var r0 openapi.SingleModuleResult
+	if rf, ok := ret.Get(0).(func(context.Context, string) openapi.SingleModuleResult); ok {
 		r0 = rf(ctx, modName)
 	} else {
-		r0 = ret.Get(0).(openapi.ShowModuleByName200Response)
+		r0 = ret.Get(0).(openapi.SingleModuleResult)
 	}
 
 	var r1 error
@@ -78,14 +78,14 @@ func (_m *ModHandler) Get(ctx context.Context, modName string) (openapi.ShowModu
 }
 
 // List provides a mock function with given fields: ctx
-func (_m *ModHandler) List(ctx context.Context) (openapi.ListModules200Response, error) {
+func (_m *ModHandler) List(ctx context.Context) (openapi.ModuleNamesResult, error) {
 	ret := _m.Called(ctx)
 
-	var r0 openapi.ListModules200Response
-	if rf, ok := ret.Get(0).(func(context.Context) openapi.ListModules200Response); ok {
+	var r0 openapi.ModuleNamesResult
+	if rf, ok := ret.Get(0).(func(context.Context) openapi.ModuleNamesResult); ok {
 		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(openapi.ListModules200Response)
+		r0 = ret.Get(0).(openapi.ModuleNamesResult)
 	}
 
 	var r1 error

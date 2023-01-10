@@ -29,7 +29,10 @@ import (
 )
 
 func TestModList(t *testing.T) {
-	testMods := []string{"mod1", "mod2", "mod3"}
+	mod1 := "mod1"
+	mod2 := "mod2"
+	mod3 := "mod3"
+	testMods := []openapi.ModuleNameModule{{Name: &mod1}, {Name: &mod2}, {Name: &mod3}}
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
 
@@ -37,7 +40,7 @@ func TestModList(t *testing.T) {
 		cmd := List{}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("List", testCtx).Return(openapi.ListModules200Response{Data: testMods}, nil)
+		mockModHandler.On("List", testCtx).Return(openapi.ModuleNamesResult{Data: testMods}, nil)
 
 		err := cmd.Run(testCtx, mockModHandler, testLogger)
 		require.NoError(t, err)
@@ -50,7 +53,7 @@ func TestModList(t *testing.T) {
 		cmd := List{}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("List", testCtx).Return(openapi.ListModules200Response{Data: testMods}, nil)
+		mockModHandler.On("List", testCtx).Return(openapi.ModuleNamesResult{Data: testMods}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
@@ -58,7 +61,7 @@ func TestModList(t *testing.T) {
 		err := cmd.Run(testCtx, mockModHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("%s\n%s\n%s\n", testMods[0], testMods[1], testMods[2]), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("%s\n%s\n%s\n", *testMods[0].Name, *testMods[1].Name, *testMods[2].Name), (&outbuf).String())
 		mockModHandler.AssertExpectations(t)
 	})
 
@@ -68,7 +71,7 @@ func TestModList(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("List", testCtx).Return(openapi.ListModules200Response{Data: testMods}, nil)
+		mockModHandler.On("List", testCtx).Return(openapi.ModuleNamesResult{Data: testMods}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
@@ -76,7 +79,7 @@ func TestModList(t *testing.T) {
 		err := cmd.Run(testCtx, mockModHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("%s\n%s\n%s\nCount: %d\n", testMods[0], testMods[1], testMods[2], len(testMods)), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("%s\n%s\n%s\nCount: %d\n", *testMods[0].Name, *testMods[1].Name, *testMods[2].Name, len(testMods)), (&outbuf).String())
 		mockModHandler.AssertExpectations(t)
 	})
 
@@ -86,7 +89,7 @@ func TestModList(t *testing.T) {
 		mockModHandler := mocks.NewModHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockModHandler.On("List", testCtx).Return(*openapi.NewListModules200Response(), e)
+		mockModHandler.On("List", testCtx).Return(*openapi.NewModuleNamesResult(), e)
 
 		err := cmd.Run(testCtx, mockModHandler, testLogger)
 		require.Error(t, err)

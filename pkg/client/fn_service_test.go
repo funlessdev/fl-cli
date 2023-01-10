@@ -85,7 +85,7 @@ func TestFnInvoke(t *testing.T) {
 func TestFnCreate(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
-	testSource, _ := filepath.Abs("../../test/fixtures/test_code.txt")
+	testSource, _ := filepath.Abs("../../test/fixtures/real.wasm")
 	testCode, _ := os.Open(testSource)
 
 	testCtx := context.Background()
