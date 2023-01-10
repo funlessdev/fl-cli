@@ -19,7 +19,7 @@ go 1.19
 require (
 	github.com/alecthomas/kong v0.7.1
 	github.com/docker/docker v20.10.22+incompatible
-	github.com/funlessdev/fl-client-sdk-go v0.0.0-20230107150146-ea7d0b8f4d99
+	github.com/funlessdev/fl-client-sdk-go v0.0.0-20230110194424-c7f5f5016383
 	github.com/theckman/yacspin v0.13.12
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.26.0
@@ -29,7 +29,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230109192245-7efeeb08f296 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/cloudflare/circl v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -91,7 +91,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230106171958-10e5f0effbd2 // indirect
+	k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
