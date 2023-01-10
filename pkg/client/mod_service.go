@@ -21,11 +21,11 @@ import (
 )
 
 type ModHandler interface {
-	Get(ctx context.Context, modName string) (openapi.ShowModuleByName200Response, error)
+	Get(ctx context.Context, modName string) (openapi.SingleModuleResult, error)
 	Create(ctx context.Context, modName string) error
 	Delete(ctx context.Context, modName string) error
 	Update(ctx context.Context, modName string, newName string) error
-	List(ctx context.Context) (openapi.ListModules200Response, error)
+	List(ctx context.Context) (openapi.ModuleNamesResult, error)
 }
 
 type ModService struct {
@@ -34,12 +34,12 @@ type ModService struct {
 
 var _ ModHandler = &ModService{}
 
-func (fn *ModService) Get(ctx context.Context, modName string) (openapi.ShowModuleByName200Response, error) {
+func (fn *ModService) Get(ctx context.Context, modName string) (openapi.SingleModuleResult, error) {
 	apiService := fn.Client.ApiClient.ModulesApi
 	request := apiService.ShowModuleByName(ctx, modName)
 	response, _, err := request.Execute()
 	if err != nil {
-		return *openapi.NewShowModuleByName200Response(), err
+		return *openapi.NewSingleModuleResult(), err
 	} else {
 		return *response, nil
 	}
@@ -47,36 +47,40 @@ func (fn *ModService) Get(ctx context.Context, modName string) (openapi.ShowModu
 
 func (fn *ModService) Create(ctx context.Context, modName string) error {
 	apiService := fn.Client.ApiClient.ModulesApi
-	createModuleRequest := openapi.CreateModuleRequest{
-		Name: &modName,
+
+	requestBody := openapi.ModuleName{
+		Module: &openapi.ModuleNameModule{
+			Name: &modName,
+		},
 	}
 
-	_, err := apiService.CreateModule(ctx).CreateModuleRequest(createModuleRequest).Execute()
+	_, err := apiService.CreateModule(ctx).ModuleName(requestBody).Execute()
 	return err
 }
 
 func (fn *ModService) Delete(ctx context.Context, modName string) error {
 	apiService := fn.Client.ApiClient.ModulesApi
-	request := apiService.DeleteModule(ctx, modName)
-	_, err := request.Execute()
+	_, err := apiService.DeleteModule(ctx, modName).Execute()
 	return err
 }
 
 func (fn *ModService) Update(ctx context.Context, modName string, newName string) error {
 	apiService := fn.Client.ApiClient.ModulesApi
-	updateModuleRequest := openapi.CreateModuleRequest{
-		Name: &modName,
+	requestBody := openapi.ModuleName{
+		Module: &openapi.ModuleNameModule{
+			Name: &newName,
+		},
 	}
-	request := apiService.UpdateModule(ctx, modName).CreateModuleRequest(updateModuleRequest)
+	request := apiService.UpdateModule(ctx, modName).ModuleName2(requestBody)
 	_, err := request.Execute()
 	return err
 }
 
-func (fn *ModService) List(ctx context.Context) (openapi.ListModules200Response, error) {
+func (fn *ModService) List(ctx context.Context) (openapi.ModuleNamesResult, error) {
 	apiService := fn.Client.ApiClient.ModulesApi
 	response, _, err := apiService.ListModules(ctx).Execute()
 	if err != nil {
-		return *openapi.NewListModules200Response(), err
+		return *openapi.NewModuleNamesResult(), err
 	} else {
 		return *response, nil
 	}

@@ -22,7 +22,7 @@ import (
 )
 
 type FnHandler interface {
-	Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeFunction200Response, error)
+	Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeResult, error)
 	Create(ctx context.Context, fnName string, fnMod string, code *os.File) error
 	Delete(ctx context.Context, fnName string, fnMod string) error
 	Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error
@@ -34,15 +34,15 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
-func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeFunction200Response, error) {
+func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeResult, error) {
 	apiService := fn.Client.ApiClient.FunctionsApi
-	invokeFunctionRequest := openapi.InvokeFunctionRequest{
+	invokeInput := openapi.InvokeInput{
 		Args: fnArgs,
 	}
-	request := apiService.InvokeFunction(ctx, fnMod, fnName).InvokeFunctionRequest(invokeFunctionRequest)
+	request := apiService.InvokeFunction(ctx, fnMod, fnName).InvokeInput(invokeInput)
 	response, _, err := request.Execute()
 	if err != nil {
-		return *openapi.NewInvokeFunction200Response(), err
+		return *openapi.NewInvokeResult(), err
 	} else {
 		return *response, nil
 	}
@@ -50,7 +50,7 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fn
 
 func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, code *os.File) error {
 	apiService := fn.Client.ApiClient.FunctionsApi
-	request := apiService.CreateFunction(ctx, fnMod).Name(fnName).Code(code)
+	request := apiService.CreateFunction(ctx, fnMod).Name(fnName).Code(*code)
 	_, err := request.Execute()
 	return err
 }
@@ -64,7 +64,7 @@ func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) er
 
 func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error {
 	apiService := fn.Client.ApiClient.FunctionsApi
-	request := apiService.UpdateFunction(ctx, fnMod, fnName).Code(code).Name(newName)
+	request := apiService.UpdateFunction(ctx, fnMod, fnName).Code(*code).Name(newName)
 	_, err := request.Execute()
 	return err
 }
