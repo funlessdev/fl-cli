@@ -30,7 +30,7 @@ import (
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
-func TestInvoke(t *testing.T) {
+func TestFnInvoke(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 	var testArgs map[string]interface{} = map[string]interface{}{"name": "Some name"}
@@ -40,9 +40,9 @@ func TestInvoke(t *testing.T) {
 	t.Run("should send invoke request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/v1/fn/invoke", r.URL.Path)
+			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testNs, testFn), r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
-			result := map[string]map[string]string{"Result": {"payload": "some result"}}
+			result := map[string]map[string]string{"Data": {"payload": "some result"}}
 			jresult, _ := json.Marshal(result)
 			_, _ = w.Write(jresult)
 		}))
@@ -55,13 +55,13 @@ func TestInvoke(t *testing.T) {
 
 		require.NoError(t, err)
 		expected := map[string]interface{}{"payload": "some result"}
-		assert.Equal(t, expected, result.GetResult())
+		assert.Equal(t, expected, result.GetData())
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/v1/fn/invoke", r.URL.Path)
+			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testNs, testFn), r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"error": "some error"}
 			jresult, _ := json.Marshal(result)
@@ -82,17 +82,17 @@ func TestInvoke(t *testing.T) {
 	})
 }
 
-func TestCreate(t *testing.T) {
+func TestFnCreate(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
-	testSource, _ := filepath.Abs("../../test/fixtures/test_code.txt")
+	testSource, _ := filepath.Abs("../../test/fixtures/real.wasm")
 	testCode, _ := os.Open(testSource)
 
 	testCtx := context.Background()
 	t.Run("should send create request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/v1/fn/create", r.URL.Path)
+			assert.Equal(t, fmt.Sprintf("/v1/fn/%s", testNs), r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"Result": "some result"}
 			jresult, _ := json.Marshal(result)
@@ -103,16 +103,15 @@ func TestCreate(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		result, err := svc.Create(testCtx, testFn, testNs, testCode)
+		err := svc.Create(testCtx, testFn, testNs, testCode)
 
 		require.NoError(t, err)
-		assert.Equal(t, "some result", result.GetResult())
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/v1/fn/create", r.URL.Path)
+			assert.Equal(t, fmt.Sprintf("/v1/fn/%s", testNs), r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"error": "some error"}
 			jresult, _ := json.Marshal(result)
@@ -125,7 +124,7 @@ func TestCreate(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		_, err := svc.Create(testCtx, testFn, testNs, testCode)
+		err := svc.Create(testCtx, testFn, testNs, testCode)
 
 		require.Error(t, err)
 		openApiError := err.(*openapi.GenericOpenAPIError)
@@ -133,7 +132,7 @@ func TestCreate(t *testing.T) {
 	})
 }
 
-func TestDelete(t *testing.T) {
+func TestFnDelete(t *testing.T) {
 	testFn := "test-fn"
 	testNs := "test-ns"
 
@@ -142,7 +141,7 @@ func TestDelete(t *testing.T) {
 	t.Run("should send delete request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, "/v1/fn/delete", r.URL.Path)
+			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testNs, testFn), r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"Result": "some result"}
 			jresult, _ := json.Marshal(result)
@@ -153,16 +152,15 @@ func TestDelete(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		result, err := svc.Delete(testCtx, testFn, testNs)
+		err := svc.Delete(testCtx, testFn, testNs)
 
 		require.NoError(t, err)
-		assert.Equal(t, "some result", result.GetResult())
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, "/v1/fn/delete", r.URL.Path)
+			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testNs, testFn), r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			result := map[string]string{"error": "some error"}
 			jresult, _ := json.Marshal(result)
@@ -175,7 +173,7 @@ func TestDelete(t *testing.T) {
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
 		svc := &FnService{Client: c}
 
-		_, err := svc.Delete(testCtx, testFn, testNs)
+		err := svc.Delete(testCtx, testFn, testNs)
 
 		require.Error(t, err)
 		openApiError := err.(*openapi.GenericOpenAPIError)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fn
+package mod
 
 import (
 	"encoding/json"
@@ -21,23 +21,23 @@ import (
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
-type Fn struct {
-	Invoke Invoke `cmd:"" aliases:"i" help:"invoke a function"`
-	Create Create `cmd:"" aliases:"c" help:"a combination of build and upload to create a function"`
-	Delete Delete `cmd:"" aliases:"d" help:"delete an existing function"`
-	Build  Build  `cmd:"" aliases:"b" help:"compile a function into a wasm binary"`
-	Upload Upload `cmd:"" aliases:"up" help:"create functions by uploading wasm binaries"`
-	New    New    `cmd:"" aliases:"n" help:"create a new function from a template"`
+type Mod struct {
+	Get    Get    `cmd:"" aliases:"g" help:"list functions and information of a module"`
+	Delete Delete `cmd:"" aliases:"d,rm" help:"delete a module"`
+	Update Update `cmd:"" aliases:"u,up" help:"update the name of a module"`
+	Create Create `cmd:"" aliases:"c" help:"create a new module"`
+	List   List   `cmd:"" aliases:"l,ls" help:"list all modules"`
 }
 
-type FnError struct {
+// TODO: avoid repetition, move both ModError and FnError to separate file/package
+type ModError struct {
 	Errors struct {
 		Detail string `json:"detail"`
 	} `json:"errors"`
 }
 
 func extractError(err error) error {
-	var e FnError
+	var e ModError
 	openApiError, castOk := err.(*openapi.GenericOpenAPIError)
 	if !castOk {
 		return err
@@ -48,6 +48,6 @@ func extractError(err error) error {
 	return errors.New(e.Errors.Detail)
 }
 
-func (f *Fn) Help() string {
-	return "Manage functions (description TBD)"
+func (f *Mod) Help() string {
+	return "Manage modules (description TBD)"
 }

@@ -47,8 +47,8 @@ func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 		return extractError(err)
 	}
 
-	if res.Result != nil {
-		decodedRes, err := json.Marshal(res.Result)
+	if data := res.GetData(); data != nil {
+		decodedRes, err := json.Marshal(data)
 		if err != nil {
 			return err
 		}

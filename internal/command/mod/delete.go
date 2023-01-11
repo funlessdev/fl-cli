@@ -12,37 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fn
+package mod
 
 import (
 	"context"
-	"errors"
 
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
-type List struct {
-	Namespace string `arg:"" name:"namespace" default:"_" help:"namespace of the functions to list"`
-	Count     bool   `name:"count" short:"c" default:"false" help:"return number of results"`
+type Delete struct {
+	Name string `arg:"" help:"name of the module to delete"`
 }
 
-func (f *List) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
-	res, err := fnHandler.List(ctx, f.Namespace)
+func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
+	err := modHandler.Delete(ctx, d.Name)
+
 	if err != nil {
-		return extractError(err)
+		return err
 	}
 
-	if res.Result != nil {
-		for _, v := range res.Result {
-			logger.Info(v)
-		}
-		if f.Count {
-			logger.Infof("Count: %d\n", len(res.Result))
-		}
-	} else {
-		return errors.New("received nil result")
-	}
+	logger.Infof("Successfully deleted module %s.\n", d.Name)
 
 	return nil
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
 	"github.com/funlessdev/fl-cli/internal/command/fn"
+	"github.com/funlessdev/fl-cli/internal/command/mod"
 	"github.com/funlessdev/fl-cli/internal/command/template"
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/build"
@@ -32,6 +33,7 @@ import (
 
 type CLI struct {
 	Fn       fn.Fn             `cmd:"" help:"create, delete and manage functions"`
+	Mod      mod.Mod           `cmd:"" help:"create, delete and manage modules"`
 	Admin    admin.Admin       `cmd:"" aliases:"a" help:"deploy and manage the platform"`
 	Template template.Template `cmd:"" help:"pull function templates"`
 
@@ -60,6 +62,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		return nil, err
 	}
 	fnSvc := &client.FnService{Client: flClient}
+	modSvc := &client.ModService{Client: flClient}
 
 	kong_ctx := kong.Parse(&cli,
 		kong.Name("fl"),
@@ -72,6 +75,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		}),
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
+		kong.BindTo(modSvc, (*client.ModHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.BindTo(dockerShell, (*deploy.DockerShell)(nil)),
 		kong.BindTo(kubernetesDeployer, (*deploy.KubernetesDeployer)(nil)),
