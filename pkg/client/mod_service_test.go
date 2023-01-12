@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/test/mocks"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,6 +31,9 @@ func TestModGet(t *testing.T) {
 	testMod := "test_mod"
 
 	testCtx := context.Background()
+
+	mockValidator := mocks.NewInputValidatorHandler(t)
+	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
 
 	t.Run("should send get request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +47,7 @@ func TestModGet(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		result, err := svc.Get(testCtx, testMod)
 
@@ -54,6 +58,9 @@ func TestModGet(t *testing.T) {
 		expected.Data.Functions = []openapi.ModuleNameModule{}
 
 		assert.Equal(t, expected, result)
+
+		mockValidator.AssertNumberOfCalls(t, "ValidateName", 1)
+		mockValidator.AssertExpectations(t)
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -70,7 +77,7 @@ func TestModGet(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		_, err := svc.Get(testCtx, testMod)
 
@@ -85,6 +92,9 @@ func TestModCreate(t *testing.T) {
 
 	testCtx := context.Background()
 
+	mockValidator := mocks.NewInputValidatorHandler(t)
+	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
+
 	t.Run("should send create request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
@@ -96,11 +106,14 @@ func TestModCreate(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		err := svc.Create(testCtx, testMod)
 
 		require.NoError(t, err)
+
+		mockValidator.AssertNumberOfCalls(t, "ValidateName", 1)
+		mockValidator.AssertExpectations(t)
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -117,7 +130,7 @@ func TestModCreate(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		err := svc.Create(testCtx, testMod)
 
@@ -132,6 +145,9 @@ func TestModDelete(t *testing.T) {
 
 	testCtx := context.Background()
 
+	mockValidator := mocks.NewInputValidatorHandler(t)
+	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
+
 	t.Run("should send delete request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodDelete, r.Method)
@@ -143,11 +159,14 @@ func TestModDelete(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		err := svc.Delete(testCtx, testMod)
 
 		require.NoError(t, err)
+
+		mockValidator.AssertNumberOfCalls(t, "ValidateName", 1)
+		mockValidator.AssertExpectations(t)
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -164,7 +183,7 @@ func TestModDelete(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		err := svc.Delete(testCtx, testMod)
 
@@ -180,6 +199,10 @@ func TestModUpdate(t *testing.T) {
 
 	testCtx := context.Background()
 
+	mockValidator := mocks.NewInputValidatorHandler(t)
+	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
+	mockValidator.On("ValidateName", testNewMod, "new mod").Return(nil)
+
 	t.Run("should send update request to server", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPut, r.Method)
@@ -191,11 +214,14 @@ func TestModUpdate(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		err := svc.Update(testCtx, testMod, testNewMod)
 
 		require.NoError(t, err)
+
+		mockValidator.AssertNumberOfCalls(t, "ValidateName", 2)
+		mockValidator.AssertExpectations(t)
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
@@ -212,7 +238,7 @@ func TestModUpdate(t *testing.T) {
 		defer server.Close()
 
 		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &ModService{Client: c}
+		svc := &ModService{Client: c, InputValidatorHandler: mockValidator}
 
 		err := svc.Update(testCtx, testMod, testNewMod)
 
