@@ -30,11 +30,20 @@ type FnHandler interface {
 
 type FnService struct {
 	*Client
+	InputValidatorHandler
 }
 
 var _ FnHandler = &FnService{}
 
 func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeResult, error) {
+
+	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
+		return *openapi.NewInvokeResult(), err
+	}
+	if err := fn.InputValidatorHandler.ValidateName(fnMod, "mod"); err != nil {
+		return *openapi.NewInvokeResult(), err
+	}
+
 	apiService := fn.Client.ApiClient.FunctionsApi
 	invokeInput := openapi.InvokeInput{
 		Args: fnArgs,
@@ -49,6 +58,14 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fn
 }
 
 func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, code *os.File) error {
+
+	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
+		return err
+	}
+	if err := fn.InputValidatorHandler.ValidateName(fnMod, "mod"); err != nil {
+		return err
+	}
+
 	apiService := fn.Client.ApiClient.FunctionsApi
 	request := apiService.CreateFunction(ctx, fnMod).Name(fnName).Code(*code)
 	_, err := request.Execute()
@@ -56,6 +73,14 @@ func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, co
 }
 
 func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) error {
+
+	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
+		return err
+	}
+	if err := fn.InputValidatorHandler.ValidateName(fnMod, "mod"); err != nil {
+		return err
+	}
+
 	apiService := fn.Client.ApiClient.FunctionsApi
 	request := apiService.DeleteFunction(ctx, fnMod, fnName)
 	_, err := request.Execute()
@@ -63,6 +88,18 @@ func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) er
 }
 
 func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error {
+
+	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
+		return err
+	}
+	if err := fn.InputValidatorHandler.ValidateName(newName, "new function"); err != nil {
+		return err
+	}
+
+	if err := fn.InputValidatorHandler.ValidateName(fnMod, "mod"); err != nil {
+		return err
+	}
+
 	apiService := fn.Client.ApiClient.FunctionsApi
 	request := apiService.UpdateFunction(ctx, fnMod, fnName).Code(*code).Name(newName)
 	_, err := request.Execute()
