@@ -71,7 +71,7 @@ func TestFnBuild(t *testing.T) {
 			Language:    testLanguage,
 		}
 
-		output := genTestOutput(testFn, pkg.FLBuilderImages[testLanguage])
+		output := genTestOutput(testFn, pkg.SupportedLanguages[testLanguage].BuilderImage)
 
 		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
 		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()

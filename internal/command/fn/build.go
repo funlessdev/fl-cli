@@ -40,7 +40,7 @@ func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log
 	if err := logger.StopSpinner(setupBuilder(builder, b.Language, b.Destination)); err != nil {
 		return err
 	}
-	_ = logger.StartSpinner(fmt.Sprintf("Pulling %s builder image (%s) 📦", langNames[b.Language], pkg.FLBuilderImages[b.Language]))
+	_ = logger.StartSpinner(fmt.Sprintf("Pulling %s builder image (%s) 📦", pkg.SupportedLanguages[b.Language].Name, pkg.SupportedLanguages[b.Language].BuilderImage))
 	if err := logger.StopSpinner(builder.PullBuilderImage(ctx)); err != nil {
 		return err
 	}
@@ -54,11 +54,6 @@ func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log
 
 	logger.Info(fmt.Sprintf("\nSuccessfully built %s.wasm 🥳🥳", b.Name))
 	return nil
-}
-
-var langNames = map[string]string{
-	"js":   "Javascript",
-	"rust": "Rust",
 }
 
 func setupBuilder(builder build.DockerBuilder, lang, out string) error {
