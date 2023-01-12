@@ -31,8 +31,8 @@ import (
 )
 
 func TestFnInvoke(t *testing.T) {
-	testFn := "test-fn"
-	testNs := "test-ns"
+	testFn := "test_fn"
+	testNs := "test_ns"
 	var testArgs map[string]interface{} = map[string]interface{}{"name": "Some name"}
 
 	testCtx := context.Background()
@@ -83,8 +83,8 @@ func TestFnInvoke(t *testing.T) {
 }
 
 func TestFnCreate(t *testing.T) {
-	testFn := "test-fn"
-	testNs := "test-ns"
+	testFn := "test_fn"
+	testNs := "test_ns"
 	testSource, _ := filepath.Abs("../../test/fixtures/real.wasm")
 	testCode, _ := os.Open(testSource)
 
@@ -133,8 +133,8 @@ func TestFnCreate(t *testing.T) {
 }
 
 func TestFnDelete(t *testing.T) {
-	testFn := "test-fn"
-	testNs := "test-ns"
+	testFn := "test_fn"
+	testNs := "test_ns"
 
 	testCtx := context.Background()
 

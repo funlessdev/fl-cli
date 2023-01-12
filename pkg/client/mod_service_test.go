@@ -27,7 +27,7 @@ import (
 )
 
 func TestModGet(t *testing.T) {
-	testMod := "test-mod"
+	testMod := "test_mod"
 
 	testCtx := context.Background()
 
@@ -81,7 +81,7 @@ func TestModGet(t *testing.T) {
 }
 
 func TestModCreate(t *testing.T) {
-	testMod := "test-mod"
+	testMod := "test_mod"
 
 	testCtx := context.Background()
 
@@ -128,7 +128,7 @@ func TestModCreate(t *testing.T) {
 }
 
 func TestModDelete(t *testing.T) {
-	testMod := "test-mod"
+	testMod := "test_mod"
 
 	testCtx := context.Background()
 
@@ -175,8 +175,8 @@ func TestModDelete(t *testing.T) {
 }
 
 func TestModUpdate(t *testing.T) {
-	testMod := "test-mod"
-	testNewMod := "test-mod-2"
+	testMod := "test_mod"
+	testNewMod := "test_mod_2"
 
 	testCtx := context.Background()
 
