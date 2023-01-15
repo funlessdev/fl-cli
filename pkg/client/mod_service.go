@@ -30,11 +30,17 @@ type ModHandler interface {
 
 type ModService struct {
 	*Client
+	InputValidatorHandler
 }
 
 var _ ModHandler = &ModService{}
 
 func (fn *ModService) Get(ctx context.Context, modName string) (openapi.SingleModuleResult, error) {
+
+	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+		return *openapi.NewSingleModuleResult(), err
+	}
+
 	apiService := fn.Client.ApiClient.ModulesApi
 	request := apiService.ShowModuleByName(ctx, modName)
 	response, _, err := request.Execute()
@@ -46,6 +52,11 @@ func (fn *ModService) Get(ctx context.Context, modName string) (openapi.SingleMo
 }
 
 func (fn *ModService) Create(ctx context.Context, modName string) error {
+
+	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+		return err
+	}
+
 	apiService := fn.Client.ApiClient.ModulesApi
 
 	requestBody := openapi.ModuleName{
@@ -59,12 +70,25 @@ func (fn *ModService) Create(ctx context.Context, modName string) error {
 }
 
 func (fn *ModService) Delete(ctx context.Context, modName string) error {
+
+	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+		return err
+	}
+
 	apiService := fn.Client.ApiClient.ModulesApi
 	_, err := apiService.DeleteModule(ctx, modName).Execute()
 	return err
 }
 
 func (fn *ModService) Update(ctx context.Context, modName string, newName string) error {
+
+	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+		return err
+	}
+	if err := fn.InputValidatorHandler.ValidateName(newName, "new mod"); err != nil {
+		return err
+	}
+
 	apiService := fn.Client.ApiClient.ModulesApi
 	requestBody := openapi.ModuleName{
 		Module: &openapi.ModuleNameModule{

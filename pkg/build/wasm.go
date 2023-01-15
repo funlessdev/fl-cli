@@ -55,11 +55,11 @@ func (b *WasmBuilder) Setup(flDocker docker.DockerClient, language string, dest 
 		return err
 	}
 
-	image, exists := pkg.FLBuilderImages[language]
+	lang, exists := pkg.SupportedLanguages[language]
 	if !exists {
 		return errors.New("no corresponding builder image found for the given language")
 	}
-	b.builderImg = image
+	b.builderImg = lang.BuilderImage
 
 	containerName, exists := builderNames[language]
 	if !exists {

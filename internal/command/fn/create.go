@@ -45,6 +45,9 @@ func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler
 	if err := setupBuilder(builder, c.Language, dest); err != nil {
 		return logger.StopSpinner(err)
 	}
+	if err := checkMustContainFiles(c.Language, c.Source); err != nil {
+		return logger.StopSpinner(err)
+	}
 	if err := builder.PullBuilderImage(ctx); err != nil {
 		return logger.StopSpinner(err)
 	}

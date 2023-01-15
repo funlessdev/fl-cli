@@ -120,8 +120,12 @@ func (c *DockerClient) RunAndWait(ctx context.Context, conf ContainerConfigs) er
 
 	for {
 		select {
-		case <-okC:
-			return c.RemoveCtr(ctx, resp.ID)
+		case res := <-okC:
+			if res.StatusCode != 0 {
+				return fmt.Errorf("error in builder container (status code %d)", res.StatusCode)
+			} else {
+				return c.RemoveCtr(ctx, resp.ID)
+			}
 		case err = <-errC:
 			return err
 		}

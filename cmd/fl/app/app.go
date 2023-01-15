@@ -58,11 +58,12 @@ func ParseCMD(version string) (*kong.Context, error) {
 
 	flConfig := client.Config{Host: "http://localhost:4000"}
 	flClient, err := client.NewClient(http.DefaultClient, flConfig)
+	validator := client.InputValidator{}
 	if err != nil {
 		return nil, err
 	}
-	fnSvc := &client.FnService{Client: flClient}
-	modSvc := &client.ModService{Client: flClient}
+	fnSvc := &client.FnService{Client: flClient, InputValidatorHandler: &validator}
+	modSvc := &client.ModService{Client: flClient, InputValidatorHandler: &validator}
 
 	kong_ctx := kong.Parse(&cli,
 		kong.Name("fl"),

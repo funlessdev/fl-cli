@@ -16,7 +16,9 @@ package fn
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/docker/docker/client"
@@ -40,7 +42,13 @@ func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log
 	if err := logger.StopSpinner(setupBuilder(builder, b.Language, b.Destination)); err != nil {
 		return err
 	}
-	_ = logger.StartSpinner(fmt.Sprintf("Pulling %s builder image (%s) 📦", langNames[b.Language], pkg.FLBuilderImages[b.Language]))
+
+	_ = logger.StartSpinner(fmt.Sprintf("Checking directory %s files for language %s... 🔍", b.Source, b.Language))
+	if err := logger.StopSpinner(checkMustContainFiles(b.Language, b.Source)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner(fmt.Sprintf("Pulling %s builder image (%s) 📦", pkg.SupportedLanguages[b.Language].Name, pkg.SupportedLanguages[b.Language].BuilderImage))
 	if err := logger.StopSpinner(builder.PullBuilderImage(ctx)); err != nil {
 		return err
 	}
@@ -56,11 +64,6 @@ func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log
 	return nil
 }
 
-var langNames = map[string]string{
-	"js":   "Javascript",
-	"rust": "Rust",
-}
-
 func setupBuilder(builder build.DockerBuilder, lang, out string) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
 	if err != nil {
@@ -74,6 +77,21 @@ func setupBuilder(builder build.DockerBuilder, lang, out string) error {
 	dest := filepath.Clean(out)
 	if err = builder.Setup(flDocker, lang, dest); err != nil {
 		return err
+	}
+	return nil
+}
+
+func checkMustContainFiles(lang, source string) error {
+	language, ok := pkg.SupportedLanguages[lang]
+	if !ok {
+		return errors.New("unsupported language")
+	}
+	for _, f := range language.MustContainFiles {
+		path := filepath.Join(source, f)
+		_, err := os.Stat(path)
+		if err != nil && os.IsNotExist(err) {
+			return fmt.Errorf("necessary file %s not found in path %s", f, source)
+		}
 	}
 	return nil
 }
