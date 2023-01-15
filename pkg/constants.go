@@ -15,21 +15,24 @@
 package pkg
 
 type Language struct {
-	Name         string
-	BuilderImage string
-	Extensions   []string
+	Name             string
+	BuilderImage     string
+	Extensions       []string
+	MustContainFiles []string
 }
 
 var SupportedLanguages = map[string]Language{
 	"js": {
-		Name:         "Javascript",
-		BuilderImage: "ghcr.io/funlessdev/fl-js-builder:latest",
-		Extensions:   []string{".js"},
+		Name:             "Javascript",
+		BuilderImage:     "ghcr.io/funlessdev/fl-js-builder:latest",
+		Extensions:       []string{".js"},
+		MustContainFiles: []string{"package.json"},
 	},
 	"rust": {
-		Name:         "Rust",
-		BuilderImage: "ghcr.io/funlessdev/fl-rust-builder:latest",
-		Extensions:   []string{".rs"},
+		Name:             "Rust",
+		BuilderImage:     "ghcr.io/funlessdev/fl-rust-builder:latest",
+		Extensions:       []string{".rs"},
+		MustContainFiles: []string{"Cargo.toml"},
 	},
 }
 
