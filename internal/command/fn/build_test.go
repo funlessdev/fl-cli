@@ -71,7 +71,7 @@ func TestFnBuild(t *testing.T) {
 			Language:    testLanguage,
 		}
 
-		output := genTestOutput(testFn, pkg.SupportedLanguages[testLanguage].BuilderImage)
+		output := genTestOutput(testFn, pkg.SupportedLanguages[testLanguage].BuilderImage, testDir)
 
 		mockBuilder.On("Setup", mock.Anything, testLanguage, testOutDir).Return(nil).Once()
 		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
@@ -136,10 +136,12 @@ func TestFnBuild(t *testing.T) {
 	})
 }
 
-func genTestOutput(name, image string) string {
+func genTestOutput(name, image, source string) string {
 	return fmt.Sprintf(`Building %s into a wasm binary...
 
 Setting up...
+done
+Checking directory %s files for language js... 🔍
 done
 Pulling Javascript builder image (%s) 📦
 done
@@ -147,5 +149,5 @@ Building source... 🛠️
 done
 
 Successfully built %s.wasm 🥳🥳
-`, name, image, name)
+`, name, source, image, name)
 }

@@ -27,6 +27,7 @@ header:
     - '**/task/**'
     - '**/vendor/**'
     - '**/*.wasm'
+    - 'test/fixtures/**'
     - '**/.gitkeep'
     - 'workspace.code-workspace'
     - CODEOWNERS
