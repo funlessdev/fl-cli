@@ -14,6 +14,95 @@
   ~ limitations under the License.
 -->
 
+## v0.3.0 (2023-01-16)
+
+### Feat
+
+- **docker**: check containerwait exit status code
+- **fn**: add check for necessary files in build and create
+- **app**: add input validator to fnservice and modservice
+- **client**: add name validation in fn_service and mod_service
+- **client**: add input_validator struct and interface
+- **mod**: fix mod get output formatting
+- **mod**: add mod subcommands
+- add modhandler interface over sdk
+- add base files for mod subcommand
+- **homedir**: add homedir pkg with utilities to handle .fl
+- **fn-new**: implement new cmd with tests
+- **template**: add template pull cmd
+- **fn**: setup 'new' cmd with list flag
+- **deploy**: add alias for deploy command
+- **admin**: add deploy subcommands for k8s/docker
+- **kubernetes_rm**: add kubernetes remove command
+- **kubernetes**: add full kubernetes deployment
+- **kubernetes**: add namespace, svc-account, role and rolebinding creation
+- **fl_k8s**: add kubernetes yaml parsing
+- add base k8s deploy command
+- **deploy**: add base kubernetes deployer/remover types
+- **upload**: add upload cmd to create functions from wasm files
+- **wasm-builder**: add rename code.wasm
+- **fn-build**: add build cmd to just build wasm binaries
+
+### Fix
+
+- update mod, fn_service, mod_service to new sdk types
+- **mod**: fix print in mod list and mod get
+- **mod_service**: fix nil pointer deref errors
+- **fn_service**: fix nil pointer deref error
+- **fn**: remove fn list command (moved to mod get)
+- **fn**: update fn commands to new fnhandler
+- **fn_service**: update fnhandler to new sdk version
+- license header and linter errors
+- check returned errors
+- **license**: add license header
+- **constants**: fix broken docker urls
+- **create**: add get wasm file in builder to get correct file in create
+- license headers and language flag type
+- **fn**: add mandatory .wasm extension in fn create with single file
+- **fn**: return error if empty file is passed in fn create
+
+### Refactor
+
+- move supported languages names/images in single struct
+- **mod**: fix output formatting for mod subcommands
+- **mod_service_test**: remove redundant type declaration
+- add components replace in docker-compose
+- add prometheus config download
+- homdir in constants and create dir function
+- **docker**: update docker deploy commands with new interface
+- **docker**: substitute docker deployer/remover with dockershell interface
+- **homedir**: return path to file from read/write
+- **homedir**: move dir string to constant
+- **template**: small improvements
+- **template**: move new --list to template list cmd
+- **template**: move copy code to pkg
+- **fn**: add command aliases
+- **deploy**: move deploy subcommands to separate folders
+- **deploy**: move docker and k8s commands under deploy subcommand
+- **deploy**: fix typo in kubernetes_remover struct
+- **deploy**: move fl_k8s/parse to deploy/kubernetes_parse
+- **constants**: revert default prometheus img
+- **kubernetes**: remove unused parameters from k8s command
+- change WithClientSet to WithConfig in k8s deployer/remover
+- **kubernetes_deployer**: add getyamlcontent() auxiliary func; update interface
+- **kubernetes**: add setupdeployer() function
+- **fn**: rename mockInvoker to mockFnHandler
+- **list**: remove redundant error check
+- **create**: update create to build and upload with tmp file
+- **create**: setup builder
+- simplify docker client
+- **wasm**: update builder
+- implement new docker remover
+- **admin-dev**: use new deployer and update tests
+- **docker**: simplify docker client interface
+- **docker-deployer**: separate setup
+- **docker**: add docker package with interfaces
+- **constants**: change builder map names
+- **fn_service**: remove unused language parameter in create
+- **fn**: add missing license headers
+- **fn**: move fn functions to separate files
+- remove unused Namespace field
+
 ## v0.2.1 (2022-10-31)
 
 ### Fix
