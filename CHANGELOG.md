@@ -14,6 +14,14 @@
   ~ limitations under the License.
 -->
 
+## v0.3.1 (2023-01-24)
+
+### Fix
+
+- **command**: raise error in json decoder if unknown fields are passed in apierror
+- **mod**: add missing extracterror calls
+- **wasm**: set unique name for builder containers
+
 ## v0.3.0 (2023-01-16)
 
 ### Feat
