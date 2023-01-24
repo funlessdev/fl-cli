@@ -17,8 +17,10 @@ package build
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -61,11 +63,11 @@ func (b *WasmBuilder) Setup(flDocker docker.DockerClient, language string, dest 
 	}
 	b.builderImg = lang.BuilderImage
 
-	containerName, exists := builderNames[language]
+	containerBaseName, exists := builderNames[language]
 	if !exists {
 		return errors.New("no corresponding builder name found for the given language")
 	}
-	b.builderContainerName = containerName
+	b.builderContainerName = containerBaseName + fmt.Sprintf("%d", time.Now().UnixMilli())
 	b.flDocker = flDocker
 	b.outPath = dest
 

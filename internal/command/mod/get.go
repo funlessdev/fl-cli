@@ -37,7 +37,7 @@ func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.
 	functions := data.Functions
 
 	if err != nil {
-		return err
+		return extractError(err)
 	}
 	logger.Infof("Module: %s\n", *name)
 	logger.Info("Functions:")
