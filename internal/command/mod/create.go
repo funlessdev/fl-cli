@@ -29,7 +29,7 @@ func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger l
 	err := modHandler.Create(ctx, c.Name)
 
 	if err != nil {
-		return err
+		return extractError(err)
 	}
 
 	logger.Infof("Successfully created module %s.\n", c.Name)
