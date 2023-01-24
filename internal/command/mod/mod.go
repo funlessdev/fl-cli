@@ -15,6 +15,7 @@
 package mod
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 
@@ -42,7 +43,11 @@ func extractError(err error) error {
 	if !castOk {
 		return err
 	}
-	if err := json.Unmarshal(openApiError.Body(), &e); err != nil {
+
+	d := json.NewDecoder(bytes.NewReader(openApiError.Body()))
+	d.DisallowUnknownFields()
+
+	if err := d.Decode(&e); err != nil {
 		return err
 	}
 	return errors.New(e.Errors.Detail)
