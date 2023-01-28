@@ -14,6 +14,16 @@
   ~ limitations under the License.
 -->
 
+## v0.3.2 (2023-01-28)
+
+### Fix
+
+- code file pointer with updated deps
+
+### Refactor
+
+- **logs**: uniform Info and Infof removing \n from Info
+
 ## v0.3.1 (2023-01-24)
 
 ### Fix
