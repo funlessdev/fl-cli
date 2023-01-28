@@ -65,7 +65,7 @@ func TestFnDelete(t *testing.T) {
 		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("\nSuccessfully deleted function %s/%s.", testNs, testFn), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("\nSuccessfully deleted function %s/%s.\n", testNs, testFn), (&outbuf).String())
 		mockFnHandler.AssertExpectations(t)
 	})
 

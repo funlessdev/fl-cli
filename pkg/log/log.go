@@ -34,22 +34,24 @@ func (l *FLoggerImpl) SpinnerMessage(msg string) {
 	l.spinner.Message(msg)
 }
 
+// StartSpinner starts the spinner with the given message adding "\n" at the end.
 func (l *FLoggerImpl) StartSpinner(msg string) error {
 	l.currentMessage = msg
 	if l.disableAnimation {
-		l.Info(msg)
+		l.Info(msg + "\n")
 		return nil
 	}
 	l.spinner.Message(msg)
 	return l.spinner.Start()
 }
 
+// StopSpinner stops the spinner with success if err is nil, fail othewise.
 func (l *FLoggerImpl) StopSpinner(err error) error {
 	if l.disableAnimation {
 		if err == nil {
-			l.Info("done")
+			l.Info("done\n")
 		} else {
-			l.Info("failed")
+			l.Info("failed\n")
 		}
 		return err
 	}
@@ -65,7 +67,7 @@ func (l *FLoggerImpl) StopSpinner(err error) error {
 }
 
 func (l *FLoggerImpl) Info(args ...interface{}) {
-	fmt.Fprintln(l.writer, args...)
+	fmt.Fprint(l.writer, args...)
 }
 
 func (l *FLoggerImpl) Infof(format string, args ...interface{}) {

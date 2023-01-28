@@ -49,7 +49,7 @@ func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 	}
 	_ = logger.StopSpinner(nil)
 
-	logger.Info(fmt.Sprintf("Successfully uploaded function %s/%s 👌", u.Namespace, u.Name))
+	logger.Info(fmt.Sprintf("Successfully uploaded function %s/%s 👌\n", u.Namespace, u.Name))
 	return nil
 }
 

@@ -36,7 +36,7 @@ type Build struct {
 }
 
 func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log.FLogger) error {
-	logger.Info(fmt.Sprintf("Building %s into a wasm binary...\n", b.Name))
+	logger.Info(fmt.Sprintf("Building %s into a wasm binary...\n\n", b.Name))
 
 	_ = logger.StartSpinner("Setting up...")
 	if err := logger.StopSpinner(setupBuilder(builder, b.Language, b.Destination)); err != nil {
@@ -60,7 +60,7 @@ func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log
 		return err
 	}
 
-	logger.Info(fmt.Sprintf("\nSuccessfully built %s.wasm 🥳🥳", b.Name))
+	logger.Info(fmt.Sprintf("\nSuccessfully built %s.wasm 🥳🥳\n", b.Name))
 	return nil
 }
 

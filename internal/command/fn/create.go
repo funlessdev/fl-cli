@@ -68,6 +68,6 @@ func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler
 	}
 	_ = logger.StopSpinner(nil)
 
-	logger.Info(fmt.Sprintf("\nSuccessfully created function %s/%s.", c.Namespace, c.Name))
+	logger.Info(fmt.Sprintf("\nSuccessfully created function %s/%s.\n", c.Namespace, c.Name))
 	return nil
 }

@@ -73,7 +73,7 @@ func TestFnInvoke(t *testing.T) {
 		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, string(testOutput)+"\n", (&outbuf).String())
+		assert.Equal(t, string(testOutput), (&outbuf).String())
 		mockFnHandler.AssertExpectations(t)
 	})
 

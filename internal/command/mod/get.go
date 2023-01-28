@@ -40,10 +40,10 @@ func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.
 		return extractError(err)
 	}
 	logger.Infof("Module: %s\n", *name)
-	logger.Info("Functions:")
+	logger.Info("Functions:\n")
 
 	for _, v := range functions {
-		logger.Info(*v.Name)
+		logger.Info(*v.Name + "\n")
 	}
 
 	if g.Count {

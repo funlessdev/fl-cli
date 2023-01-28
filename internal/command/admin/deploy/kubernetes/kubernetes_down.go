@@ -26,7 +26,7 @@ type Down struct {
 }
 
 func (k *Down) Run(ctx context.Context, remover deploy.KubernetesRemover, logger log.FLogger) error {
-	logger.Info("Removing Kubernetes FunLess deployment...\n")
+	logger.Info("Removing Kubernetes FunLess deployment...\n\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 	if err := logger.StopSpinner(remover.WithConfig(k.KubeConfig)); err != nil {
@@ -38,7 +38,7 @@ func (k *Down) Run(ctx context.Context, remover deploy.KubernetesRemover, logger
 		return err
 	}
 
-	logger.Info("\nAll clear!")
+	logger.Info("\nAll clear!\n")
 
 	return nil
 }
