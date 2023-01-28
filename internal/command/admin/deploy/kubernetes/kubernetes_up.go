@@ -27,7 +27,7 @@ type Up struct {
 }
 
 func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
-	logger.Info("Deploying FunLess on Kubernetes...\n")
+	logger.Info("Deploying FunLess on Kubernetes...\n\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 	if err := logger.StopSpinner(deployer.WithConfig(k.KubeConfig)); err != nil {
@@ -84,8 +84,8 @@ func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger
 		return err
 	}
 
-	logger.Info("\nDeployment complete!")
-	logger.Info("You can now start using FunLess! 🎉")
+	logger.Info("\nDeployment complete!\n")
+	logger.Info("You can now start using FunLess! 🎉\n")
 
 	return nil
 }

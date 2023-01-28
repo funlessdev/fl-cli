@@ -67,7 +67,7 @@ func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, co
 	}
 
 	apiService := fn.Client.ApiClient.FunctionsApi
-	request := apiService.CreateFunction(ctx, fnMod).Name(fnName).Code(*code)
+	request := apiService.CreateFunction(ctx, fnMod).Name(fnName).Code(code)
 	_, err := request.Execute()
 	return err
 }
@@ -101,7 +101,7 @@ func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, co
 	}
 
 	apiService := fn.Client.ApiClient.FunctionsApi
-	request := apiService.UpdateFunction(ctx, fnMod, fnName).Code(*code).Name(newName)
+	request := apiService.UpdateFunction(ctx, fnMod, fnName).Code(code).Name(newName)
 	_, err := request.Execute()
 	return err
 }

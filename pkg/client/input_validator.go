@@ -32,6 +32,6 @@ func (i *InputValidator) ValidateName(name, entity string) error {
 	if regex.MatchString(name) {
 		return nil
 	} else {
-		return fmt.Errorf("Invalid %s name", entity)
+		return fmt.Errorf("invalid %s name", entity)
 	}
 }

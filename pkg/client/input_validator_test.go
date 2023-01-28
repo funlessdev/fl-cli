@@ -50,7 +50,7 @@ func TestValidateFnModName(t *testing.T) {
 		for _, n := range entities {
 			err = validator.ValidateName(invalidNames[0], n)
 			require.Error(t, err)
-			assert.Equal(t, err.Error(), fmt.Errorf("Invalid %s name", n).Error())
+			assert.Equal(t, err.Error(), fmt.Errorf("invalid %s name", n).Error())
 		}
 	})
 }

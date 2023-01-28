@@ -32,6 +32,6 @@ func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 		return extractError(err)
 	}
 
-	logger.Infof("\nSuccessfully deleted function %s/%s.", f.Namespace, f.Name)
+	logger.Infof("\nSuccessfully deleted function %s/%s.\n", f.Namespace, f.Name)
 	return nil
 }

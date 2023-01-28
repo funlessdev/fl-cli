@@ -38,7 +38,7 @@ type Up struct {
 }
 
 func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
-	logger.Info("Deploying FunLess locally...\n")
+	logger.Info("Deploying FunLess locally...\n\n")
 
 	_ = logger.StartSpinner("Setting things up...")
 
@@ -62,7 +62,7 @@ func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 		return err
 	}
 
-	logger.Info("\nDeployment complete!")
+	logger.Info("\nDeployment complete!\n")
 	logger.Info("You can now start using FunLess! 🎉")
 
 	return nil

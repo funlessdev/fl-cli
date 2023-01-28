@@ -34,7 +34,7 @@ func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log
 	data := res.GetData()
 
 	for _, v := range data {
-		logger.Info(*v.Name)
+		logger.Info(*v.Name + "\n")
 	}
 
 	if l.Count {
