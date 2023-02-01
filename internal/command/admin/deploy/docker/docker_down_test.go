@@ -56,7 +56,7 @@ func TestDockerDownRun(t *testing.T) {
 	})
 
 	t.Run("should return error when compose down fails", func(t *testing.T) {
-		path, err := downloadDockerCompose()
+		path, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 		require.NoError(t, err)
 
 		out.Reset()
@@ -67,7 +67,7 @@ func TestDockerDownRun(t *testing.T) {
 	})
 
 	t.Run("should remove docker-compose.yml when succeds", func(t *testing.T) {
-		path, err := downloadDockerCompose()
+		path, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 		require.NoError(t, err)
 
 		out.Reset()
