@@ -91,7 +91,7 @@ func TestDockerUpRun(t *testing.T) {
 	})
 }
 
-func Test_downloadDockerCompose(t *testing.T) {
+func Test_downloadFile(t *testing.T) {
 	homedirPath, err := os.MkdirTemp("", "funless-test-homedir-")
 	require.NoError(t, err)
 
@@ -104,12 +104,12 @@ func Test_downloadDockerCompose(t *testing.T) {
 	}()
 
 	// Download it for the first time
-	path, err := downloadDockerCompose()
+	path, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 	require.NoError(t, err)
 	require.FileExists(t, path)
 
 	// Now that it exists it should not give errors
-	path, err = downloadDockerCompose()
+	path, err = downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 	require.NoError(t, err)
 	require.FileExists(t, path)
 }
@@ -126,13 +126,13 @@ func Test_downloadPrometheusConfig(t *testing.T) {
 		os.RemoveAll(homedirPath)
 	}()
 
-	err = downloadPrometheusConfig()
+	err = downloadFolderFile("prometheus", "config.yml", prometheusConfigYmlUrl)
 	require.NoError(t, err)
 
 	require.DirExists(t, filepath.Join(homedirPath, ".fl", "prometheus"))
 	require.FileExists(t, filepath.Join(homedirPath, ".fl", "prometheus", "config.yml"))
 
-	err = downloadPrometheusConfig()
+	err = downloadFolderFile("prometheus", "config.yml", prometheusConfigYmlUrl)
 	require.NoError(t, err)
 }
 
@@ -154,7 +154,7 @@ func Test_replaceImages(t *testing.T) {
 	})
 
 	t.Run("should swap core image when different from default", func(t *testing.T) {
-		path, err := downloadDockerCompose()
+		path, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 		require.NoError(t, err)
 		defer os.Remove(path)
 
@@ -173,7 +173,7 @@ func Test_replaceImages(t *testing.T) {
 	})
 
 	t.Run("should swap worker image when different from default", func(t *testing.T) {
-		path, err := downloadDockerCompose()
+		path, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 		require.NoError(t, err)
 		defer os.Remove(path)
 
@@ -192,7 +192,7 @@ func Test_replaceImages(t *testing.T) {
 	})
 
 	t.Run("should swap both images when different from default", func(t *testing.T) {
-		path, err := downloadDockerCompose()
+		path, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 		require.NoError(t, err)
 		defer os.Remove(path)
 

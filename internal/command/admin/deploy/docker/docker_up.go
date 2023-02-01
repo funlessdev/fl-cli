@@ -29,7 +29,9 @@ import (
 
 const (
 	dockerComposeYmlUrl    = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/docker-compose.yml"
+	envUrl                 = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/.env.example"
 	prometheusConfigYmlUrl = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/prometheus/config.yml"
+	filebeatComposeYmlUrl  = "https://raw.githubusercontent.com/funlessdev/fl-deploy/main/docker-compose/filebeat/filebeat.compose.yml"
 )
 
 type Up struct {
@@ -42,7 +44,7 @@ func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 
 	_ = logger.StartSpinner("Setting things up...")
 
-	composeFilePath, err := downloadDockerCompose()
+	composeFilePath, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 	if err != nil {
 		return logger.StopSpinner(err)
 	}
@@ -52,7 +54,18 @@ func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 		return logger.StopSpinner(err)
 	}
 
-	if err := downloadPrometheusConfig(); err != nil {
+	// prometheus config file
+	if err := downloadFolderFile("prometheus", "config.yml", prometheusConfigYmlUrl); err != nil {
+		return logger.StopSpinner(err)
+	}
+
+	// filebeat compose file
+	if err := downloadFolderFile("filebeat", "filebeat.compose.yml", filebeatComposeYmlUrl); err != nil {
+		return logger.StopSpinner(err)
+	}
+
+	// .env file
+	if _, err := downloadFile(".env", envUrl); err != nil {
 		return logger.StopSpinner(err)
 	}
 
@@ -68,14 +81,13 @@ func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 	return nil
 }
 
-func downloadDockerCompose() (string, error) {
-	// Check if it's already present
-	if _, path, err := homedir.ReadFromConfigDir("docker-compose.yml"); err == nil {
+func downloadFile(name, url string) (string, error) {
+	// Check if already present
+	if _, path, err := homedir.ReadFromConfigDir(name); err == nil {
 		return path, nil
 	}
 
-	// Download docker-compose.yml
-	resp, err := http.Get(dockerComposeYmlUrl)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -85,17 +97,19 @@ func downloadDockerCompose() (string, error) {
 		return "", err
 	}
 
-	return homedir.WriteToConfigDir("docker-compose.yml", content, true)
+	return homedir.WriteToConfigDir(name, content, true)
+
 }
 
-func downloadPrometheusConfig() error {
+func downloadFolderFile(folder, file, url string) error {
+	filepath := folder + "/" + file
+
 	// Check if it's already present
-	if _, _, err := homedir.ReadFromConfigDir("prometheus/config.yml"); err == nil {
+	if _, _, err := homedir.ReadFromConfigDir(filepath); err == nil {
 		return nil
 	}
 
-	// Download prometheus/config.yml
-	resp, err := http.Get(prometheusConfigYmlUrl)
+	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
@@ -105,11 +119,11 @@ func downloadPrometheusConfig() error {
 		return err
 	}
 
-	if _, err := homedir.CreateDirInConfigDir("prometheus"); err != nil {
+	if _, err := homedir.CreateDirInConfigDir(folder); err != nil {
 		return err
 	}
 
-	_, err = homedir.WriteToConfigDir("prometheus/config.yml", content, true)
+	_, err = homedir.WriteToConfigDir(filepath, content, true)
 	return err
 }
 
