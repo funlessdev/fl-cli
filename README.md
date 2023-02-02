@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2022 Giuseppe De Palma, Matteo Trentin
+  ~ Copyright 2023 Giuseppe De Palma, Matteo Trentin
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -13,74 +13,113 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
 -->
+![tests](https://github.com/funlessdev/fl-cli/actions/workflows/test.yml/badge.svg)
+[![release](https://badgen.net/github/release/funlessdev/fl-cli)](https://github.com/funlessdev/fl-cli/releases/)
+![contributors](https://badgen.net/github/contributors/funlessdev/fl-cli) 
 
-# fl
+# The FunLess CLI
 
-This is the repository for the CLI of the Funless (FL) platform, a new generation research-driven serverless platform.
+This is the repository for the FunLess platform CLI tool (fl), a new generation research-driven serverless platform.
 
-The CLI can be used both to deploy the platform and to create, delete and invoke functions on it.
+The CLI is written in Go, using the [Kong](https://github.com/alecthomas/kong) framework. It can be used deploy the platform, manage modules and create, delete, invoke functions.
 
-## Using the CLI
+### The Commands
 
-The CLI currently exposes two sets of commands, `fn` and `admin`, for function manipulation and deployment respectively.
-### fn
+The CLI offers 3 main commands:
 
-The `fn` commands are used to create, delete and invoke functions. All commands require the function's name, and allow an additional `--namespace` parameter for the function.
+- **admin**: currently used only to deploy and remove the platform on a local machine
+- **fn**: used to create, delete and invoke functions
+- **mod**: used to create, delete and get information on modules
+- **template**: used to manage the template folder
 
-#### `fn create`
+Each command has a series of subcommands. Use `--help` to get more information on each command.
 
-The `fn create` command is used to create functions and store them in the platform's permanent storage.
+#### fl admin
 
-It takes a mandatory argument (the function's name) and requires either a `--source-file` or a `--source-dir` additional parameter, for the function's source, along with a `--language` parameter 
-(either `js` or `rust`).
+The `admin` command has currently 1 subcommand: `deploy` which can be used chained with:
 
-![](assets/img/fl_create_file.gif)
+- `docker up`: to deploy the platform on a local machine using Docker containers
+- `docker down`: to remove the platform from a local machine
+- `kubernetes up`: to deploy the platform on a Kubernetes cluster (not yet updated)
+- `kubernetes down`: to remove the platform from a Kubernetes cluster (not yet updated)
 
-In case a source directory is passed, a suitable container from [fl-runtimes](https://github.com/funlessdev/fl-runtimes) is pulled and used to build the source.
+#### fl fn
 
-![](assets/img/fl_create_dir.gif)
+The `fn` command is used for anything function related. It has currently 6 subcommands: 
+  
+- `invoke`: to invoke an existing function
+- `build`: to build the wasm file from a function's source code
+- `upload`: to upload a function's wasm file to the platform with a given name
+- `create`: a combination of `build` and `upload`, the wasm file is removed after the upload
+- `delete`: to delete a function from the platform
+- `new`: to create new function's project files from a templates
 
+#### fl mod
 
-#### `fn delete`
+The `mod` command is used for anything module related. It has currently 5 subcommands:
 
-The `fn delete` command is used to remove functions from the platform's permanent storage.
+- `create`: to create a new module
+- `delete`: to delete a module
+- `get`: to get information on a module (name and functions inside)
+- `list`: to list all modules
+- `update`: to update a module's name
 
+#### fl template
 
+The `template` command is used to pull or list templates. It has currently 2 subcommands:
 
-#### `fn invoke`
+- `pull`: to pull a template from a repository
+- `list`: to list all templates in the current folder
 
-The `fn invoke` command is used to run functions on the platform. Both keyword arguments and json arguments can be passed using the `-a` or the `-j` flag respectively.
+## Installation
 
-![](assets/img/fl_invoke.gif)
+Right now only the linux version of the CLI is supported, although we build and release the CLI for windows and macos as well, therefore 
+they are not guaranteed to work (if anyone wants to try on those platforms and give feedback/help we'd appreciate it).
 
-### admin
+The tool is in the [Release page](https://github.com/funlessdev/fl-cli/releases) of this repository, and can be downloaded from there.
+In linux, just move the binary to a folder in your `$PATH` and you're good to go.
 
-The `admin` commands are used to deploy and delete an instance of the platform; currently the only deployment option available is a development instance.
+## Usage
 
-All `admin` commands can be used with the `a` shortcut, so `fl admin dev` is the same as `fl a dev`.
+We added the docker deployment in the tool to have an easy quick start. It uses `docker compose` under the hood so you
+need to have a recent version of docker installed and running (you can find a more in depth quick start at [funless.dev](https://funless.dev/)). All you have to do is run:
 
-#### `admin dev`
+```bash
+fl admin deploy docker up
+```
 
-The `admin dev` command is used to spin up a development version of the platform, with 1 Core and 1 Worker, on the local machine.
+This will deploy the platform on your local machine, together with some helper services to handle the logs (Kibana with Elasticsearch). You can access Kibana interface at `localhost:5601`.
 
-Custom images for Core and Worker can be used with the `--core` and `--worker` flags.
+The core services, instead, are:
 
-![](assets/img/fl_admin_dev.gif)
+- the **core** container which exposes the JSON API to interact with the platform (at `localhost:4000`)
+- the **worker** container which handles the execution of the functions (only 1 worker in the local deploy)
+- the **postgres** container which is the database used by the platform
+- the **prometheus** container which is the monitoring service used by the platform (at `localhost:9090`)
 
-#### `admin reset`
+To remove the platform from your machine, just run
 
-The `admin reset` command is used to delete all containers of the development installation of the platform; pulled images will not be deleted.
+```bash
+fl admin deploy docker down
+```
 
-![](assets/img/fl_admin_reset.gif)
+### Using custom images
+
+If you are working on the core or worker, there is an easy way to quick start the platform with your custom components.
+You need to build the images for the core and/or the worker and then specify them in the `docker up` command:
+
+```bash
+fl admin deploy docker up --core <your-core-image> --worker <your-worker-image>
+```
 
 ## Contributing
 
-Anyone is welcome to contribute to this project or any other Funless project. 
+Anyone is welcome to contribute to this project or any other FunLess project. 
 
 You can contribute by testing the projects, opening tickets, writing documentation, sharing new ideas for future works and, of course,
 by contributing code. 
 
-You can pick an issue or create a new one, comment on it that you will take priority and then fork the repo so you're free to work on it.
+You can pick an issue or create a new one and fork the repo so you're free to work on it.
 Once you feel ready open a Pull Request to send your code to us.
 
 ## License
