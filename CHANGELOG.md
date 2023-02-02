@@ -14,6 +14,12 @@
   ~ limitations under the License.
 -->
 
+## v0.3.3 (2023-02-02)
+
+### Fix
+
+- **docker-deploy**: download filebeat and .env files for new docker compose
+
 ## v0.3.2 (2023-01-28)
 
 ### Fix
