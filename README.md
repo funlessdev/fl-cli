@@ -19,9 +19,9 @@
 
 # The FunLess CLI
 
-This is the repository for the FunLess platform CLI tool (fl), a new generation research-driven serverless platform.
+This is the repository for the FunLess platform CLI tool (**fl**), a new generation research-driven serverless platform.
 
-The CLI is written in Go, using the [Kong](https://github.com/alecthomas/kong) framework. It can be used deploy the platform, manage modules and create, delete, invoke functions.
+The CLI is written in Go, using the [Kong](https://github.com/alecthomas/kong) framework. It can be used to deploy the platform, manage modules and create, delete, invoke functions.
 
 ### The Commands
 
