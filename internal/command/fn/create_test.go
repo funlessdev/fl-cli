@@ -31,15 +31,6 @@ import (
 )
 
 func TestFnCreate(t *testing.T) {
-	// 	testResult := `Creating test-fn function...
-
-	// Building function...🏗 ️
-	// done
-	// Uploading function... 📮
-	// done
-
-	// Successfully created function test-mod/test-fn.
-	// `
 	testFn := "test-fn"
 	testMod := "test-mod"
 	testResult := fmt.Sprintf(`Creating test-fn function...
