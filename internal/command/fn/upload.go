@@ -29,9 +29,9 @@ import (
 )
 
 type Upload struct {
-	Name      string `arg:"" help:"the name of the function"`
-	Source    string `arg:"" type:"existingfile" help:"path of the wasm binary"`
-	Namespace string `short:"n" default:"_" help:"the namespace of the function"`
+	Name   string `arg:"" help:"the name of the function"`
+	Source string `arg:"" type:"existingfile" help:"path of the wasm binary"`
+	Module string `short:"m" default:"_" help:"the module of the function"`
 }
 
 func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
@@ -43,13 +43,13 @@ func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 	_ = logger.StopSpinner(nil)
 
 	_ = logger.StartSpinner("Uploading function...")
-	err = fnHandler.Create(ctx, u.Name, u.Namespace, code)
+	err = fnHandler.Create(ctx, u.Name, u.Module, code)
 	if err != nil {
 		return logger.StopSpinner(extractError(err))
 	}
 	_ = logger.StopSpinner(nil)
 
-	logger.Info(fmt.Sprintf("Successfully uploaded function %s/%s 👌\n", u.Namespace, u.Name))
+	logger.Info(fmt.Sprintf("Successfully uploaded function %s/%s 👌\n", u.Module, u.Name))
 	return nil
 }
 
