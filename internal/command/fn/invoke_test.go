@@ -32,7 +32,7 @@ import (
 func TestFnInvoke(t *testing.T) {
 	testResult := map[string]interface{}{"payload": "Hi"}
 	testFn := "test-fn"
-	testNs := "test-ns"
+	testMod := "test-mod"
 	testArgs := map[string]string{"name": "Some name"}
 	testJArgs := "{\"name\":\"Some name\"}"
 	testParsedJArgs := map[string]interface{}{"name": "Some name"}
@@ -41,30 +41,30 @@ func TestFnInvoke(t *testing.T) {
 
 	t.Run("should use FnService.Invoke to invoke functions", func(t *testing.T) {
 		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			Args:      map[string]string{},
+			Name:   testFn,
+			Module: testMod,
+			Args:   map[string]string{},
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(openapi.InvokeResult{Data: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testNs, map[string]interface{}{})
+		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testMod, map[string]interface{}{})
 		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should correctly print result", func(t *testing.T) {
 		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			Args:      map[string]string{},
+			Name:   testFn,
+			Module: testMod,
+			Args:   map[string]string{},
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testNs, map[string]interface{}{}).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(openapi.InvokeResult{Data: testResult}, nil)
 
 		var outbuf bytes.Buffer
 		var testOutput, _ = json.Marshal(testResult)
@@ -79,9 +79,9 @@ func TestFnInvoke(t *testing.T) {
 
 	t.Run("should correctly parse and forward keyword args", func(t *testing.T) {
 		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			Args:      testArgs,
+			Name:   testFn,
+			Module: testMod,
+			Args:   testArgs,
 		}
 
 		mockArgs := make(map[string]interface{}, len(testArgs))
@@ -90,28 +90,28 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testNs, mockArgs).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, mockArgs).Return(openapi.InvokeResult{Data: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testNs, mockArgs)
+		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testMod, mockArgs)
 		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should correctly parse and forward json args", func(t *testing.T) {
 		cmd := Invoke{
-			Name:      testFn,
-			Namespace: testNs,
-			JsonArgs:  testJArgs,
+			Name:     testFn,
+			Module:   testMod,
+			JsonArgs: testJArgs,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testNs, testParsedJArgs).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, testParsedJArgs).Return(openapi.InvokeResult{Data: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testNs, testParsedJArgs)
+		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testMod, testParsedJArgs)
 		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
