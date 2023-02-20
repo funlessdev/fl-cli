@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,7 +32,7 @@ import (
 
 func TestFnUpload(t *testing.T) {
 	testFn := "test-fn"
-	testNs := "test-ns"
+	testMod := "test-mod"
 	testSource, _ := filepath.Abs("../../../test/fixtures/real.wasm")
 	ctx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
@@ -40,9 +41,9 @@ func TestFnUpload(t *testing.T) {
 
 	t.Run("should return error if file is not valid", func(t *testing.T) {
 		upload := Upload{
-			Name:      testFn,
-			Source:    "not-found.wasm",
-			Namespace: testNs,
+			Name:   testFn,
+			Source: "not-found.wasm",
+			Module: testMod,
 		}
 		mockFnHandler := mocks.NewFnHandler(t)
 		err := upload.Run(ctx, mockFnHandler, testLogger)
@@ -51,37 +52,40 @@ func TestFnUpload(t *testing.T) {
 
 	t.Run("should return error when FnService.Create fails", func(t *testing.T) {
 		cmd := Upload{
-			Name:      testFn,
-			Namespace: testNs,
-			Source:    testSource,
+			Name:   testFn,
+			Module: testMod,
+			Source: testSource,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(errors.New("error")).Once()
+		mockFnHandler.On("Create", ctx, testFn, testMod, mock.Anything).Return(errors.New("error")).Once()
 
 		err := cmd.Run(ctx, mockFnHandler, testLogger)
 		require.Error(t, err)
 
-		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testNs, mock.AnythingOfType("*os.File"))
+		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testMod, mock.AnythingOfType("*os.File"))
 		mockFnHandler.AssertNumberOfCalls(t, "Create", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should correctly print result when it works", func(t *testing.T) {
-		testResult := `Reading wasm...
+
+		testResult := fmt.Sprintf(`Reading wasm...
 done
 Uploading function...
 done
-Successfully uploaded function test-ns/test-fn 👌
-`
+Successfully uploaded function %s/%s 👌
+`,
+			testMod, testFn)
+
 		cmd := Upload{
-			Name:      testFn,
-			Namespace: testNs,
-			Source:    testSource,
+			Name:   testFn,
+			Module: testMod,
+			Source: testSource,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(nil)
+		mockFnHandler.On("Create", ctx, testFn, testMod, mock.Anything).Return(nil)
 
 		var outbuf bytes.Buffer
 

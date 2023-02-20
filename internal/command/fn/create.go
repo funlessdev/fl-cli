@@ -26,10 +26,10 @@ import (
 )
 
 type Create struct {
-	Name      string `arg:"" help:"name of the function to create"`
-	Source    string `arg:"" type:"existingdir" help:"path of the source directory"`
-	Namespace string `short:"n" default:"_" help:"namespace of the function to create"`
-	Language  string `short:"l" required:"" enum:"rust,js" help:"programming language of the function"`
+	Name     string `arg:"" help:"name of the function to create"`
+	Source   string `arg:"" type:"existingdir" help:"path of the source directory"`
+	Module   string `short:"m" default:"_" help:"module of the function to create"`
+	Language string `short:"l" required:"" enum:"rust,js" help:"programming language of the function"`
 }
 
 func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
@@ -62,12 +62,12 @@ func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler
 		return logger.StopSpinner(err)
 	}
 
-	err = fnHandler.Create(ctx, c.Name, c.Namespace, code)
+	err = fnHandler.Create(ctx, c.Name, c.Module, code)
 	if err != nil {
 		return logger.StopSpinner(extractError(err))
 	}
 	_ = logger.StopSpinner(nil)
 
-	logger.Info(fmt.Sprintf("\nSuccessfully created function %s/%s.\n", c.Namespace, c.Name))
+	logger.Info(fmt.Sprintf("\nSuccessfully created function %s/%s.\n", c.Module, c.Name))
 	return nil
 }

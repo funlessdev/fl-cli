@@ -22,16 +22,16 @@ import (
 )
 
 type Delete struct {
-	Name      string `arg:"" name:"name" help:"name of the function to delete"`
-	Namespace string `name:"namespace" short:"n" default:"_" help:"namespace of the function to delete"`
+	Name   string `arg:"" name:"name" help:"name of the function to delete"`
+	Module string `name:"module" short:"m" default:"_" help:"module of the function to delete"`
 }
 
 func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
-	err := fnHandler.Delete(ctx, f.Name, f.Namespace)
+	err := fnHandler.Delete(ctx, f.Name, f.Module)
 	if err != nil {
 		return extractError(err)
 	}
 
-	logger.Infof("\nSuccessfully deleted function %s/%s.\n", f.Namespace, f.Name)
+	logger.Infof("\nSuccessfully deleted function %s/%s.\n", f.Module, f.Name)
 	return nil
 }

@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	DefaultNamespace = "_"
+	DefaultModule = "_"
 )
 
 type Client struct {

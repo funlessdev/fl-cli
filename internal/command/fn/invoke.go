@@ -24,10 +24,10 @@ import (
 )
 
 type Invoke struct {
-	Name      string            `arg:"" name:"name" help:"name of the function to invoke"`
-	Namespace string            `name:"namespace" short:"n" default:"_" help:"namespace of the function to invoke"`
-	Args      map[string]string `name:"args" short:"a" help:"arguments of the function to invoke" xor:"args"`
-	JsonArgs  string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
+	Name     string            `arg:"" name:"name" help:"name of the function to invoke"`
+	Module   string            `name:"module" short:"n" default:"_" help:"module of the function to invoke"`
+	Args     map[string]string `name:"args" short:"a" help:"arguments of the function to invoke" xor:"args"`
+	JsonArgs string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
 }
 
 func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
@@ -42,7 +42,7 @@ func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 			return err
 		}
 	}
-	res, err := fnHandler.Invoke(ctx, f.Name, f.Namespace, args)
+	res, err := fnHandler.Invoke(ctx, f.Name, f.Module, args)
 	if err != nil {
 		return extractError(err)
 	}

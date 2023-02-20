@@ -31,33 +31,33 @@ import (
 
 func TestFnDelete(t *testing.T) {
 	testFn := "test-fn"
-	testNs := "test-ns"
+	testMod := "test-mod"
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
 
 	t.Run("should use FnService.Delete to delete functions", func(t *testing.T) {
 		cmd := Delete{
-			Name:      testFn,
-			Namespace: testNs,
+			Name:   testFn,
+			Module: testMod,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(nil)
+		mockFnHandler.On("Delete", testCtx, testFn, testMod).Return(nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Delete", testCtx, testFn, testNs)
+		mockFnHandler.AssertCalled(t, "Delete", testCtx, testFn, testMod)
 		mockFnHandler.AssertNumberOfCalls(t, "Delete", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
 	t.Run("should correctly print result", func(t *testing.T) {
 		cmd := Delete{
-			Name:      testFn,
-			Namespace: testNs,
+			Name:   testFn,
+			Module: testMod,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(nil)
+		mockFnHandler.On("Delete", testCtx, testFn, testMod).Return(nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
@@ -65,20 +65,20 @@ func TestFnDelete(t *testing.T) {
 		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("\nSuccessfully deleted function %s/%s.\n", testNs, testFn), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("\nSuccessfully deleted function %s/%s.\n", testMod, testFn), (&outbuf).String())
 		mockFnHandler.AssertExpectations(t)
 	})
 
 	t.Run("should return error if invalid delete request", func(t *testing.T) {
 		cmd := Delete{
-			Name:      testFn,
-			Namespace: testNs,
+			Name:   testFn,
+			Module: testMod,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockFnHandler.On("Delete", testCtx, testFn, testNs).Return(e)
+		mockFnHandler.On("Delete", testCtx, testFn, testMod).Return(e)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.Error(t, err)

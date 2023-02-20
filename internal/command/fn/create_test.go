@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -30,24 +31,25 @@ import (
 )
 
 func TestFnCreate(t *testing.T) {
-	testResult := `Creating test-fn function...
+	testFn := "test-fn"
+	testMod := "test-mod"
+	testResult := fmt.Sprintf(`Creating test-fn function...
 
 Building function...🏗 ️
 done
 Uploading function... 📮
 done
 
-Successfully created function test-ns/test-fn.
-`
-	testFn := "test-fn"
-	testNs := "test-ns"
+Successfully created function %s/%s.
+`,
+		testMod, testFn)
 	testLanguage := "js"
 	testDir, _ := filepath.Abs("../../../test/fixtures/test_dir/")
 	ctx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	mockFnHandler := mocks.NewFnHandler(t)
-	mockFnHandler.On("Create", ctx, testFn, testNs, mock.Anything).Return(nil)
+	mockFnHandler.On("Create", ctx, testFn, testMod, mock.Anything).Return(nil)
 
 	mockBuilder := mocks.NewDockerBuilder(t)
 	mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil)
@@ -61,10 +63,10 @@ Successfully created function test-ns/test-fn.
 
 	t.Run("success: should correctly print result when building from a directory", func(t *testing.T) {
 		cmd := Create{
-			Name:      testFn,
-			Namespace: testNs,
-			Source:    testDir,
-			Language:  testLanguage,
+			Name:     testFn,
+			Module:   testMod,
+			Source:   testDir,
+			Language: testLanguage,
 		}
 
 		var outbuf bytes.Buffer
@@ -75,7 +77,7 @@ Successfully created function test-ns/test-fn.
 
 		require.NoError(t, err)
 		assert.Equal(t, testResult, (&outbuf).String())
-		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testNs, mock.AnythingOfType("*os.File"))
+		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testMod, mock.AnythingOfType("*os.File"))
 		mockFnHandler.AssertNumberOfCalls(t, "Create", 1)
 		mockFnHandler.AssertExpectations(t)
 		mockBuilder.AssertExpectations(t)
@@ -83,10 +85,10 @@ Successfully created function test-ns/test-fn.
 
 	t.Run("should use DockerBuilder.BuildSource to build functions", func(t *testing.T) {
 		cmd := Create{
-			Name:      testFn,
-			Namespace: testNs,
-			Source:    testDir,
-			Language:  testLanguage,
+			Name:     testFn,
+			Module:   testMod,
+			Source:   testDir,
+			Language: testLanguage,
 		}
 
 		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
@@ -99,10 +101,10 @@ Successfully created function test-ns/test-fn.
 
 	t.Run("should return error if builder setup encounters errors", func(t *testing.T) {
 		cmd := Create{
-			Name:      testFn,
-			Namespace: testNs,
-			Source:    testDir,
-			Language:  testLanguage,
+			Name:     testFn,
+			Module:   testMod,
+			Source:   testDir,
+			Language: testLanguage,
 		}
 
 		mockBuilder := mocks.NewDockerBuilder(t)
@@ -115,10 +117,10 @@ Successfully created function test-ns/test-fn.
 
 	t.Run("should return error if builder image cannot be pulled", func(t *testing.T) {
 		cmd := Create{
-			Name:      testFn,
-			Namespace: testNs,
-			Source:    testDir,
-			Language:  testLanguage,
+			Name:     testFn,
+			Module:   testMod,
+			Source:   testDir,
+			Language: testLanguage,
 		}
 
 		mockBuilder := mocks.NewDockerBuilder(t)
@@ -132,10 +134,10 @@ Successfully created function test-ns/test-fn.
 
 	t.Run("should return error if builder image encounters errors", func(t *testing.T) {
 		cmd := Create{
-			Name:      testFn,
-			Namespace: testNs,
-			Source:    testDir,
-			Language:  testLanguage,
+			Name:     testFn,
+			Module:   testMod,
+			Source:   testDir,
+			Language: testLanguage,
 		}
 
 		mockBuilder := mocks.NewDockerBuilder(t)
