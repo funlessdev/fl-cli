@@ -76,7 +76,7 @@ func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 	}
 
 	logger.Info("\nDeployment complete!\n")
-	logger.Info("You can now start using FunLess! 🎉")
+	logger.Info("You can now start using FunLess! 🎉\n")
 
 	return nil
 }
