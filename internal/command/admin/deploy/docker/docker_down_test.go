@@ -66,6 +66,46 @@ func TestDockerDownRun(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("should return error when unable to find docker compose but local deployment is found", func(t *testing.T) {
+		homedir.GetHomeDir = func() (string, error) {
+			return "", os.ErrNotExist
+		}
+
+		defer func() {
+			homedir.GetHomeDir = func() (string, error) {
+				return homedirPath, nil
+			}
+		}()
+
+		out.Reset()
+		mockDockerShell.On("ComposeList").Return([]string{"fl"}, nil).Once()
+
+		err = down.Run(ctx, mockDockerShell, logger)
+		require.Error(t, err)
+		require.Equal(t, err.Error(), "unable to locate docker-compose.yml, but a local deployment was found. The file might have been moved or deleted.")
+
+	})
+
+	t.Run("should return error when unable to find docker compose and local deployment is not found", func(t *testing.T) {
+		homedir.GetHomeDir = func() (string, error) {
+			return "", os.ErrNotExist
+		}
+
+		defer func() {
+			homedir.GetHomeDir = func() (string, error) {
+				return homedirPath, nil
+			}
+		}()
+
+		out.Reset()
+		mockDockerShell.On("ComposeList").Return([]string{"test"}, nil).Once()
+
+		err = down.Run(ctx, mockDockerShell, logger)
+		require.Error(t, err)
+		require.Equal(t, err.Error(), "no local deployment found, nothing to remove. Use \"fl admin deploy docker up\" to create one.")
+
+	})
+
 	t.Run("should remove docker-compose.yml when succeds", func(t *testing.T) {
 		path, err := downloadFile("docker-compose.yml", dockerComposeYmlUrl)
 		require.NoError(t, err)
