@@ -15,6 +15,8 @@
 package deploy
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"os/exec"
 	"regexp"
@@ -24,23 +26,31 @@ import (
 type DockerShell interface {
 	ComposeUp(composeFilePath string) error
 	ComposeDown(composeFilePath string) error
+	ComposeList() ([]string, error)
 }
 
 type FLDockerShell struct{}
 
 func (sh *FLDockerShell) ComposeUp(composeFilePath string) error {
-	return runShellCmd("docker", "compose", "-f", composeFilePath, "up", "-d")
+	return runShellCmd(os.Stdout, os.Stderr, "docker", "compose", "-f", composeFilePath, "up", "-d")
 }
 
 func (sh *FLDockerShell) ComposeDown(composeFilePath string) error {
-	return runShellCmd("docker", "compose", "-f", composeFilePath, "down")
+	return runShellCmd(os.Stdout, os.Stderr, "docker", "compose", "-f", composeFilePath, "down")
 }
 
-func runShellCmd(cmd string, args ...string) error {
+func (sh *FLDockerShell) ComposeList() ([]string, error) {
+	var buf bytes.Buffer
+	err := runShellCmd(&buf, os.Stderr, "docker", "compose", "ls", "-q")
+	lines := strings.Split(buf.String(), "\n")
+	return lines, err
+}
+
+func runShellCmd(resultBuf io.Writer, errorBuf io.Writer, cmd string, args ...string) error {
 	exe, params := parseCmd(cmd, args...)
 	command := exec.Command(exe, params...)
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
+	command.Stdout = resultBuf
+	command.Stderr = errorBuf
 
 	return command.Run()
 }
