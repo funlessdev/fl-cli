@@ -15,6 +15,7 @@
 package deploy
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,6 @@ func Test_parseCmd(t *testing.T) {
 }
 
 func Test_runShellCmd(t *testing.T) {
-	err := runShellCmd("echo", "hello")
+	err := runShellCmd(os.Stdout, os.Stderr, "echo", "hello")
 	assert.Nil(t, err)
 }
