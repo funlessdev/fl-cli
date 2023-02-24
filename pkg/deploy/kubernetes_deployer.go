@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	apiAppsV1 "k8s.io/api/apps/v1"
+	apiBatchV1 "k8s.io/api/batch/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiRbacV1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,6 +40,9 @@ type KubernetesDeployer interface {
 	CreatePrometheusConfigMap(ctx context.Context) error
 	DeployPrometheus(ctx context.Context) error
 	DeployPrometheusService(ctx context.Context) error
+	DeployPostgres(ctx context.Context) error
+	DeployPostgresService(ctx context.Context) error
+	StartInitPostgres(ctx context.Context) error
 	DeployCore(ctx context.Context) error
 	DeployCoreService(ctx context.Context) error
 	DeployWorker(ctx context.Context) error
@@ -219,6 +223,63 @@ func (k *FLKubernetesDeployer) DeployPrometheusService(ctx context.Context) erro
 	service := obj.(*apiCoreV1.Service)
 
 	_, err = k.kubernetesClientSet.CoreV1().Services(k.namespace).Create(ctx, service, v1.CreateOptions{})
+
+	return err
+}
+
+func (k *FLKubernetesDeployer) DeployPostgres(ctx context.Context) error {
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/postgres.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
+	obj, err := ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	deployment := obj.(*apiAppsV1.Deployment)
+
+	_, err = k.kubernetesClientSet.AppsV1().Deployments(k.namespace).Create(ctx, deployment, v1.CreateOptions{})
+
+	return err
+}
+
+func (k *FLKubernetesDeployer) DeployPostgresService(ctx context.Context) error {
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/postgres.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	service := obj.(*apiCoreV1.Service)
+
+	_, err = k.kubernetesClientSet.CoreV1().Services(k.namespace).Create(ctx, service, v1.CreateOptions{})
+
+	return err
+}
+
+func (k *FLKubernetesDeployer) StartInitPostgres(ctx context.Context) error {
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/postgres.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	job := obj.(*apiBatchV1.Job)
+
+	_, err = k.kubernetesClientSet.BatchV1().Jobs(k.namespace).Create(ctx, job, v1.CreateOptions{})
 
 	return err
 }
