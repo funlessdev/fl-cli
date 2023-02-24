@@ -233,7 +233,7 @@ func (k *FLKubernetesDeployer) DeployPostgres(ctx context.Context) error {
 		return err
 	}
 
-	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
+	typeMeta := v1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
 	obj, err := ParseKubernetesYAML(yml, &apiAppsV1.Deployment{TypeMeta: typeMeta})
 	if err != nil {
 		return err
@@ -271,8 +271,8 @@ func (k *FLKubernetesDeployer) StartInitPostgres(ctx context.Context) error {
 		return err
 	}
 
-	typeMeta := v1.TypeMeta{Kind: "Service", APIVersion: "v1"}
-	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.Service{TypeMeta: typeMeta})
+	typeMeta := v1.TypeMeta{Kind: "Job", APIVersion: "batch/v1"}
+	obj, err := ParseKubernetesYAML(yml, &apiBatchV1.Job{TypeMeta: typeMeta})
 	if err != nil {
 		return err
 	}
