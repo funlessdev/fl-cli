@@ -22,6 +22,7 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
+	"golang.org/x/exp/slices"
 )
 
 type Down struct{}
@@ -31,7 +32,16 @@ func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogge
 
 	_, composeFilePath, err := homedir.ReadFromConfigDir("docker-compose.yml")
 	if err != nil {
-		return errors.New("unable to read docker-compose.yml file")
+		errorMsg := "unable to read docker-compose.yml file"
+		if os.IsNotExist(err) {
+			lines, _ := dk.ComposeList()
+			if slices.Contains(lines, "fl") {
+				errorMsg = "unable to locate docker-compose.yml, but a local deployment was found. The file might have been moved or deleted."
+			} else {
+				errorMsg = "no local deployment found, nothing to remove. Use \"fl admin deploy docker up\" to create one."
+			}
+		}
+		return errors.New(errorMsg)
 	}
 	defer os.Remove(composeFilePath)
 
@@ -40,7 +50,7 @@ func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogge
 		return err
 	}
 
-	logger.Info("\nAll clear! 👍")
+	logger.Info("\nAll clear! 👍\n")
 
 	return nil
 }
