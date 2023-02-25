@@ -15,6 +15,7 @@
 package deploy
 
 import (
+	"bytes"
 	"os"
 	"testing"
 
@@ -33,6 +34,42 @@ func Test_parseCmd(t *testing.T) {
 }
 
 func Test_runShellCmd(t *testing.T) {
-	err := runShellCmd(os.Stdout, os.Stderr, "echo", "hello")
-	assert.Nil(t, err)
+
+	t.Run("should return the command output in output buffer", func(t *testing.T) {
+		var outBuf bytes.Buffer
+		err := runShellCmd(&outBuf, os.Stderr, "echo", "hello")
+		assert.Nil(t, err)
+		assert.Equal(t, "hello\n", outBuf.String())
+	})
+
+	t.Run("should return in error buffer all the contents of stderr", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/bash", "-c", "echo hello err 1>&2")
+		assert.Nil(t, errSecond)
+		assert.Equal(t, "hello err\n", errBuf.String())
+
+	})
+
+	t.Run("should return an error in case of command fail", func(t *testing.T) {
+		err := runShellCmd(os.Stdout, os.Stderr, "exit", "1")
+		assert.NotNil(t, err)
+	})
+
+	t.Run("should return the content of StdOut and StdErr despite the command fail", func(t *testing.T) {
+		var outBuf bytes.Buffer
+		var errBuf bytes.Buffer
+		errFirst := runShellCmd(&outBuf, &errBuf, "echo", "hello out")
+		assert.Nil(t, errFirst)
+
+		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/bash", "-c", "echo hello err 1>&2")
+		assert.Nil(t, errSecond)
+
+		errThird := runShellCmd(&outBuf, &errBuf, "exit", "1")
+		assert.NotNil(t, errThird)
+
+		assert.Equal(t, "hello out\n", outBuf.String())
+		assert.Equal(t, "hello err\n", errBuf.String())
+
+	})
+
 }

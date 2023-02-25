@@ -66,7 +66,7 @@ func TestDockerDownRun(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("should return error when unable to find docker compose but local deployment is found", func(t *testing.T) {
+	t.Run("should return error when unable to find docker-compose.yml but local deployment is found", func(t *testing.T) {
 		homedir.GetHomeDir = func() (string, error) {
 			return "", os.ErrNotExist
 		}
@@ -86,7 +86,7 @@ func TestDockerDownRun(t *testing.T) {
 
 	})
 
-	t.Run("should return error when unable to find docker compose and local deployment is not found", func(t *testing.T) {
+	t.Run("should return error when unable to find docker-compose.yml and local deployment is not found", func(t *testing.T) {
 		homedir.GetHomeDir = func() (string, error) {
 			return "", os.ErrNotExist
 		}
