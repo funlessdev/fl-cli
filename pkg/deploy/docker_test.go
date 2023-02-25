@@ -44,7 +44,7 @@ func Test_runShellCmd(t *testing.T) {
 
 	t.Run("should return in error buffer all the contents of stderr", func(t *testing.T) {
 		var errBuf bytes.Buffer
-		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/bash", "-c", "echo hello err 1>&2")
+		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/sh", "-c", "echo hello err 1>&2")
 		assert.Nil(t, errSecond)
 		assert.Equal(t, "hello err\n", errBuf.String())
 
@@ -61,7 +61,7 @@ func Test_runShellCmd(t *testing.T) {
 		errFirst := runShellCmd(&outBuf, &errBuf, "echo", "hello out")
 		assert.Nil(t, errFirst)
 
-		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/bash", "-c", "echo hello err 1>&2")
+		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/sh", "-c", "echo hello err 1>&2")
 		assert.Nil(t, errSecond)
 
 		errThird := runShellCmd(&outBuf, &errBuf, "exit", "1")
