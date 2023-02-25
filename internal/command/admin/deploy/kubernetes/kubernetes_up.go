@@ -69,6 +69,21 @@ func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger
 		return err
 	}
 
+	_ = logger.StartSpinner("Deploying PostgreSQL...")
+	if err := logger.StopSpinner(deployer.DeployPostgres(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Deploying PostgreSQL Service...")
+	if err := logger.StopSpinner(deployer.DeployPostgresService(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Starting init-postgres Job...")
+	if err := logger.StopSpinner(deployer.StartInitPostgres(ctx)); err != nil {
+		return err
+	}
+
 	_ = logger.StartSpinner("Deploying Core...")
 	if err := logger.StopSpinner(deployer.DeployCore(ctx)); err != nil {
 		return err

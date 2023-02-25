@@ -103,8 +103,35 @@ func TestKubernetesUpRun(t *testing.T) {
 		mockDeployer.AssertNumberOfCalls(t, "DeployPrometheusService", 1)
 	})
 
-	t.Run("should return error when deploying Core fails", func(t *testing.T) {
+	t.Run("should return error when deploying Postgres fails", func(t *testing.T) {
 		mockDeployer.On("DeployPrometheusService", mock.Anything).Return(nil)
+		mockDeployer.On("DeployPostgres", mock.Anything).Return(errors.New("error")).Once()
+
+		err := k8s.Run(ctx, mockDeployer, logger)
+		require.Error(t, err)
+		mockDeployer.AssertNumberOfCalls(t, "DeployPostgres", 1)
+	})
+
+	t.Run("should return error when deploying Postgres Service fails", func(t *testing.T) {
+		mockDeployer.On("DeployPostgres", mock.Anything).Return(nil)
+		mockDeployer.On("DeployPostgresService", mock.Anything).Return(errors.New("error")).Once()
+
+		err := k8s.Run(ctx, mockDeployer, logger)
+		require.Error(t, err)
+		mockDeployer.AssertNumberOfCalls(t, "DeployPostgresService", 1)
+	})
+
+	t.Run("should return error when starting init-postgres fails", func(t *testing.T) {
+		mockDeployer.On("DeployPostgresService", mock.Anything).Return(nil)
+		mockDeployer.On("StartInitPostgres", mock.Anything).Return(errors.New("error")).Once()
+
+		err := k8s.Run(ctx, mockDeployer, logger)
+		require.Error(t, err)
+		mockDeployer.AssertNumberOfCalls(t, "StartInitPostgres", 1)
+	})
+
+	t.Run("should return error when deploying Core fails", func(t *testing.T) {
+		mockDeployer.On("StartInitPostgres", mock.Anything).Return(nil)
 		mockDeployer.On("DeployCore", mock.Anything).Return(errors.New("error")).Once()
 
 		err := k8s.Run(ctx, mockDeployer, logger)
@@ -153,6 +180,12 @@ done
 Deploying Prometheus...
 done
 Deploying Prometheus Service...
+done
+Deploying PostgreSQL...
+done
+Deploying PostgreSQL Service...
+done
+Starting init-postgres Job...
 done
 Deploying Core...
 done
