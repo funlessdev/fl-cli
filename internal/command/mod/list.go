@@ -17,6 +17,7 @@ package mod
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -28,7 +29,7 @@ type List struct {
 func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	res, err := modHandler.List(ctx)
 	if err != nil {
-		return extractError(err)
+		return pkg.ExtractError(err)
 	}
 
 	data := res.GetData()

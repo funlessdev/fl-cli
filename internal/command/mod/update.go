@@ -17,6 +17,7 @@ package mod
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -30,7 +31,7 @@ func (u *Update) Run(ctx context.Context, modHandler client.ModHandler, logger l
 	err := modHandler.Update(ctx, u.Name, u.NewName)
 
 	if err != nil {
-		return extractError(err)
+		return pkg.ExtractError(err)
 	}
 
 	logger.Infof("Successfully renamed module %s to %s.\n", u.Name, u.NewName)

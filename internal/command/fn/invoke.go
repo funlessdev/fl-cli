@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -44,7 +45,7 @@ func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 	}
 	res, err := fnHandler.Invoke(ctx, f.Name, f.Module, args)
 	if err != nil {
-		return extractError(err)
+		return pkg.ExtractError(err)
 	}
 
 	if data := res.GetData(); data != nil {

@@ -19,7 +19,7 @@ go 1.19
 require (
 	github.com/alecthomas/kong v0.7.1
 	github.com/docker/docker v20.10.23+incompatible
-	github.com/funlessdev/fl-client-sdk-go v0.0.0-20230218195230-0cef4bf202e2
+	github.com/funlessdev/fl-client-sdk-go v0.0.0-20230312081443-2c80f8dc5ba5
 	github.com/theckman/yacspin v0.13.12
 	golang.org/x/exp v0.0.0-20230223210539-50820d90acfd
 	gotest.tools/v3 v3.4.0

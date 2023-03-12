@@ -1,4 +1,4 @@
-// Copyright 2022 Giuseppe De Palma, Matteo Trentin
+// Copyright 2023 Giuseppe De Palma, Matteo Trentin
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mod
+package pkg
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
+	"errors"
 
-	"github.com/funlessdev/fl-cli/pkg"
-	"github.com/funlessdev/fl-cli/pkg/client"
-	"github.com/funlessdev/fl-cli/pkg/log"
+	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
-type Delete struct {
-	Name string `arg:"" help:"name of the module to delete"`
+type FLError struct {
+	Errors struct {
+		Detail string `json:"detail"`
+	} `json:"errors"`
 }
 
-func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
-	err := modHandler.Delete(ctx, d.Name)
-
-	if err != nil {
-		return pkg.ExtractError(err)
+func ExtractError(err error) error {
+	var e FLError
+	openApiError, castOk := err.(*openapi.GenericOpenAPIError)
+	if !castOk {
+		return err
 	}
 
-	logger.Infof("Successfully deleted module %s.\n", d.Name)
+	d := json.NewDecoder(bytes.NewReader(openApiError.Body()))
+	d.DisallowUnknownFields()
 
-	return nil
+	if err := d.Decode(&e); err != nil {
+		return err
+	}
+	return errors.New(e.Errors.Detail)
 }
