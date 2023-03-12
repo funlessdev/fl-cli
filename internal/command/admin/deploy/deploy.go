@@ -33,3 +33,11 @@ type deploy_kubernetes struct {
 	Up   kubernetes.Up   `cmd:"" name:"up" aliases:"u" help:"spin up Kubernetes-based FunLess deployment"`
 	Down kubernetes.Down `cmd:"" name:"down" aliases:"d" help:"tear down Kubernetes-based FunLess deployment"`
 }
+
+func (f *Deploy) Help() string {
+	return "Group of commands for deploying FunLess in different setups"
+}
+
+func (f *deploy_docker) Help() string {
+	return "Group of commands for managing a local docker deployment with 1 core and 1 worker"
+}

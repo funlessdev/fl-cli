@@ -19,3 +19,7 @@ import deploy "github.com/funlessdev/fl-cli/internal/command/admin/deploy"
 type Admin struct {
 	Deploy deploy.Deploy `cmd:"" name:"deploy" aliases:"d" help:"deploy FunLess on different setups"`
 }
+
+func (f *Admin) Help() string {
+	return "Group of commands for managing and maintaining the platform"
+}

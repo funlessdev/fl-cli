@@ -39,6 +39,14 @@ type Up struct {
 	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
 }
 
+func (f *Up) Help() string {
+	return `The "-core" and "-worker" flags can be used to choose a core and worker image other than the default ones.
+
+EXAMPLES
+
+fl admin deploy docker up -core my-core-image -worker my-worker-image`
+}
+
 func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
 	logger.Info("Deploying FunLess locally...\n\n")
 
