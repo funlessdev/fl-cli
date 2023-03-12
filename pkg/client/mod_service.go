@@ -60,7 +60,7 @@ func (fn *ModService) Create(ctx context.Context, modName string) error {
 	apiService := fn.Client.ApiClient.ModulesApi
 
 	requestBody := openapi.ModuleName{
-		Module: &openapi.ModuleNameModule{
+		Module: &openapi.SubjectNameSubject{
 			Name: &modName,
 		},
 	}
@@ -91,7 +91,7 @@ func (fn *ModService) Update(ctx context.Context, modName string, newName string
 
 	apiService := fn.Client.ApiClient.ModulesApi
 	requestBody := openapi.ModuleName{
-		Module: &openapi.ModuleNameModule{
+		Module: &openapi.SubjectNameSubject{
 			Name: &newName,
 		},
 	}

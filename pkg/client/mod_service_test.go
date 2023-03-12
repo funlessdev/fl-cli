@@ -66,7 +66,7 @@ func TestModGet(t *testing.T) {
 		expected := *openapi.NewSingleModuleResult()
 		expected.Data = openapi.NewSingleModuleResultData()
 		expected.Data.Name = &tmod
-		expected.Data.Functions = []openapi.ModuleNameModule{}
+		expected.Data.Functions = []openapi.SubjectNameSubject{}
 
 		assert.Equal(t, expected, result)
 
@@ -214,7 +214,7 @@ func TestModList(t *testing.T) {
 		result, err := svc.List(testCtx)
 		require.NoError(t, err)
 		expected := *openapi.NewModuleNamesResult()
-		expected.Data = []openapi.ModuleNameModule{{Name: &f1}, {Name: &f2}, {Name: &f3}}
+		expected.Data = []openapi.SubjectNameSubject{{Name: &f1}, {Name: &f2}, {Name: &f3}}
 		assert.Equal(t, expected, result)
 	})
 
