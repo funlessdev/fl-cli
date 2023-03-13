@@ -1,4 +1,4 @@
-// Copyright 2022 Giuseppe De Palma, Matteo Trentin
+// Copyright 2023 Giuseppe De Palma, Matteo Trentin
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admin
+package pkg
 
-import (
-	deploy "github.com/funlessdev/fl-cli/internal/command/admin/deploy"
-	user "github.com/funlessdev/fl-cli/internal/command/admin/user"
-)
-
-type Admin struct {
-	Deploy deploy.Deploy `cmd:"" name:"deploy" aliases:"d" help:"deploy FunLess on different setups"`
-	User   user.User     `cmd:"" name:"user" aliases:"u" help:"create/delete FunLess users"`
+type UserNameToken struct {
+	Name  string
+	Token string
 }

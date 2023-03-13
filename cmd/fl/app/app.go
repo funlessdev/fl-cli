@@ -64,6 +64,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 	}
 	fnSvc := &client.FnService{Client: flClient, InputValidatorHandler: &validator}
 	modSvc := &client.ModService{Client: flClient, InputValidatorHandler: &validator}
+	userSvc := &client.UserService{Client: flClient}
 
 	kong_ctx := kong.Parse(&cli,
 		kong.Name("fl"),
@@ -82,6 +83,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(kubernetesDeployer, (*deploy.KubernetesDeployer)(nil)),
 		kong.BindTo(kubernetesRemover, (*deploy.KubernetesRemover)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
+		kong.BindTo(userSvc, (*client.UserHandler)(nil)),
 		kong.Vars{
 			"version":              version,
 			"default_core_image":   pkg.CoreImg,
