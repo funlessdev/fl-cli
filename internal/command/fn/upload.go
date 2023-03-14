@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -45,7 +46,7 @@ func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log
 	_ = logger.StartSpinner("Uploading function...")
 	err = fnHandler.Create(ctx, u.Name, u.Module, code)
 	if err != nil {
-		return logger.StopSpinner(extractError(err))
+		return logger.StopSpinner(pkg.ExtractError(err))
 	}
 	_ = logger.StopSpinner(nil)
 

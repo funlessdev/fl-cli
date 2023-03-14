@@ -17,6 +17,7 @@ package mod
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -29,7 +30,7 @@ func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger l
 	err := modHandler.Create(ctx, c.Name)
 
 	if err != nil {
-		return extractError(err)
+		return pkg.ExtractError(err)
 	}
 
 	logger.Infof("Successfully created module %s.\n", c.Name)

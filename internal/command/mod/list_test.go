@@ -32,7 +32,7 @@ func TestModList(t *testing.T) {
 	mod1 := "mod1"
 	mod2 := "mod2"
 	mod3 := "mod3"
-	testMods := []openapi.ModuleNameModule{{Name: &mod1}, {Name: &mod2}, {Name: &mod3}}
+	testMods := []openapi.SubjectNameSubject{{Name: &mod1}, {Name: &mod2}, {Name: &mod3}}
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
 

@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -64,7 +65,7 @@ func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler
 
 	err = fnHandler.Create(ctx, c.Name, c.Module, code)
 	if err != nil {
-		return logger.StopSpinner(extractError(err))
+		return logger.StopSpinner(pkg.ExtractError(err))
 	}
 	_ = logger.StopSpinner(nil)
 

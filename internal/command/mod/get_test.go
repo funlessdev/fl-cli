@@ -33,7 +33,7 @@ func TestModGet(t *testing.T) {
 	fn1 := "fn1"
 	fn2 := "fn2"
 	fn3 := "fn3"
-	testFns := []openapi.ModuleNameModule{{Name: &fn1}, {Name: &fn2}, {Name: &fn3}}
+	testFns := []openapi.SubjectNameSubject{{Name: &fn1}, {Name: &fn2}, {Name: &fn3}}
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
 

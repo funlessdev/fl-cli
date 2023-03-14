@@ -17,6 +17,7 @@ package mod
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -29,7 +30,7 @@ type Get struct {
 func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	res, err := modHandler.Get(ctx, g.Name)
 	if err != nil {
-		return extractError(err)
+		return pkg.ExtractError(err)
 	}
 
 	data := res.GetData()
@@ -37,7 +38,7 @@ func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.
 	functions := data.Functions
 
 	if err != nil {
-		return extractError(err)
+		return pkg.ExtractError(err)
 	}
 	logger.Infof("Module: %s\n", *name)
 	logger.Info("Functions:\n")
