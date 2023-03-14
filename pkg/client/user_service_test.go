@@ -27,7 +27,7 @@ func TestCreate(t *testing.T) {
 	testCtx := context.Background()
 	testName := "testName"
 
-	t.Run("should return name,token if input is valid", func(t *testing.T) {
+	t.Run("should return name,token", func(t *testing.T) {
 		res := map[string]map[string]string{"data": {"name": "some_name", "token": "some_token"}}
 		client := setupHttpServer(t, "/v1/admin/subjects", http.MethodPost, res, http.StatusOK)
 		svc := &UserService{Client: client}
@@ -41,6 +41,30 @@ func TestCreate(t *testing.T) {
 		client := setupHttpServer(t, "/v1/admin/subjects", http.MethodPost, res, http.StatusNotFound)
 		svc := &UserService{Client: client}
 		_, err := svc.Create(testCtx, testName)
+		require.Error(t, err)
+		assert.Equal(t, "some error", err.Error())
+	})
+}
+
+func TestList(t *testing.T) {
+	testCtx := context.Background()
+
+	t.Run("should return list of names", func(t *testing.T) {
+		res := map[string][]map[string]string{"data": {{"name": "name"}, {"name": "name2"}}}
+		client := setupHttpServer(t, "/v1/admin/subjects", http.MethodGet, res, http.StatusOK)
+		svc := &UserService{Client: client}
+		result, err := svc.List(testCtx)
+		require.NoError(t, err)
+
+		require.Equal(t, "name", result.Names[0])
+		require.Equal(t, "name2", result.Names[1])
+	})
+
+	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
+		client := setupHttpServer(t, "/v1/admin/subjects", http.MethodGet, res, http.StatusNotFound)
+		svc := &UserService{Client: client}
+		_, err := svc.List(testCtx)
 		require.Error(t, err)
 		assert.Equal(t, "some error", err.Error())
 	})

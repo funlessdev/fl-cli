@@ -46,3 +46,22 @@ func TestCreateUser(t *testing.T) {
 	require.Contains(t, outbuf.String(), testName)
 	require.Contains(t, outbuf.String(), testToken)
 }
+
+func TestListUsers(t *testing.T) {
+	mockResult := pkg.UserNamesList{Names: []string{"userA", "userB"}}
+	ctx := context.Background()
+	var outbuf bytes.Buffer
+	bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
+	mockUserHandler := mocks.NewUserHandler(t)
+	mockUserHandler.On("List", ctx).Return(mockResult, nil)
+
+	cmd := ListUsers{}
+	err := cmd.Run(ctx, mockUserHandler, bufLogger)
+	require.NoError(t, err)
+	mockUserHandler.AssertCalled(t, "List", ctx)
+	mockUserHandler.AssertNumberOfCalls(t, "List", 1)
+	mockUserHandler.AssertExpectations(t)
+
+	require.Contains(t, outbuf.String(), "userA")
+	require.Contains(t, outbuf.String(), "userB")
+}

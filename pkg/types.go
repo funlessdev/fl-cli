@@ -14,7 +14,41 @@
 
 package pkg
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+
+	openapi "github.com/funlessdev/fl-client-sdk-go"
+)
+
 type UserNameToken struct {
 	Name  string
 	Token string
+}
+
+type UserNamesList struct {
+	Names []string
+}
+
+type FLError struct {
+	Errors struct {
+		Detail string `json:"detail"`
+	} `json:"errors"`
+}
+
+func ExtractError(err error) error {
+	var e FLError
+	openApiError, castOk := err.(*openapi.GenericOpenAPIError)
+	if !castOk {
+		return err
+	}
+
+	d := json.NewDecoder(bytes.NewReader(openApiError.Body()))
+	d.DisallowUnknownFields()
+
+	if err := d.Decode(&e); err != nil {
+		return err
+	}
+	return errors.New(e.Errors.Detail)
 }

@@ -24,6 +24,7 @@ import (
 
 type User struct {
 	Create CreateUser `cmd:"" name:"create" aliases:"c" help:"create a new FunLess user"`
+	List   ListUsers  `cmd:"" name:"list" aliases:"l" help:"list all FunLess users"`
 }
 
 type CreateUser struct {
@@ -51,5 +52,33 @@ To create new user specify an unique name. The token will be generated automatic
 ## Example
 
 $ fl admin user create userA\n
+`
+}
+
+type ListUsers struct {
+}
+
+func (u *ListUsers) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger) error {
+	logger.StartSpinner("Listing existing users...")
+	res, err := userHandler.List(ctx)
+	_ = logger.StopSpinner(err)
+	if err != nil {
+		return err
+	}
+	logger.Info("Users:")
+	for _, user := range res.Names {
+		logger.Info(fmt.Sprintf("- %s", user))
+	}
+	return err
+}
+
+func (u *ListUsers) Help() string {
+	return `
+List all existing FunLess user names. To create a new user use the "create" command.
+To get the token of an existing user use the "token" command (TODO). 
+
+## Example
+
+$ fl admin user list
 `
 }

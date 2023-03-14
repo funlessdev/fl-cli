@@ -23,7 +23,7 @@ import (
 
 type UserHandler interface {
 	Create(ctx context.Context, name string) (pkg.UserNameToken, error)
-	List(ctx context.Context) error
+	List(ctx context.Context) (pkg.UserNamesList, error)
 }
 
 type UserService struct {
@@ -50,6 +50,21 @@ func (u *UserService) Create(ctx context.Context, name string) (pkg.UserNameToke
 	return pkg.UserNameToken{Name: *data.Name, Token: *data.Token}, err
 }
 
-func (u *UserService) List(ctx context.Context) error {
-	return nil
+func (u *UserService) List(ctx context.Context) (pkg.UserNamesList, error) {
+
+	apiService := u.Client.ApiClient.SubjectsApi
+
+	res, _, err := apiService.ListSubjects(ctx).Execute()
+	if err != nil {
+		return pkg.UserNamesList{}, pkg.ExtractError(err)
+	}
+
+	data := res.GetData()
+
+	var users []string
+	for _, user := range data {
+		users = append(users, *user.Name)
+	}
+
+	return pkg.UserNamesList{Names: users}, err
 }
