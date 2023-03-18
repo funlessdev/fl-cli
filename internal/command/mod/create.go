@@ -17,7 +17,6 @@ package mod
 import (
 	"context"
 
-	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -28,12 +27,9 @@ type Create struct {
 
 func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	err := modHandler.Create(ctx, c.Name)
-
 	if err != nil {
-		return pkg.ExtractError(err)
+		return err
 	}
-
 	logger.Infof("Successfully created module %s.\n", c.Name)
-
 	return nil
 }

@@ -17,7 +17,6 @@ package mod
 import (
 	"context"
 
-	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -29,12 +28,9 @@ type Update struct {
 
 func (u *Update) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	err := modHandler.Update(ctx, u.Name, u.NewName)
-
 	if err != nil {
-		return pkg.ExtractError(err)
+		return err
 	}
-
 	logger.Infof("Successfully renamed module %s to %s.\n", u.Name, u.NewName)
-
 	return nil
 }

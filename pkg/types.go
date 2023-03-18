@@ -31,6 +31,19 @@ type UserNamesList struct {
 	Names []string
 }
 
+type IvkResult struct {
+	Result string
+}
+
+type SingleModule struct {
+	Name      string
+	Functions []string
+}
+
+type ModuleNameList struct {
+	Names []string
+}
+
 type FLError struct {
 	Errors struct {
 		Detail string `json:"detail"`

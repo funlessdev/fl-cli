@@ -16,13 +16,16 @@ package client
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"os"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 type FnHandler interface {
-	Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeResult, error)
+	Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (pkg.IvkResult, error)
 	Create(ctx context.Context, fnName string, fnMod string, code *os.File) error
 	Delete(ctx context.Context, fnName string, fnMod string) error
 	Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error
@@ -35,13 +38,13 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
-func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (openapi.InvokeResult, error) {
+func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (pkg.IvkResult, error) {
 
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
-		return *openapi.NewInvokeResult(), err
+		return pkg.IvkResult{}, err
 	}
 	if err := fn.InputValidatorHandler.ValidateName(fnMod, "mod"); err != nil {
-		return *openapi.NewInvokeResult(), err
+		return pkg.IvkResult{}, err
 	}
 
 	apiService := fn.Client.ApiClient.FunctionsApi
@@ -50,11 +53,22 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fn
 	}
 	request := apiService.InvokeFunction(ctx, fnMod, fnName).InvokeInput(invokeInput)
 	response, _, err := request.Execute()
+
 	if err != nil {
-		return *openapi.NewInvokeResult(), err
-	} else {
-		return *response, nil
+		return pkg.IvkResult{}, pkg.ExtractError(err)
 	}
+
+	data := response.GetData()
+	if data == nil {
+		return pkg.IvkResult{}, errors.New("received no result")
+	}
+
+	decodedRes, err := json.Marshal(data)
+	if err != nil {
+		return pkg.IvkResult{}, err
+	}
+
+	return pkg.IvkResult{Result: string(decodedRes)}, nil
 }
 
 func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, code *os.File) error {
@@ -69,7 +83,7 @@ func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, co
 	apiService := fn.Client.ApiClient.FunctionsApi
 	request := apiService.CreateFunction(ctx, fnMod).Name(fnName).Code(code)
 	_, err := request.Execute()
-	return err
+	return pkg.ExtractError(err)
 }
 
 func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) error {
@@ -84,7 +98,7 @@ func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) er
 	apiService := fn.Client.ApiClient.FunctionsApi
 	request := apiService.DeleteFunction(ctx, fnMod, fnName)
 	_, err := request.Execute()
-	return err
+	return pkg.ExtractError(err)
 }
 
 func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error {
@@ -103,5 +117,5 @@ func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, co
 	apiService := fn.Client.ApiClient.FunctionsApi
 	request := apiService.UpdateFunction(ctx, fnMod, fnName).Code(code).Name(newName)
 	_, err := request.Execute()
-	return err
+	return pkg.ExtractError(err)
 }

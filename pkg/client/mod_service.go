@@ -17,15 +17,16 @@ package client
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 type ModHandler interface {
-	Get(ctx context.Context, modName string) (openapi.SingleModuleResult, error)
+	Get(ctx context.Context, modName string) (pkg.SingleModule, error)
 	Create(ctx context.Context, modName string) error
 	Delete(ctx context.Context, modName string) error
 	Update(ctx context.Context, modName string, newName string) error
-	List(ctx context.Context) (openapi.ModuleNamesResult, error)
+	List(ctx context.Context) (pkg.ModuleNameList, error)
 }
 
 type ModService struct {
@@ -35,20 +36,31 @@ type ModService struct {
 
 var _ ModHandler = &ModService{}
 
-func (fn *ModService) Get(ctx context.Context, modName string) (openapi.SingleModuleResult, error) {
+func (fn *ModService) Get(ctx context.Context, modName string) (pkg.SingleModule, error) {
 
 	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
-		return *openapi.NewSingleModuleResult(), err
+		return pkg.SingleModule{}, err
 	}
 
 	apiService := fn.Client.ApiClient.ModulesApi
 	request := apiService.ShowModuleByName(ctx, modName)
 	response, _, err := request.Execute()
 	if err != nil {
-		return *openapi.NewSingleModuleResult(), err
-	} else {
-		return *response, nil
+		return pkg.SingleModule{}, pkg.ExtractError(err)
 	}
+	data := response.GetData()
+	name := data.Name
+
+	var functions []string
+	for _, fn := range data.Functions {
+		functions = append(functions, *fn.Name)
+	}
+
+	return pkg.SingleModule{
+		Name:      *name,
+		Functions: functions,
+	}, nil
+
 }
 
 func (fn *ModService) Create(ctx context.Context, modName string) error {
@@ -66,7 +78,7 @@ func (fn *ModService) Create(ctx context.Context, modName string) error {
 	}
 
 	_, err := apiService.CreateModule(ctx).ModuleName(requestBody).Execute()
-	return err
+	return pkg.ExtractError(err)
 }
 
 func (fn *ModService) Delete(ctx context.Context, modName string) error {
@@ -77,7 +89,7 @@ func (fn *ModService) Delete(ctx context.Context, modName string) error {
 
 	apiService := fn.Client.ApiClient.ModulesApi
 	_, err := apiService.DeleteModule(ctx, modName).Execute()
-	return err
+	return pkg.ExtractError(err)
 }
 
 func (fn *ModService) Update(ctx context.Context, modName string, newName string) error {
@@ -97,15 +109,20 @@ func (fn *ModService) Update(ctx context.Context, modName string, newName string
 	}
 	request := apiService.UpdateModule(ctx, modName).ModuleName2(requestBody)
 	_, err := request.Execute()
-	return err
+	return pkg.ExtractError(err)
 }
 
-func (fn *ModService) List(ctx context.Context) (openapi.ModuleNamesResult, error) {
+func (fn *ModService) List(ctx context.Context) (pkg.ModuleNameList, error) {
 	apiService := fn.Client.ApiClient.ModulesApi
 	response, _, err := apiService.ListModules(ctx).Execute()
 	if err != nil {
-		return *openapi.NewModuleNamesResult(), err
-	} else {
-		return *response, nil
+		return pkg.ModuleNameList{}, pkg.ExtractError(err)
 	}
+
+	var modules []string
+	for _, mod := range response.GetData() {
+		modules = append(modules, *mod.Name)
+	}
+
+	return pkg.ModuleNameList{Names: modules}, nil
 }
