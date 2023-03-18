@@ -14,13 +14,15 @@
 
 name: CLI CI
 on:
-  push:
-    tags:
-      - v*
-    branches:
-      - master
-      - main
-  pull_request:
+  workflow_dispatch:
+
+#   push:
+#     tags:
+#       - v*
+#     branches:
+#       - master
+#       - main
+#   pull_request:
 
 permissions:
   contents: read

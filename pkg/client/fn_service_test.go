@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 func TestFnInvoke(t *testing.T) {
@@ -45,8 +45,8 @@ func TestFnInvoke(t *testing.T) {
 		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
 		result, err := svc.Invoke(testCtx, testFn, testMod, testArgs)
 		require.NoError(t, err)
-		expected := map[string]interface{}{"payload": "some result"}
-		assert.Equal(t, expected, result.GetData())
+		expected := pkg.IvkResult{Result: "{\"payload\":\"some result\"}"}
+		assert.Equal(t, expected, result)
 		mockValidator.AssertNumberOfCalls(t, "ValidateName", 2)
 		mockValidator.AssertExpectations(t)
 	})
@@ -61,13 +61,12 @@ func TestFnInvoke(t *testing.T) {
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), http.MethodPost, res, http.StatusInternalServerError)
 		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
 		_, err := svc.Invoke(testCtx, testFn, testMod, testArgs)
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -103,13 +102,12 @@ func TestFnCreate(t *testing.T) {
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s", testMod), http.MethodPost, res, http.StatusInternalServerError)
 		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
 		err := svc.Create(testCtx, testFn, testMod, testCode)
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -143,12 +141,11 @@ func TestFnDelete(t *testing.T) {
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), http.MethodDelete, res, http.StatusInternalServerError)
 		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
 		err := svc.Delete(testCtx, testFn, testMod)
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 }

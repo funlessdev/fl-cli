@@ -17,7 +17,6 @@ package fn
 import (
 	"context"
 
-	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -30,9 +29,8 @@ type Delete struct {
 func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
 	err := fnHandler.Delete(ctx, f.Name, f.Module)
 	if err != nil {
-		return pkg.ExtractError(err)
+		return err
 	}
-
 	logger.Infof("\nSuccessfully deleted function %s/%s.\n", f.Module, f.Name)
 	return nil
 }

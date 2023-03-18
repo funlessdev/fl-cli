@@ -22,8 +22,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	openapi "github.com/funlessdev/fl-client-sdk-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,20 +53,19 @@ func TestModGet(t *testing.T) {
 	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
 
 	t.Run("should send get request to server", func(t *testing.T) {
-		res := map[string]map[string]interface{}{"Data": {"Name": testMod, "Functions": []string{}}}
+		res := map[string]map[string]interface{}{"Data": {"name": testMod, "functions": []string(nil)}}
 		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s", testMod), http.MethodGet, res, http.StatusOK)
 
 		svc := &ModService{Client: client, InputValidatorHandler: mockValidator}
 
 		result, err := svc.Get(testCtx, testMod)
-
 		require.NoError(t, err)
 
 		tmod := testMod
-		expected := *openapi.NewSingleModuleResult()
-		expected.Data = openapi.NewSingleModuleResultData()
-		expected.Data.Name = &tmod
-		expected.Data.Functions = []openapi.SubjectNameSubject{}
+		expected := pkg.SingleModule{
+			Name:      tmod,
+			Functions: []string(nil),
+		}
 
 		assert.Equal(t, expected, result)
 
@@ -75,13 +74,12 @@ func TestModGet(t *testing.T) {
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s", testMod), http.MethodGet, res, http.StatusNotFound)
 		svc := &ModService{Client: client, InputValidatorHandler: mockValidator}
 		_, err := svc.Get(testCtx, testMod)
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -111,13 +109,12 @@ func TestModCreate(t *testing.T) {
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, "/v1/fn", http.MethodPost, res, http.StatusNotFound)
 		svc := &ModService{Client: client, InputValidatorHandler: mockValidator}
 		err := svc.Create(testCtx, testMod)
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -150,14 +147,13 @@ func TestModDelete(t *testing.T) {
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s", testMod), http.MethodDelete, res, http.StatusNotFound)
 		svc := &ModService{Client: client, InputValidatorHandler: mockValidator}
 		err := svc.Delete(testCtx, testMod)
 
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -191,13 +187,12 @@ func TestModUpdate(t *testing.T) {
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s", testMod), http.MethodPut, res, http.StatusNotFound)
 		svc := &ModService{Client: client, InputValidatorHandler: mockValidator}
 		err := svc.Update(testCtx, testMod, testNewMod)
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -213,19 +208,19 @@ func TestModList(t *testing.T) {
 		svc := &ModService{Client: client}
 		result, err := svc.List(testCtx)
 		require.NoError(t, err)
-		expected := *openapi.NewModuleNamesResult()
-		expected.Data = []openapi.SubjectNameSubject{{Name: &f1}, {Name: &f2}, {Name: &f3}}
+		expected := pkg.ModuleNameList{
+			Names: []string{f1, f2, f3},
+		}
 		assert.Equal(t, expected, result)
 	})
 
 	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		res := map[string]string{"error": "some error"}
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
 		client := setupHttpServer(t, "/v1/fn", http.MethodGet, res, http.StatusNotFound)
 		svc := &ModService{Client: client}
 		_, err := svc.List(testCtx)
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
 	})
 
 }

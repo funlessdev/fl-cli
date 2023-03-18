@@ -17,7 +17,6 @@ package mod
 import (
 	"context"
 
-	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -30,10 +29,8 @@ func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger l
 	err := modHandler.Delete(ctx, d.Name)
 
 	if err != nil {
-		return pkg.ExtractError(err)
+		return err
 	}
-
 	logger.Infof("Successfully deleted module %s.\n", d.Name)
-
 	return nil
 }
