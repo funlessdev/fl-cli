@@ -14,14 +14,6 @@
 
 package fn
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-
-	openapi "github.com/funlessdev/fl-client-sdk-go"
-)
-
 type Fn struct {
 	Invoke Invoke `cmd:"" aliases:"i" help:"invoke a function"`
 	Create Create `cmd:"" aliases:"c" help:"a combination of build and upload to create a function"`
@@ -29,28 +21,6 @@ type Fn struct {
 	Build  Build  `cmd:"" aliases:"b" help:"compile a function into a wasm binary"`
 	Upload Upload `cmd:"" aliases:"up" help:"create functions by uploading wasm binaries"`
 	New    New    `cmd:"" aliases:"n" help:"create a new function from a template"`
-}
-
-type FnError struct {
-	Errors struct {
-		Detail string `json:"detail"`
-	} `json:"errors"`
-}
-
-func extractError(err error) error {
-	var e FnError
-	openApiError, castOk := err.(*openapi.GenericOpenAPIError)
-	if !castOk {
-		return err
-	}
-
-	d := json.NewDecoder(bytes.NewReader(openApiError.Body()))
-	d.DisallowUnknownFields()
-
-	if err := d.Decode(&e); err != nil {
-		return err
-	}
-	return errors.New(e.Errors.Detail)
 }
 
 func (f *Fn) Help() string {

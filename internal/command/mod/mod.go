@@ -14,43 +14,12 @@
 
 package mod
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-
-	openapi "github.com/funlessdev/fl-client-sdk-go"
-)
-
 type Mod struct {
 	Get    Get    `cmd:"" aliases:"g" help:"list functions and information of a module"`
 	Delete Delete `cmd:"" aliases:"d,rm" help:"delete a module"`
 	Update Update `cmd:"" aliases:"u,up" help:"update the name of a module"`
 	Create Create `cmd:"" aliases:"c" help:"create a new module"`
 	List   List   `cmd:"" aliases:"l,ls" help:"list all modules"`
-}
-
-// TODO: avoid repetition, move both ModError and FnError to separate file/package
-type ModError struct {
-	Errors struct {
-		Detail string `json:"detail"`
-	} `json:"errors"`
-}
-
-func extractError(err error) error {
-	var e ModError
-	openApiError, castOk := err.(*openapi.GenericOpenAPIError)
-	if !castOk {
-		return err
-	}
-
-	d := json.NewDecoder(bytes.NewReader(openApiError.Body()))
-	d.DisallowUnknownFields()
-
-	if err := d.Decode(&e); err != nil {
-		return err
-	}
-	return errors.New(e.Errors.Detail)
 }
 
 func (f *Mod) Help() string {

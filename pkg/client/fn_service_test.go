@@ -16,10 +16,8 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,8 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/test/mocks"
-	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
 func TestFnInvoke(t *testing.T) {
@@ -42,50 +40,33 @@ func TestFnInvoke(t *testing.T) {
 	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
 
 	t.Run("should send invoke request to server", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), r.URL.Path)
-			w.Header().Set("Content-Type", "application/json")
-			result := map[string]map[string]string{"Data": {"payload": "some result"}}
-			jresult, _ := json.Marshal(result)
-			_, _ = w.Write(jresult)
-		}))
-		defer server.Close()
-
-		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &FnService{Client: c, InputValidatorHandler: mockValidator}
-
+		res := map[string]map[string]string{"Data": {"payload": "some result"}}
+		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), http.MethodPost, res, http.StatusOK)
+		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
 		result, err := svc.Invoke(testCtx, testFn, testMod, testArgs)
-
 		require.NoError(t, err)
-		expected := map[string]interface{}{"payload": "some result"}
-		assert.Equal(t, expected, result.GetData())
-
+		expected := pkg.IvkResult{Result: "{\"payload\":\"some result\"}"}
+		assert.Equal(t, expected, result)
 		mockValidator.AssertNumberOfCalls(t, "ValidateName", 2)
 		mockValidator.AssertExpectations(t)
 	})
 
-	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), r.URL.Path)
-			w.Header().Set("Content-Type", "application/json")
-			result := map[string]string{"error": "some error"}
-			jresult, _ := json.Marshal(result)
-
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, string(jresult))
-		}))
-		defer server.Close()
-
-		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &FnService{Client: c, InputValidatorHandler: mockValidator}
-
+	t.Run("should return error if input is invalid", func(t *testing.T) {
+		errMockValidator := mocks.NewInputValidatorHandler(t)
+		errMockValidator.On("ValidateName", testFn, "function").Return(fmt.Errorf("some error"))
+		svc := &FnService{Client: nil, InputValidatorHandler: errMockValidator}
 		_, err := svc.Invoke(testCtx, testFn, testMod, testArgs)
-
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}\n", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
+	})
+
+	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
+		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), http.MethodPost, res, http.StatusInternalServerError)
+		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
+		_, err := svc.Invoke(testCtx, testFn, testMod, testArgs)
+		require.Error(t, err)
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -102,48 +83,31 @@ func TestFnCreate(t *testing.T) {
 	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
 
 	t.Run("should send create request to server", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, fmt.Sprintf("/v1/fn/%s", testMod), r.URL.Path)
-			w.Header().Set("Content-Type", "application/json")
-			result := map[string]string{"Result": "some result"}
-			jresult, _ := json.Marshal(result)
-			_, _ = w.Write(jresult)
-		}))
-		defer server.Close()
-
-		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &FnService{Client: c, InputValidatorHandler: mockValidator}
-
+		res := map[string]string{"Result": "some result"}
+		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s", testMod), http.MethodPost, res, http.StatusOK)
+		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
 		err := svc.Create(testCtx, testFn, testMod, testCode)
-
 		require.NoError(t, err)
-
 		mockValidator.AssertNumberOfCalls(t, "ValidateName", 2)
 		mockValidator.AssertExpectations(t)
 	})
 
-	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, fmt.Sprintf("/v1/fn/%s", testMod), r.URL.Path)
-			w.Header().Set("Content-Type", "application/json")
-			result := map[string]string{"error": "some error"}
-			jresult, _ := json.Marshal(result)
-
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, string(jresult))
-		}))
-		defer server.Close()
-
-		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &FnService{Client: c, InputValidatorHandler: mockValidator}
-
+	t.Run("should return error if input is invalid", func(t *testing.T) {
+		errMockValidator := mocks.NewInputValidatorHandler(t)
+		errMockValidator.On("ValidateName", testFn, "function").Return(fmt.Errorf("some error"))
+		svc := &FnService{Client: nil, InputValidatorHandler: errMockValidator}
 		err := svc.Create(testCtx, testFn, testMod, testCode)
-
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}\n", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
+	})
+
+	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
+		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s", testMod), http.MethodPost, res, http.StatusInternalServerError)
+		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
+		err := svc.Create(testCtx, testFn, testMod, testCode)
+		require.Error(t, err)
+		assert.Equal(t, "some error", err.Error())
 	})
 }
 
@@ -158,47 +122,30 @@ func TestFnDelete(t *testing.T) {
 	mockValidator.On("ValidateName", testMod, "mod").Return(nil)
 
 	t.Run("should send delete request to server", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), r.URL.Path)
-			w.Header().Set("Content-Type", "application/json")
-			result := map[string]string{"Result": "some result"}
-			jresult, _ := json.Marshal(result)
-			_, _ = w.Write(jresult)
-		}))
-		defer server.Close()
-
-		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &FnService{Client: c, InputValidatorHandler: mockValidator}
-
+		res := map[string]string{"Result": "some result"}
+		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), http.MethodDelete, res, http.StatusOK)
+		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
 		err := svc.Delete(testCtx, testFn, testMod)
-
 		require.NoError(t, err)
-
 		mockValidator.AssertNumberOfCalls(t, "ValidateName", 2)
 		mockValidator.AssertExpectations(t)
 	})
 
-	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), r.URL.Path)
-			w.Header().Set("Content-Type", "application/json")
-			result := map[string]string{"error": "some error"}
-			jresult, _ := json.Marshal(result)
-
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, string(jresult))
-		}))
-		defer server.Close()
-
-		c, _ := NewClient(http.DefaultClient, Config{Host: server.URL})
-		svc := &FnService{Client: c, InputValidatorHandler: mockValidator}
-
+	t.Run("should return error if input is invalid", func(t *testing.T) {
+		errMockValidator := mocks.NewInputValidatorHandler(t)
+		errMockValidator.On("ValidateName", testFn, "function").Return(fmt.Errorf("some error"))
+		svc := &FnService{Client: nil, InputValidatorHandler: errMockValidator}
 		err := svc.Delete(testCtx, testFn, testMod)
-
 		require.Error(t, err)
-		openApiError := err.(*openapi.GenericOpenAPIError)
-		assert.Equal(t, "{\"error\":\"some error\"}\n", string(openApiError.Body()))
+		assert.Equal(t, "some error", err.Error())
+	})
+
+	t.Run("should return error if request encounters an HTTP error", func(t *testing.T) {
+		res := map[string]map[string]string{"errors": {"detail": "some error"}}
+		client := setupHttpServer(t, fmt.Sprintf("/v1/fn/%s/%s", testMod, testFn), http.MethodDelete, res, http.StatusInternalServerError)
+		svc := &FnService{Client: client, InputValidatorHandler: mockValidator}
+		err := svc.Delete(testCtx, testFn, testMod)
+		require.Error(t, err)
+		assert.Equal(t, "some error", err.Error())
 	})
 }

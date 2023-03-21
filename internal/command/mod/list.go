@@ -28,17 +28,13 @@ type List struct {
 func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	res, err := modHandler.List(ctx)
 	if err != nil {
-		return extractError(err)
+		return err
 	}
-
-	data := res.GetData()
-
-	for _, v := range data {
-		logger.Info(*v.Name + "\n")
+	for _, name := range res.Names {
+		logger.Info(name + "\n")
 	}
-
 	if l.Count {
-		logger.Infof("Count: %d\n", len(data))
+		logger.Infof("Count: %d\n", len(res.Names))
 	}
 	return nil
 }

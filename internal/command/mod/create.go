@@ -27,12 +27,9 @@ type Create struct {
 
 func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	err := modHandler.Create(ctx, c.Name)
-
 	if err != nil {
-		return extractError(err)
+		return err
 	}
-
 	logger.Infof("Successfully created module %s.\n", c.Name)
-
 	return nil
 }

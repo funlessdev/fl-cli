@@ -21,6 +21,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
@@ -33,7 +34,7 @@ func TestModGet(t *testing.T) {
 	fn1 := "fn1"
 	fn2 := "fn2"
 	fn3 := "fn3"
-	testFns := []openapi.ModuleNameModule{{Name: &fn1}, {Name: &fn2}, {Name: &fn3}}
+	testFns := []string{fn1, fn2, fn3}
 	testCtx := context.Background()
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).Build()
 
@@ -43,7 +44,11 @@ func TestModGet(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Get", testCtx, testMod).Return(openapi.SingleModuleResult{Data: &openapi.SingleModuleResultData{Name: &testMod, Functions: testFns}}, nil)
+		mockModHandler.On("Get", testCtx, testMod).Return(
+			pkg.SingleModule{
+				Name:      testMod,
+				Functions: testFns,
+			}, nil)
 
 		err := cmd.Run(testCtx, mockModHandler, testLogger)
 		require.NoError(t, err)
@@ -58,7 +63,11 @@ func TestModGet(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Get", testCtx, testMod).Return(openapi.SingleModuleResult{Data: &openapi.SingleModuleResultData{Name: &testMod, Functions: testFns}}, nil)
+		mockModHandler.On("Get", testCtx, testMod).Return(
+			pkg.SingleModule{
+				Name:      testMod,
+				Functions: testFns,
+			}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
@@ -66,7 +75,7 @@ func TestModGet(t *testing.T) {
 		err := cmd.Run(testCtx, mockModHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("Module: %s\nFunctions:\n%s\n%s\n%s\n", testMod, *testFns[0].Name, *testFns[1].Name, *testFns[2].Name), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("Module: %s\nFunctions:\n%s\n%s\n%s\n", testMod, testFns[0], testFns[1], testFns[2]), (&outbuf).String())
 		mockModHandler.AssertExpectations(t)
 	})
 
@@ -77,7 +86,11 @@ func TestModGet(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Get", testCtx, testMod).Return(openapi.SingleModuleResult{Data: &openapi.SingleModuleResultData{Name: &testMod, Functions: testFns}}, nil)
+		mockModHandler.On("Get", testCtx, testMod).Return(
+			pkg.SingleModule{
+				Name:      testMod,
+				Functions: testFns,
+			}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
@@ -85,7 +98,7 @@ func TestModGet(t *testing.T) {
 		err := cmd.Run(testCtx, mockModHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, fmt.Sprintf("Module: %s\nFunctions:\n%s\n%s\n%s\nCount: %d\n", testMod, *testFns[0].Name, *testFns[1].Name, *testFns[2].Name, len(testFns)), (&outbuf).String())
+		assert.Equal(t, fmt.Sprintf("Module: %s\nFunctions:\n%s\n%s\n%s\nCount: %d\n", testMod, testFns[0], testFns[1], testFns[2], len(testFns)), (&outbuf).String())
 		mockModHandler.AssertExpectations(t)
 	})
 
@@ -97,7 +110,7 @@ func TestModGet(t *testing.T) {
 		mockModHandler := mocks.NewModHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockModHandler.On("Get", testCtx, testMod).Return(*openapi.NewSingleModuleResult(), e)
+		mockModHandler.On("Get", testCtx, testMod).Return(pkg.SingleModule{}, e)
 
 		err := cmd.Run(testCtx, mockModHandler, testLogger)
 		require.Error(t, err)

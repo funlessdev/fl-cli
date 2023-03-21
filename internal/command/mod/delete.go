@@ -29,10 +29,8 @@ func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger l
 	err := modHandler.Delete(ctx, d.Name)
 
 	if err != nil {
-		return extractError(err)
+		return err
 	}
-
 	logger.Infof("Successfully deleted module %s.\n", d.Name)
-
 	return nil
 }

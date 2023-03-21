@@ -29,25 +29,18 @@ type Get struct {
 func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	res, err := modHandler.Get(ctx, g.Name)
 	if err != nil {
-		return extractError(err)
+		return err
 	}
 
-	data := res.GetData()
-	name := data.Name
-	functions := data.Functions
-
-	if err != nil {
-		return extractError(err)
-	}
-	logger.Infof("Module: %s\n", *name)
+	logger.Infof("Module: %s\n", res.Name)
 	logger.Info("Functions:\n")
 
-	for _, v := range functions {
-		logger.Info(*v.Name + "\n")
+	for _, name := range res.Functions {
+		logger.Info(name + "\n")
 	}
 
 	if g.Count {
-		logger.Infof("Count: %d\n", len(functions))
+		logger.Infof("Count: %d\n", len(res.Functions))
 	}
 
 	return nil

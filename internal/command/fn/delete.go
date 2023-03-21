@@ -29,9 +29,8 @@ type Delete struct {
 func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
 	err := fnHandler.Delete(ctx, f.Name, f.Module)
 	if err != nil {
-		return extractError(err)
+		return err
 	}
-
 	logger.Infof("\nSuccessfully deleted function %s/%s.\n", f.Module, f.Name)
 	return nil
 }

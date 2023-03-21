@@ -17,12 +17,13 @@ package fn
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"os"
 	"testing"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -30,7 +31,7 @@ import (
 )
 
 func TestFnInvoke(t *testing.T) {
-	testResult := map[string]interface{}{"payload": "Hi"}
+	testResult := "test-res"
 	testFn := "test-fn"
 	testMod := "test-mod"
 	testArgs := map[string]string{"name": "Some name"}
@@ -47,7 +48,7 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(pkg.IvkResult{Result: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
@@ -64,16 +65,15 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(pkg.IvkResult{Result: testResult}, nil)
 
 		var outbuf bytes.Buffer
-		var testOutput, _ = json.Marshal(testResult)
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
 		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
 
 		require.NoError(t, err)
-		assert.Equal(t, string(testOutput), (&outbuf).String())
+		assert.Equal(t, testResult, (&outbuf).String())
 		mockFnHandler.AssertExpectations(t)
 	})
 
@@ -90,7 +90,7 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, mockArgs).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, mockArgs).Return(pkg.IvkResult{Result: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
@@ -107,7 +107,8 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, testParsedJArgs).Return(openapi.InvokeResult{Data: testResult}, nil)
+		mockFnHandler.On("Invoke", testCtx, testFn, testMod, testParsedJArgs).Return(
+			pkg.IvkResult{Result: testResult}, nil)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.NoError(t, err)
@@ -117,13 +118,15 @@ func TestFnInvoke(t *testing.T) {
 	})
 
 	t.Run("should return error if invalid invoke request", func(t *testing.T) {
+		// missing module
 		cmd := Invoke{
 			Name: testFn,
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
 		e := &openapi.GenericOpenAPIError{}
-		mockFnHandler.On("Invoke", testCtx, testFn, "", map[string]interface{}{}).Return(openapi.InvokeResult{}, e)
+		mockFnHandler.On("Invoke", testCtx, testFn, "", mock.Anything).Return(
+			pkg.IvkResult{}, e)
 
 		err := cmd.Run(testCtx, mockFnHandler, testLogger)
 		require.Error(t, err)

@@ -28,12 +28,9 @@ type Update struct {
 
 func (u *Update) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	err := modHandler.Update(ctx, u.Name, u.NewName)
-
 	if err != nil {
-		return extractError(err)
+		return err
 	}
-
 	logger.Infof("Successfully renamed module %s to %s.\n", u.Name, u.NewName)
-
 	return nil
 }
