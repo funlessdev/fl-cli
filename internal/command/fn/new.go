@@ -63,7 +63,7 @@ func (n *New) Run(ctx context.Context, logger log.FLogger) error {
 		return err
 	}
 
-	logger.Infof("Function \"%s\" created!", n.Name)
+	logger.Infof("Function \"%s\" created!\n", n.Name)
 
 	return nil
 }
