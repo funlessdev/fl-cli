@@ -37,36 +37,36 @@ type deploy_kubernetes struct {
 func (f *Deploy) Help() string {
 	return `Below is a description of the architecture.
 
-CORE
+## CORE
 	
-	At the heart of the platform there is the Core component, which is the orchestrator of the platform.
-	It manages functions and modules using a Postgres database behind.
-	When an invocation request arrives, it acts as a scheduler to pick one of the available Worker componets,
-	and it then sends the request to the worker to invoke the function (with the wasm binary if missing).
-		
-	The core code resides in the apps/core folder, it is a Phoenix application that exposes a json REST API.
+At the heart of the platform there is the Core component, which is the orchestrator of the platform.
+It manages functions and modules using a Postgres database behind.
+When an invocation request arrives, it acts as a scheduler to pick one of the available Worker componets,
+and it then sends the request to the worker to invoke the function (with the wasm binary if missing).
 	
-WORKER
+The core code resides in the apps/core folder, it is a Phoenix application that exposes a json REST API.
+	
+## WORKER
 
-	The Worker is the actual functions executor. 
-	It makes use of Rust NIFs to run user-defined functions via the wasmtime runtime. 
-	The worker makes use of a cache to avoid requesting the same function multiple times, 
-	and it is able to run multiple functions in parallel. 
-	When the core sends an invocation request, the worker first tries to find the function in the cache, 
-	if it is not present it requests back to the core the wasm binary. 
-	Then it executes the function and sends back the result to the core.
+The Worker is the actual functions executor. 
+It makes use of Rust NIFs to run user-defined functions via the wasmtime runtime. 
+The worker makes use of a cache to avoid requesting the same function multiple times, 
+and it is able to run multiple functions in parallel. 
+When the core sends an invocation request, the worker first tries to find the function in the cache, 
+if it is not present it requests back to the core the wasm binary. 
+Then it executes the function and sends back the result to the core.
 
-	The worker code resides in the apps/worker folder.
+The worker code resides in the apps/worker folder.
 
-PROMETHEUS
+## PROMETHEUS
 
-	We are using Prometheus to collect metrics from the platform. 
-	Besides collecting metrics from the Core and Worker, 
-	it is used by the Core to access the metrics of the Workers to make scheduling decisions.
+We are using Prometheus to collect metrics from the platform. 
+Besides collecting metrics from the Core and Worker, 
+it is used by the Core to access the metrics of the Workers to make scheduling decisions.
 
-POSTGRES
+## POSTGRES
 
-	We are using Postgres as the platform database, used by the Core to store functions and modules.
+We are using Postgres as the platform database, used by the Core to store functions and modules.
 `
 }
 

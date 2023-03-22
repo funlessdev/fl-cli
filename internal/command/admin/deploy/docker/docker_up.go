@@ -40,11 +40,12 @@ type Up struct {
 }
 
 func (f *Up) Help() string {
-	return `The "--core" and "--worker" flags can be used to choose a core and worker image other than the default ones.
+	return `It creates a local Docker-based Funless deployment.
+The "--core" and "--worker" flags can be used to choose a core and worker image other than the default ones.
 
-EXAMPLES
+## EXAMPLES
 
-	fl admin deploy docker up --core <your-core-image> --worker <your-worker-image>`
+$ fl admin deploy docker up --core <your-core-image> --worker <your-worker-image>`
 }
 
 func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
