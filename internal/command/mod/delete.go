@@ -25,6 +25,26 @@ type Delete struct {
 	Name string `arg:"" help:"name of the module to delete"`
 }
 
+func (c *Delete) Help() string {
+	return `It deletes the module with the specified name.
+
+## EXAMPLES
+	
+$ fl mod delete <your-module-name>
+
+---
+
+$ fl mod list
+	_
+	myModule
+$ fl mod delete myModule
+
+$ fl mod list
+	_
+	
+`
+}
+
 func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	err := modHandler.Delete(ctx, d.Name)
 

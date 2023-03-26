@@ -25,6 +25,28 @@ type Create struct {
 	Name string `arg:"" help:"name of the module to create"`
 }
 
+func (c *Create) Help() string {
+	return `It creates a new module with the specified name.
+
+## EXAMPLES
+	
+$ fl mod create <your-module-name>
+
+Module name must be a hexadecimal string.
+
+---
+
+$ fl mod list
+	_
+$ fl mod create myModule
+
+$ fl mod list
+	_
+	myModule
+`
+
+}
+
 func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	err := modHandler.Create(ctx, c.Name)
 	if err != nil {

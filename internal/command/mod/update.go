@@ -26,6 +26,15 @@ type Update struct {
 	NewName string `arg:"" help:"new name of the module"`
 }
 
+func (c *Update) Help() string {
+	return `Update a module name with a new one.
+
+## EXAMPLES
+	
+$ fl mod update <module-name> <new-module-name>
+`
+}
+
 func (u *Update) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	err := modHandler.Update(ctx, u.Name, u.NewName)
 	if err != nil {

@@ -26,6 +26,16 @@ type Get struct {
 	Count bool   `name:"count" short:"c" default:"false" help:"return number of results"`
 }
 
+func (c *Get) Help() string {
+	return `List all the functions and information about the specified module.
+The "--count" flag can be use to return the number of results
+
+## EXAMPLES
+	
+$ fl mod get <your-module-name> --count
+`
+}
+
 func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	res, err := modHandler.Get(ctx, g.Name)
 	if err != nil {

@@ -25,6 +25,16 @@ type List struct {
 	Count bool `name:"count" short:"c" default:"false" help:"return number of results"`
 }
 
+func (c *List) Help() string {
+	return `List all modules.
+The "--count" flag can be use to return the number of results
+
+## EXAMPLES
+	
+$ fl mod list --count
+`
+}
+
 func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
 	res, err := modHandler.List(ctx)
 	if err != nil {

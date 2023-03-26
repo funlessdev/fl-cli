@@ -23,5 +23,5 @@ type Mod struct {
 }
 
 func (f *Mod) Help() string {
-	return "Manage modules (description TBD)"
+	return "Group of commands for managing modules"
 }
