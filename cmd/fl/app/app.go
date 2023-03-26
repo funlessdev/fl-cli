@@ -36,6 +36,7 @@ type CLI struct {
 	Mod      mod.Mod           `cmd:"" help:"create, delete and manage modules"`
 	Admin    admin.Admin       `cmd:"" aliases:"a" help:"deploy and manage the platform"`
 	Template template.Template `cmd:"" help:"pull function templates"`
+	Host     string            `short:"H" default:"http://localhost:4000" help:"API host of the platform"`
 
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
@@ -56,7 +57,10 @@ func ParseCMD(version string) (*kong.Context, error) {
 		return nil, err
 	}
 
-	flConfig := client.Config{Host: "http://localhost:4000"}
+	flConfig, err := client.NewConfig("config")
+	if err != nil {
+		return nil, err
+	}
 	flClient, err := client.NewClient(http.DefaultClient, flConfig)
 	validator := client.InputValidator{}
 	if err != nil {
