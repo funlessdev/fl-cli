@@ -49,7 +49,7 @@ $ fl template pull <your-template-repository> --out-dir <your-template-output-di
 
 $ ls
 
-	my_subfolder templates
+	my_subfolder template
 
 ---
 
