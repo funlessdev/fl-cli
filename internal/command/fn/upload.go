@@ -34,6 +34,17 @@ type Upload struct {
 	Module string `short:"m" default:"_" help:"the module of the function"`
 }
 
+func (c *Upload) Help() string {
+	return `It uploads a function with the specified name from the specified path of the wasm binary.
+
+The "--module" flag can be used to choose a module other than the default one. 
+
+## EXAMPLES
+	
+$ fl fn upload <your-function-name> <your-wasm-path> --module=<your-module-name>
+`
+}
+
 func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
 	_ = logger.StartSpinner("Reading wasm...")
 	code, err := openWasmFile(u.Source)

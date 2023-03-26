@@ -29,6 +29,18 @@ type Invoke struct {
 	JsonArgs string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
 }
 
+func (c *Invoke) Help() string {
+	return `It invokes the function with the specified name.
+
+The "--module" flag can be used to choose a module other than the default one. 
+The "--args" and "--json" flags can be used to pass parameters to functions. "--json" flag overrides "--args"
+
+## EXAMPLES
+	
+$ fl fn invoke <your-function-name> --module=<your-module-name>
+`
+}
+
 func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
 	args := make(map[string]interface{}, len(f.Args))
 	if f.Args != nil {

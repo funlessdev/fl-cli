@@ -24,5 +24,5 @@ type Fn struct {
 }
 
 func (f *Fn) Help() string {
-	return "Manage functions (description TBD)"
+	return "Group of commands for managing functions"
 }

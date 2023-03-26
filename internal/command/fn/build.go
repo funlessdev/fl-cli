@@ -35,6 +35,21 @@ type Build struct {
 	Language    string `short:"l" enum:"rust,js" required:"" help:"programming language of the function"`
 }
 
+func (c *Build) Help() string {
+	return `It creates wasm for function specified in source.
+It must be use the flag "--language" to specify the language of the funcion.
+The possible value is one of from the following list.
+
+	[rust, js]
+
+The "--destination" flag can be used to choose a destination directory other than the default one. 
+
+## EXAMPLES
+	
+$ fl fn build <your-function-name> <your-function-source> --language=<lang-from-enum> --destination=<your-destination-directory>
+`
+
+}
 func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log.FLogger) error {
 	logger.Info(fmt.Sprintf("Building %s into a wasm binary...\n\n", b.Name))
 

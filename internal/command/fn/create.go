@@ -32,6 +32,22 @@ type Create struct {
 	Language string `short:"l" required:"" enum:"rust,js" help:"programming language of the function"`
 }
 
+func (c *Create) Help() string {
+	return `It builds and a uploads a function with the specified name from the specified source.
+It must be use the flag "--language" to specify the language of the funcion.
+The possible value is one of from the following list.
+
+	[rust, js]
+
+The "--module" flag can be used to choose a module other than the default one. 
+
+## EXAMPLES
+	
+$ fl fn create <your-function-name> <your-function-source> --language=<lang-from-enum> --module=<your-module-name>
+`
+
+}
+
 func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
 	logger.Infof("Creating %s function...\n\n", c.Name)
 

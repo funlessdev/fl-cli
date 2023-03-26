@@ -26,6 +26,18 @@ type Delete struct {
 	Module string `name:"module" short:"m" default:"_" help:"module of the function to delete"`
 }
 
+func (c *Delete) Help() string {
+	return `It deletes the function with the specified name from the specified source.
+
+The "--module" flag can be used to choose a module other than the default one. 
+
+## EXAMPLES
+	
+$ fl fn delete <your-function-name> <your-module-name>
+`
+
+}
+
 func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
 	err := fnHandler.Delete(ctx, f.Name, f.Module)
 	if err != nil {
