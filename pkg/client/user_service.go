@@ -32,7 +32,18 @@ type UserService struct {
 
 var _ UserHandler = &UserService{}
 
+func (u *UserService) setAdminToken() {
+	if u.Client != nil {
+		adminToken := u.Client.Config.AdminToken
+		apiConfig := u.Client.ApiClient.GetConfig()
+		apiConfig.DefaultHeader["Authorization"] = "Bearer " + adminToken
+	}
+}
+
 func (u *UserService) Create(ctx context.Context, name string) (pkg.UserNameToken, error) {
+
+	u.setAdminToken()
+
 	apiService := u.Client.ApiClient.SubjectsApi
 
 	requestBody := openapi.SubjectName{
@@ -51,6 +62,8 @@ func (u *UserService) Create(ctx context.Context, name string) (pkg.UserNameToke
 }
 
 func (u *UserService) List(ctx context.Context) (pkg.UserNamesList, error) {
+
+	u.setAdminToken()
 
 	apiService := u.Client.ApiClient.SubjectsApi
 

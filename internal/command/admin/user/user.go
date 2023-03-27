@@ -32,14 +32,14 @@ type CreateUser struct {
 }
 
 func (u *CreateUser) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger) error {
-	logger.StartSpinner("Creating user...")
+	_ = logger.StartSpinner("Creating user...")
 	res, err := userHandler.Create(ctx, u.Name)
 	_ = logger.StopSpinner(err)
 	if err != nil {
 		return err
 	}
 	logger.Info(fmt.Sprintf("User %s created. Auth token:\n", res.Name))
-	logger.Info(res.Token)
+	logger.Info(res.Token + "\n")
 	return err
 }
 
@@ -59,15 +59,15 @@ type ListUsers struct {
 }
 
 func (u *ListUsers) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger) error {
-	logger.StartSpinner("Listing existing users...")
+	_ = logger.StartSpinner("Listing existing users...")
 	res, err := userHandler.List(ctx)
 	_ = logger.StopSpinner(err)
 	if err != nil {
 		return err
 	}
-	logger.Info("Users:")
+	logger.Info("Users:\n")
 	for _, user := range res.Names {
-		logger.Info(fmt.Sprintf("- %s", user))
+		logger.Info(fmt.Sprintf("- %s\n", user))
 	}
 	return err
 }
