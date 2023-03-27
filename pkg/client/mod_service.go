@@ -36,7 +36,17 @@ type ModService struct {
 
 var _ ModHandler = &ModService{}
 
+func (fn *ModService) setAPIToken() {
+	if fn.Client != nil {
+		apiToken := fn.Client.Config.APIToken
+		apiConfig := fn.Client.ApiClient.GetConfig()
+		apiConfig.DefaultHeader["Authorization"] = "Bearer " + apiToken
+	}
+}
+
 func (fn *ModService) Get(ctx context.Context, modName string) (pkg.SingleModule, error) {
+
+	fn.setAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return pkg.SingleModule{}, err
@@ -65,6 +75,8 @@ func (fn *ModService) Get(ctx context.Context, modName string) (pkg.SingleModule
 
 func (fn *ModService) Create(ctx context.Context, modName string) error {
 
+	fn.setAPIToken()
+
 	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return err
 	}
@@ -83,6 +95,8 @@ func (fn *ModService) Create(ctx context.Context, modName string) error {
 
 func (fn *ModService) Delete(ctx context.Context, modName string) error {
 
+	fn.setAPIToken()
+
 	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return err
 	}
@@ -93,6 +107,8 @@ func (fn *ModService) Delete(ctx context.Context, modName string) error {
 }
 
 func (fn *ModService) Update(ctx context.Context, modName string, newName string) error {
+
+	fn.setAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return err
@@ -113,6 +129,9 @@ func (fn *ModService) Update(ctx context.Context, modName string, newName string
 }
 
 func (fn *ModService) List(ctx context.Context) (pkg.ModuleNameList, error) {
+
+	fn.setAPIToken()
+
 	apiService := fn.Client.ApiClient.ModulesApi
 	response, _, err := apiService.ListModules(ctx).Execute()
 	if err != nil {
