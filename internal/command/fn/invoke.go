@@ -24,7 +24,7 @@ import (
 
 type Invoke struct {
 	Name     string            `arg:"" name:"name" help:"name of the function to invoke"`
-	Module   string            `name:"module" short:"n" default:"_" help:"module of the function to invoke"`
+	Module   string            `name:"module" short:"m" default:"_" help:"module of the function to invoke"`
 	Args     map[string]string `name:"args" short:"a" help:"arguments of the function to invoke" xor:"args"`
 	JsonArgs string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
 }

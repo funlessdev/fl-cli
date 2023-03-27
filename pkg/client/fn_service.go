@@ -38,7 +38,15 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
+func (fn *FnService) setAPIToken() {
+	apiToken := fn.Client.Config.APIToken
+	apiConfig := fn.Client.ApiClient.GetConfig()
+	apiConfig.DefaultHeader["Authorization"] = "Bearer " + apiToken
+}
+
 func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (pkg.IvkResult, error) {
+
+	fn.setAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return pkg.IvkResult{}, err
@@ -73,6 +81,8 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fn
 
 func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, code *os.File) error {
 
+	fn.setAPIToken()
+
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return err
 	}
@@ -88,6 +98,8 @@ func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, co
 
 func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) error {
 
+	fn.setAPIToken()
+
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return err
 	}
@@ -102,6 +114,8 @@ func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) er
 }
 
 func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error {
+
+	fn.setAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return err
