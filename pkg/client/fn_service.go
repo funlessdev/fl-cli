@@ -39,9 +39,11 @@ type FnService struct {
 var _ FnHandler = &FnService{}
 
 func (fn *FnService) setAPIToken() {
-	apiToken := fn.Client.Config.APIToken
-	apiConfig := fn.Client.ApiClient.GetConfig()
-	apiConfig.DefaultHeader["Authorization"] = "Bearer " + apiToken
+	if fn.Client != nil {
+		apiToken := fn.Client.Config.APIToken
+		apiConfig := fn.Client.ApiClient.GetConfig()
+		apiConfig.DefaultHeader["Authorization"] = "Bearer " + apiToken
+	}
 }
 
 func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (pkg.IvkResult, error) {
