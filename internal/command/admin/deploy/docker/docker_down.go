@@ -54,7 +54,3 @@ func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogge
 
 	return nil
 }
-
-func (f *Down) Help() string {
-	return `It removes local Funless deployment if it exists.`
-}

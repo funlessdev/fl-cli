@@ -26,12 +26,15 @@ type List struct {
 }
 
 func (c *List) Help() string {
-	return `List all modules.
-The "--count" flag can be use to return the number of results
+	return `
+DESCRIPTION
 
-## EXAMPLES
+	List all modules.
+	The "--count" flag can be use to return the number of results
+
+EXAMPLES
 	
-$ fl mod list --count
+	$ fl mod list --count
 `
 }
 

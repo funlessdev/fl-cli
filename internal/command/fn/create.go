@@ -26,24 +26,27 @@ import (
 )
 
 type Create struct {
-	Name     string `arg:"" help:"name of the function to create"`
-	Source   string `arg:"" type:"existingdir" help:"path of the source directory"`
-	Module   string `short:"m" default:"_" help:"module of the function to create"`
-	Language string `short:"l" required:"" enum:"rust,js" help:"programming language of the function"`
+	Name     string `arg:"" help:"Name of the function to create"`
+	Source   string `arg:"" type:"existingdir" help:"Path of the source directory"`
+	Module   string `short:"m" default:"_" help:"Module of the function to create"`
+	Language string `short:"l" required:"" enum:"rust,js" help:"Programming language of the function"`
 }
 
 func (c *Create) Help() string {
-	return `It builds and a uploads a function with the specified name from the specified source.
-It must be use the flag "--language" to specify the language of the funcion.
-The possible value is one of from the following list.
+	return `
+DESCRIPTION
 
-	[rust, js]
+	It builds and a uploads a function with the specified name from the specified source.
+	It must be use the flag "--language" to specify the language of the funcion.
+	The possible value is one of from the following list.
 
-The "--module" flag can be used to choose a module other than the default one. 
+		[rust, js]
 
-## EXAMPLES
+	The "--module" flag can be used to choose a module other than the default one. 
+
+EXAMPLES
 	
-$ fl fn create <your-function-name> <your-function-source> --language=<lang-from-enum> --module=<your-module-name>
+	$ fl fn create <your-function-name> <your-function-source> --language=<lang-from-enum> --module=<your-module-name>
 `
 
 }

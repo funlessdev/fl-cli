@@ -22,27 +22,26 @@ import (
 )
 
 type Create struct {
-	Name string `arg:"" help:"name of the module to create"`
+	Name string `arg:"" help:"Name of the module to create"`
 }
 
 func (c *Create) Help() string {
-	return `It creates a new module with the specified name.
+	return `
+DESCRIPRION
 
-## EXAMPLES
-	
-$ fl mod create <your-module-name>
+	It creates a new module with the specified name.
+	Module name must be a hexadecimal string.
 
-Module name must be a hexadecimal string.
+EXAMPLES
 
----
+	$ fl mod list
+		_
+		
+	$ fl mod create <your-module-name>
 
-$ fl mod list
-	_
-$ fl mod create myModule
-
-$ fl mod list
-	_
-	myModule
+	$ fl mod list
+		_
+		<your-module-name>
 `
 
 }

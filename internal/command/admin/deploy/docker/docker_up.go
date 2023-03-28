@@ -35,17 +35,20 @@ const (
 )
 
 type Up struct {
-	CoreImage   string `name:"core" short:"c" help:"core docker image to deploy" default:"${default_core_image}"`
-	WorkerImage string `name:"worker" short:"w" help:"worker docker image to deploy" default:"${default_worker_image}"`
+	CoreImage   string `name:"core" short:"c" help:"Core docker image to deploy" default:"${default_core_image}"`
+	WorkerImage string `name:"worker" short:"w" help:"Worker docker image to deploy" default:"${default_worker_image}"`
 }
 
 func (f *Up) Help() string {
-	return `It creates a local Docker-based Funless deployment.
-The "--core" and "--worker" flags can be used to choose a core and worker image other than the default ones.
+	return `
+DESCRIPTION
 
-## EXAMPLES
+	It creates a local Docker-based Funless deployment.
+	The "--core" and "--worker" flags can be used to choose a core and worker image other than the default ones.
 
-$ fl admin deploy docker up --core <your-core-image> --worker <your-worker-image>`
+EXAMPLES
+
+	$ fl admin deploy docker up --core <your-core-image> --worker <your-worker-image>`
 }
 
 func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {

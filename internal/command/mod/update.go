@@ -22,16 +22,19 @@ import (
 )
 
 type Update struct {
-	Name    string `arg:"" help:"name of the module to update"`
-	NewName string `arg:"" help:"new name of the module"`
+	Name    string `arg:"" help:"Name of the module to update"`
+	NewName string `arg:"" help:"New name of the module"`
 }
 
 func (c *Update) Help() string {
-	return `Update a module name with a new one.
+	return `
+DESCRIPTION
 
-## EXAMPLES
+	Update a module name with a new one.
+
+EXAMPLES
 	
-$ fl mod update <module-name> <new-module-name>
+	$ fl mod update <module-name> <new-module-name>
 `
 }
 

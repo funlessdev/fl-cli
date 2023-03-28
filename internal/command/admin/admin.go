@@ -20,8 +20,8 @@ import (
 )
 
 type Admin struct {
-	Deploy deploy.Deploy `cmd:"" name:"deploy" aliases:"d" help:"deploy FunLess on different setups"`
-	User   user.User     `cmd:"" name:"user" aliases:"u" help:"create/delete FunLess users"`
+	Deploy deploy.Deploy `cmd:"" name:"deploy" aliases:"d" help:"Deploy FunLess on different setups"`
+	User   user.User     `cmd:"" name:"user" aliases:"u" help:"Create/delete FunLess users"`
 }
 
 func (f *Admin) Help() string {

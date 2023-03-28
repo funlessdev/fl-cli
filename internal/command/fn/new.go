@@ -26,24 +26,27 @@ import (
 )
 
 type New struct {
-	Name        string `arg:"" help:"the name of the function"`
-	Language    string `name:"lang" short:"l" required:"" enum:"rust, js" help:"the language of the function"`
-	TemplateDir string `short:"t" type:"path" default:"." help:"the directory where the template are located"`
-	OutDir      string `short:"o" type:"path" default:"." help:"the directory where the function will be created"`
+	Name        string `arg:"" help:"The name of the function"`
+	Language    string `name:"lang" short:"l" required:"" enum:"rust, js" help:"The language of the function"`
+	TemplateDir string `short:"t" type:"path" default:"." help:"The directory where the template are located"`
+	OutDir      string `short:"o" type:"path" default:"." help:"The directory where the function will be created"`
 }
 
 func (n *New) Help() string {
-	return `It creates a new function with specified name from a template.
-It must be use the flag "--lang" to specify the language of the funcion.
-The possible value is one of from the following list.
+	return `
+DESCRIPTION
 
-	[rust, js]
+	It creates a new function with specified name from a template.
+	It must be use the flag "--lang" to specify the language of the funcion.
+	The possible value is one of from the following list.
 
-The "--template-dir" and "--out-dir" flags can be used to choose a template directory and a function destination directory other than the default ones. 
+		[rust, js]
 
-## EXAMPLES
+	The "--template-dir" and "--out-dir" flags can be used to choose a template directory and a function destination directory other than the default ones. 
+
+EXAMPLES
 	
-$ fl fn new <your-function-name> --lang=<lang-from-enum> --template-dir=<your-template-dir> --out-dir=<your-output-dir>
+	$ fl fn new <your-function-name> --lang=<lang-from-enum> --template-dir=<your-template-dir> --out-dir=<your-output-dir>
 
 `
 }

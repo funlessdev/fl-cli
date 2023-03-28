@@ -22,18 +22,20 @@ import (
 )
 
 type Delete struct {
-	Name   string `arg:"" name:"name" help:"name of the function to delete"`
-	Module string `name:"module" short:"m" default:"_" help:"module of the function to delete"`
+	Name   string `arg:"" name:"name" help:"Name of the function to delete"`
+	Module string `name:"module" short:"m" default:"_" help:"Module of the function to delete"`
 }
 
 func (c *Delete) Help() string {
-	return `It deletes the function with the specified name from the specified source.
+	return `
+DESCRIPTION
 
-The "--module" flag can be used to choose a module other than the default one. 
+	It deletes the function with the specified name from the specified source.
+	The "--module" flag can be used to choose a module other than the default one. 
 
-## EXAMPLES
+EXAMPLES
 	
-$ fl fn delete <your-function-name> <your-module-name>
+	$ fl fn delete <your-function-name> <your-module-name>
 `
 
 }

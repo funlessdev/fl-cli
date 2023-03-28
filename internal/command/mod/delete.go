@@ -26,21 +26,21 @@ type Delete struct {
 }
 
 func (c *Delete) Help() string {
-	return `It deletes the module with the specified name.
+	return `
+DESCRIPTION
 
-## EXAMPLES
-	
-$ fl mod delete <your-module-name>
+	It deletes the module with the specified name.
 
----
+EXAMPLES
 
-$ fl mod list
-	_
-	myModule
-$ fl mod delete myModule
+	$ fl mod list
+		_
+		<your-module-name>
 
-$ fl mod list
-	_
+	$ fl mod delete <your-module-name>
+
+	$ fl mod list
+		_
 	
 `
 }

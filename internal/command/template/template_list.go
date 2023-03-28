@@ -25,16 +25,19 @@ import (
 )
 
 type List struct {
-	TemplateDir string `short:"d" type:"path" default:"." help:"the directory to read the templates from"`
+	TemplateDir string `short:"d" type:"path" default:"." help:"The directory to read the templates from"`
 }
 
 func (f *List) Help() string {
-	return `List all available templates.
-The "--template-dir" can be used to specify a different path other than the default ones.
+	return `
+DESCRIPTION
 
-## EXAMPLES
+	List all available templates.
+	The "--template-dir" can be used to specify a different path other than the default ones.
 
-$ fl template list --template-dir <your-templates-path>`
+EXAMPLES
+
+	$ fl template list --template-dir <your-templates-path>`
 }
 
 func (l *List) Run(ctx context.Context, logger log.FLogger) error {

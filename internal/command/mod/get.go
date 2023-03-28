@@ -27,12 +27,15 @@ type Get struct {
 }
 
 func (c *Get) Help() string {
-	return `List all the functions and information about the specified module.
-The "--count" flag can be use to return the number of results
+	return `
+DESCRIPTION
 
-## EXAMPLES
+	List all the functions and information about the specified module.
+	The "--count" flag can be use to return the number of results
+
+EXAMPLES
 	
-$ fl mod get <your-module-name> --count
+	$ fl mod get <your-module-name> --count
 `
 }
 

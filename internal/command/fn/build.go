@@ -29,24 +29,27 @@ import (
 )
 
 type Build struct {
-	Name        string `arg:"" help:"the name of the function"`
-	Source      string `arg:"" type:"existingdir" help:"path of the source directory"`
-	Destination string `short:"d" type:"path" help:"path where the compiled wasm file will be saved" default:"."`
-	Language    string `short:"l" enum:"rust,js" required:"" help:"programming language of the function"`
+	Name        string `arg:"" help:"The name of the function"`
+	Source      string `arg:"" type:"existingdir" help:"Path of the source directory"`
+	Destination string `short:"d" type:"path" help:"Path where the compiled wasm file will be saved" default:"."`
+	Language    string `short:"l" enum:"rust,js" required:"" help:"Programming language of the function"`
 }
 
 func (c *Build) Help() string {
-	return `It creates wasm for function specified in source.
-It must be use the flag "--language" to specify the language of the funcion.
-The possible value is one of from the following list.
+	return `
+DESCRIPTION
 
-	[rust, js]
+	It creates wasm for function specified in source.
+	It must be use the flag "--language" to specify the language of the funcion.
+	The possible value is one of from the following list.
 
-The "--destination" flag can be used to choose a destination directory other than the default one. 
+		[rust, js]
 
-## EXAMPLES
+	The "--destination" flag can be used to choose a destination directory other than the default one. 
+
+EXAMPLES
 	
-$ fl fn build <your-function-name> <your-function-source> --language=<lang-from-enum> --destination=<your-destination-directory>
+	$ fl fn build <your-function-name> <your-function-source> --language=<lang-from-enum> --destination=<your-destination-directory>
 `
 
 }

@@ -30,14 +30,16 @@ type Invoke struct {
 }
 
 func (c *Invoke) Help() string {
-	return `It invokes the function with the specified name.
+	return `
+DESCRIPTION
 
-The "--module" flag can be used to choose a module other than the default one. 
-The "--args" and "--json" flags can be used to pass parameters to functions. "--json" flag overrides "--args"
-
-## EXAMPLES
+	It invokes the function with the specified name.
+	The "--module" flag can be used to choose a module other than the default one.
+	The "--args" and "--json" flags can be used to pass parameters to functions. "--json" flag overrides "--args"
 	
-$ fl fn invoke <your-function-name> --module=<your-module-name>
+EXAMPLES
+	
+	$ fl fn invoke <your-function-name> --module=<your-module-name>
 `
 }
 
