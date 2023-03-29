@@ -35,6 +35,10 @@ func TestCfg(t *testing.T) {
 	homedirPath, err := os.MkdirTemp("", "funless-test-cfg-")
 	require.NoError(t, err)
 
+	homedir.GetHomeDir = func() (string, error) {
+		return homedirPath, nil
+	}
+
 	defer func() {
 		homedir.GetHomeDir = os.UserHomeDir
 		os.RemoveAll(homedirPath)
@@ -45,7 +49,7 @@ func TestCfg(t *testing.T) {
 
 	setCmds := [4]CfgSet{
 		{
-			Key:   "host",
+			Key:   "api_host",
 			Value: "test_host",
 		},
 		{
@@ -67,9 +71,12 @@ func TestCfg(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	config, err = client.NewConfig("config")
+	require.NoError(t, err)
+
 	getCmds := [4]CfgGet{
 		{
-			Key: "host",
+			Key: "api_host",
 		},
 		{
 			Key: "api_token",
@@ -82,16 +89,13 @@ func TestCfg(t *testing.T) {
 		},
 	}
 
-	config, err = client.NewConfig("config")
-	require.NoError(t, err)
-
 	for _, c := range getCmds {
 		err = c.Run(testCtx, testGetLogger, config)
 		require.NoError(t, err)
 	}
 
 	expected :=
-		"host=test_host\n" +
+		"api_host=test_host\n" +
 			"api_token=test_api_token\n" +
 			"admin_token=test_admin_token\n" +
 			"secret_key_base=test_secret_key_base\n"

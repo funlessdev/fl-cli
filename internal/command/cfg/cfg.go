@@ -17,10 +17,12 @@ package cfg
 import (
 	"context"
 	"fmt"
+	"os"
 	"path"
 	"regexp"
 	"strings"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -42,13 +44,21 @@ type CfgGet struct {
 
 func (g *CfgSet) Run(ctx context.Context, logger log.FLogger, config client.Config) error {
 
-	configBasePath := path.Base(config.Path)
-	configText, _, err := homedir.ReadFromConfigDir(configBasePath)
-	configString := string(configText[:])
-	if err != nil {
-		return nil
+	var configBasePath string
+
+	if config.Path == "" {
+		configBasePath = pkg.ConfigFileName
+	} else {
+		configBasePath = path.Base(config.Path)
 	}
 
+	configText, _, err := homedir.ReadFromConfigDir(configBasePath)
+
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	configString := string(configText[:])
 	r, _ := regexp.Compile(fmt.Sprintf("%s=(.+)", g.Key))
 
 	var outConfig string
@@ -72,7 +82,7 @@ func (g *CfgSet) Run(ctx context.Context, logger log.FLogger, config client.Conf
 func (g *CfgGet) Run(ctx context.Context, logger log.FLogger, config client.Config) error {
 	var cfgValue string
 	switch g.Key {
-	case "host":
+	case "api_host":
 		cfgValue = config.Host
 	case "api_token":
 		cfgValue = config.APIToken
