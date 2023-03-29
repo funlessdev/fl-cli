@@ -21,6 +21,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
+	"github.com/funlessdev/fl-cli/internal/command/cfg"
 	"github.com/funlessdev/fl-cli/internal/command/fn"
 	"github.com/funlessdev/fl-cli/internal/command/mod"
 	"github.com/funlessdev/fl-cli/internal/command/template"
@@ -36,8 +37,9 @@ type CLI struct {
 	Mod      mod.Mod           `cmd:"" help:"create, delete and manage modules"`
 	Admin    admin.Admin       `cmd:"" aliases:"a" help:"deploy and manage the platform"`
 	Template template.Template `cmd:"" help:"pull function templates"`
-	Host     string            `short:"H" default:"http://localhost:4000" help:"API host of the platform"`
+	Cfg      cfg.Cfg           `cmd:"" aliases:"c,config" help:"manage local configuration"`
 
+	Host    string           `short:"H" help:"API host of the platform"`
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
 
@@ -57,7 +59,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 		return nil, err
 	}
 
-	flConfig, err := client.NewConfig("config")
+	flConfig, err := client.NewConfig(pkg.ConfigFileName)
 	if err != nil {
 		return nil, err
 	}
@@ -82,14 +84,17 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(modSvc, (*client.ModHandler)(nil)),
+		kong.BindTo(userSvc, (*client.UserHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.BindTo(dockerShell, (*deploy.DockerShell)(nil)),
 		kong.BindTo(kubernetesDeployer, (*deploy.KubernetesDeployer)(nil)),
 		kong.BindTo(kubernetesRemover, (*deploy.KubernetesRemover)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
-		kong.BindTo(userSvc, (*client.UserHandler)(nil)),
+		kong.BindTo(flConfig, (*client.Config)(nil)),
+		kong.Bind(&(cli.Host)),
 		kong.Vars{
 			"version":              version,
+			"config_keys":          pkg.ConfigKeys,
 			"default_core_image":   pkg.CoreImg,
 			"default_worker_image": pkg.WorkerImg,
 		},

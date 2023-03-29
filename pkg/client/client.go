@@ -39,6 +39,7 @@ type Client struct {
 }
 
 type Config struct {
+	Path          string
 	Host          string
 	BaseURL       *url.URL
 	SecretKeyBase string // used when deploying the platform, unused when using API
@@ -49,7 +50,7 @@ type Config struct {
 // NewConfig creates a new funless config, reading the information from the given configPath
 func NewConfig(configPath string) (Config, error) {
 
-	config, _, err := homedir.ReadFromConfigDir(configPath)
+	config, path, err := homedir.ReadFromConfigDir(configPath)
 
 	outConfig := Config{
 		Host:          "http://localhost:4000",
@@ -71,13 +72,17 @@ func NewConfig(configPath string) (Config, error) {
 	for configScanner.Scan() {
 		line := configScanner.Text()
 		lineParts := strings.Split(line, "=")
-		key, value := strings.TrimSpace(lineParts[0]), strings.TrimSpace(lineParts[1])
-		configMap[key] = value
+		if len(lineParts) == 2 {
+			key, value := strings.TrimSpace(lineParts[0]), strings.TrimSpace(lineParts[1])
+			configMap[key] = value
+		}
 	}
 
 	if err = configScanner.Err(); err != nil {
 		return Config{}, err
 	}
+
+	outConfig.Path = path
 
 	if host, v := configMap["api_host"]; v {
 		outConfig.Host = host
