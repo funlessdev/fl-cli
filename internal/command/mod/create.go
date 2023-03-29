@@ -30,7 +30,8 @@ func (c *Create) Help() string {
 DESCRIPRION
 
 	It creates a new module with the specified name.
-	Module name must be a hexadecimal string.
+	Module name must respect the pattern [a-zA-Z0-9_]*, 
+	i.e., it must be an alphanumeric string with underscores allowed.
 
 EXAMPLES
 

@@ -39,13 +39,14 @@ func (c *Build) Help() string {
 	return `
 DESCRIPTION
 
-	It creates wasm for function specified in source.
-	It must be use the flag "--language" to specify the language of the funcion.
-	The possible value is one of from the following list.
+	It creates wasm for the function specified in source.
+	It must be use the flag "--language" to specify the language of the 
+	function. The possible value is one of from the following list.
 
 		[rust, js]
 
-	The "--destination" flag can be used to choose a destination directory other than the default one. 
+	The "--destination" flag can be used to choose a destination directory 
+	other than the default one. 
 
 EXAMPLES
 	

@@ -28,8 +28,10 @@ type Down struct {
 func (f *Down) Help() string {
 	return `
 DESCRIPTION
+
 	It removes a Kubernetes Funless deployment.
-	The "--kubeconfig" flag can be used to specify the absolute path to the kubeconfig file.
+	The "--kubeconfig" flag can be used to specify the absolute path 
+	to the kubeconfig file.
 
 EXAMPLES
 

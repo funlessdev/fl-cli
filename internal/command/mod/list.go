@@ -22,7 +22,7 @@ import (
 )
 
 type List struct {
-	Count bool `name:"count" short:"c" default:"false" help:"return number of results"`
+	Count bool `name:"count" short:"c" default:"false" help:"Return number of results"`
 }
 
 func (c *List) Help() string {
@@ -30,7 +30,7 @@ func (c *List) Help() string {
 DESCRIPTION
 
 	List all modules.
-	The "--count" flag can be use to return the number of results
+	The "--count" flag can be used to return the number of results.
 
 EXAMPLES
 	

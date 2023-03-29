@@ -47,8 +47,10 @@ func (u *User) Help() string {
 	return `
 DESCRIPTION
 	
-	Create a new FunLess user. A user is a (name, token) pair, used to authenticate to the FunLess API.
-	To create new user specify an unique name. The token will be generated automatically by the FunLess Platform.
+	Create a new FunLess user. A user is a (name, token) pair, used to 
+	authenticate to the FunLess API.
+	To create new user specify an unique name. The token will be generated 
+	automatically by the FunLess Platform.
 
 EXAMPLES
 
@@ -77,7 +79,8 @@ func (u *ListUsers) Help() string {
 	return `
 DESCRIPTION
 
-	List all existing FunLess user names. To create a new user use the "create" command.
+	List all existing FunLess user names. To create a new user use 
+	the "create" command.
 	To get the token of an existing user use the "token" command (TODO). 
 
 EXAMPLES

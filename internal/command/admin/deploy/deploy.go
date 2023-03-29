@@ -40,28 +40,32 @@ Below is a description of the architecture.
 
 CORE
 
-	It is the orchestrator of the platform and it manages function and modules.
-	In case of invocation request it acts as a scheduler too to pick one of the available worker components.
+	The orchestrator of the platform: it manages functions and modules.
+	In case of invocation requests, it acts as a scheduler to pick one 
+	of the available worker components.
 	
 WORKER
 
-	It is the actual functions executor and it is able to run multiple function in parallel. 
-	In case of invocation request, it uses a cache to avoid requesting the same function multiple times.
+	The actual functions executor: it is able to run multiple functions 
+	in parallel. In case of invocation requests, it uses a cache to avoid 
+	requesting the same function multiple times.
 
 PROMETHEUS
 
-	It collects metrics from the platform (Core and Worker).
-	It is also used by the Core to access the metrics of the Workers to make scheduling decisions. 
+	Collects metrics from the platform containers (Core and Worker).
+	It is also used by the Core to access the metrics of the Workers 
+	to make scheduling decisions. 
 
 POSTGRES
 
-	It is used by the Core to store functions and modules.
+	Used by the Core to store functions and modules.
 
 ELASTICSEARCH
 KIBANA
 FILEBEAT
 
 	This stack is used in docker deploy to collect and manage logs. 
+
 `
 }
 

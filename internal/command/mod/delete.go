@@ -22,7 +22,7 @@ import (
 )
 
 type Delete struct {
-	Name string `arg:"" help:"name of the module to delete"`
+	Name string `arg:"" help:"Name of the module to delete"`
 }
 
 func (c *Delete) Help() string {

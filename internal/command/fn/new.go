@@ -37,12 +37,13 @@ func (n *New) Help() string {
 DESCRIPTION
 
 	It creates a new function with specified name from a template.
-	It must be use the flag "--lang" to specify the language of the funcion.
+	It must be use the flag "--lang" to specify the language of the function.
 	The possible value is one of from the following list.
 
 		[rust, js]
 
-	The "--template-dir" and "--out-dir" flags can be used to choose a template directory and a function destination directory other than the default ones. 
+	The "--template-dir" and "--out-dir" flags can be used to choose a template 
+	directory and a function destination directory other than the default ones. 
 
 EXAMPLES
 	

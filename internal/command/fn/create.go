@@ -36,13 +36,15 @@ func (c *Create) Help() string {
 	return `
 DESCRIPTION
 
-	It builds and a uploads a function with the specified name from the specified source.
-	It must be use the flag "--language" to specify the language of the funcion.
-	The possible value is one of from the following list.
+	It builds and a uploads a function with the specified name from the 
+	specified source. 
+	It must be use the flag "--language" to specify the language of the 
+	function. The possible value is one of from the following list.
 
 		[rust, js]
 
-	The "--module" flag can be used to choose a module other than the default one. 
+	The "--module" flag can be used to choose a module other than 
+	the default one. 
 
 EXAMPLES
 	

@@ -31,7 +31,8 @@ func (c *Delete) Help() string {
 DESCRIPTION
 
 	It deletes the function with the specified name from the specified source.
-	The "--module" flag can be used to choose a module other than the default one. 
+	The "--module" flag can be used to choose a module other than 
+	the default one. 
 
 EXAMPLES
 	

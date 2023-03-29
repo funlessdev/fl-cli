@@ -22,16 +22,16 @@ import (
 )
 
 type Get struct {
-	Name  string `arg:"" help:"name of the module"`
-	Count bool   `name:"count" short:"c" default:"false" help:"return number of results"`
+	Name  string `arg:"" help:"Name of the module"`
+	Count bool   `name:"count" short:"c" default:"false" help:"Return number of results"`
 }
 
 func (c *Get) Help() string {
 	return `
 DESCRIPTION
 
-	List all the functions and information about the specified module.
-	The "--count" flag can be use to return the number of results
+	List all the functions and informations about the specified module.
+	The "--count" flag can be used to return the number of results
 
 EXAMPLES
 	

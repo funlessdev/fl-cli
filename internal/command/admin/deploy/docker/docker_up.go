@@ -44,7 +44,8 @@ func (f *Up) Help() string {
 DESCRIPTION
 
 	It creates a local Docker-based Funless deployment.
-	The "--core" and "--worker" flags can be used to choose a core and worker image other than the default ones.
+	The "--core" and "--worker" flags can be used to choose a core 
+	and a worker image other than the default ones.
 
 EXAMPLES
 

@@ -36,22 +36,24 @@ func (f *Pull) Help() string {
 	return `
 DESCRIPTION
 
-	Pull template folder from a repository, the default one is https://github.com/funlessdev/fl-templates.git.
-	An other repository can be specified as argument to override the default one.
-	The "--out-dir" can be used to specify a different path for the output other than the default one.
+	Pull template folder from a repository, the default one is 
+	https://github.com/funlessdev/fl-templates.git.
+	An other repository can be used as argument to override the default one.
+	The "--out-dir" can be used to specify a different path for the output 
+	other than the default one. 
 	The "--force" can be used to overwrite the template if it already exists.
 
 EXAMPLES
 
 	$ ls
 
-	my_subfolder
+		my_subfolder
 
 	$ fl template pull <your-template-repository> --out-dir <your-template-output-dir> --force
 
 	$ ls
 
-	my_subfolder template
+		my_subfolder template
 
 ---
 
@@ -61,7 +63,7 @@ EXAMPLES
 
 	$ ls ./template/
 
-	js rust
+		js rust
 `
 
 }

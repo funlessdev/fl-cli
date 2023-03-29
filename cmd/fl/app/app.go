@@ -32,12 +32,12 @@ import (
 )
 
 type CLI struct {
-	Fn       fn.Fn             `cmd:"" help:"create, delete and manage functions"`
-	Mod      mod.Mod           `cmd:"" help:"create, delete and manage modules"`
-	Admin    admin.Admin       `cmd:"" aliases:"a" help:"deploy and manage the platform"`
-	Template template.Template `cmd:"" help:"pull function templates"`
+	Fn       fn.Fn             `cmd:"" help:"Create, delete and manage functions"`
+	Mod      mod.Mod           `cmd:"" help:"Create, delete and manage modules"`
+	Admin    admin.Admin       `cmd:"" aliases:"a" help:"Deploy and manage the platform"`
+	Template template.Template `cmd:"" help:"Pull function templates"`
 
-	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
+	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"Show fl version"`
 }
 
 func ParseCMD(version string) (*kong.Context, error) {

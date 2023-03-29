@@ -33,7 +33,8 @@ func (f *List) Help() string {
 DESCRIPTION
 
 	List all available templates.
-	The "--template-dir" can be used to specify a different path other than the default ones.
+	The "--template-dir" can be used to specify a different path other than 
+	the default one.
 
 EXAMPLES
 
