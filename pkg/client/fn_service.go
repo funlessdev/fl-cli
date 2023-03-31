@@ -38,7 +38,7 @@ type FnService struct {
 
 var _ FnHandler = &FnService{}
 
-func (fn *FnService) setAPIToken() {
+func (fn *FnService) injectAPIToken() {
 	if fn.Client != nil {
 		apiToken := fn.Client.Config.APIToken
 		apiConfig := fn.Client.ApiClient.GetConfig()
@@ -46,9 +46,18 @@ func (fn *FnService) setAPIToken() {
 	}
 }
 
+func (fn *FnService) injectHost(ctx context.Context) {
+	overrideHost := ctx.Value("api_host").(string)
+	if overrideHost != "" {
+		apiConfig := fn.Client.ApiClient.GetConfig()
+		apiConfig.Host = overrideHost
+	}
+}
+
 func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fnArgs map[string]interface{}) (pkg.IvkResult, error) {
 
-	fn.setAPIToken()
+	fn.injectHost(ctx)
+	fn.injectAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return pkg.IvkResult{}, err
@@ -83,7 +92,8 @@ func (fn *FnService) Invoke(ctx context.Context, fnName string, fnMod string, fn
 
 func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, code *os.File) error {
 
-	fn.setAPIToken()
+	fn.injectHost(ctx)
+	fn.injectAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return err
@@ -100,7 +110,8 @@ func (fn *FnService) Create(ctx context.Context, fnName string, fnMod string, co
 
 func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) error {
 
-	fn.setAPIToken()
+	fn.injectHost(ctx)
+	fn.injectAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return err
@@ -117,7 +128,8 @@ func (fn *FnService) Delete(ctx context.Context, fnName string, fnMod string) er
 
 func (fn *FnService) Update(ctx context.Context, fnName string, fnMod string, code *os.File, newName string) error {
 
-	fn.setAPIToken()
+	fn.injectHost(ctx)
+	fn.injectAPIToken()
 
 	if err := fn.InputValidatorHandler.ValidateName(fnName, "function"); err != nil {
 		return err

@@ -36,23 +36,32 @@ type ModService struct {
 
 var _ ModHandler = &ModService{}
 
-func (fn *ModService) setAPIToken() {
-	if fn.Client != nil {
-		apiToken := fn.Client.Config.APIToken
-		apiConfig := fn.Client.ApiClient.GetConfig()
+func (mod *ModService) injectAPIToken() {
+	if mod.Client != nil {
+		apiToken := mod.Client.Config.APIToken
+		apiConfig := mod.Client.ApiClient.GetConfig()
 		apiConfig.DefaultHeader["Authorization"] = "Bearer " + apiToken
 	}
 }
 
-func (fn *ModService) Get(ctx context.Context, modName string) (pkg.SingleModule, error) {
+func (mod *ModService) injectHost(ctx context.Context) {
+	overrideHost := ctx.Value("api_host").(string)
+	if overrideHost != "" {
+		apiConfig := mod.Client.ApiClient.GetConfig()
+		apiConfig.Host = overrideHost
+	}
+}
 
-	fn.setAPIToken()
+func (mod *ModService) Get(ctx context.Context, modName string) (pkg.SingleModule, error) {
 
-	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+	mod.injectHost(ctx)
+	mod.injectAPIToken()
+
+	if err := mod.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return pkg.SingleModule{}, err
 	}
 
-	apiService := fn.Client.ApiClient.ModulesApi
+	apiService := mod.Client.ApiClient.ModulesApi
 	request := apiService.ShowModuleByName(ctx, modName)
 	response, _, err := request.Execute()
 	if err != nil {
@@ -62,8 +71,8 @@ func (fn *ModService) Get(ctx context.Context, modName string) (pkg.SingleModule
 	name := data.Name
 
 	var functions []string
-	for _, fn := range data.Functions {
-		functions = append(functions, *fn.Name)
+	for _, mod := range data.Functions {
+		functions = append(functions, *mod.Name)
 	}
 
 	return pkg.SingleModule{
@@ -73,15 +82,16 @@ func (fn *ModService) Get(ctx context.Context, modName string) (pkg.SingleModule
 
 }
 
-func (fn *ModService) Create(ctx context.Context, modName string) error {
+func (mod *ModService) Create(ctx context.Context, modName string) error {
 
-	fn.setAPIToken()
+	mod.injectHost(ctx)
+	mod.injectAPIToken()
 
-	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+	if err := mod.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return err
 	}
 
-	apiService := fn.Client.ApiClient.ModulesApi
+	apiService := mod.Client.ApiClient.ModulesApi
 
 	requestBody := openapi.ModuleName{
 		Module: &openapi.SubjectNameSubject{
@@ -93,31 +103,33 @@ func (fn *ModService) Create(ctx context.Context, modName string) error {
 	return pkg.ExtractError(err)
 }
 
-func (fn *ModService) Delete(ctx context.Context, modName string) error {
+func (mod *ModService) Delete(ctx context.Context, modName string) error {
 
-	fn.setAPIToken()
+	mod.injectHost(ctx)
+	mod.injectAPIToken()
 
-	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+	if err := mod.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return err
 	}
 
-	apiService := fn.Client.ApiClient.ModulesApi
+	apiService := mod.Client.ApiClient.ModulesApi
 	_, err := apiService.DeleteModule(ctx, modName).Execute()
 	return pkg.ExtractError(err)
 }
 
-func (fn *ModService) Update(ctx context.Context, modName string, newName string) error {
+func (mod *ModService) Update(ctx context.Context, modName string, newName string) error {
 
-	fn.setAPIToken()
+	mod.injectHost(ctx)
+	mod.injectAPIToken()
 
-	if err := fn.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
+	if err := mod.InputValidatorHandler.ValidateName(modName, "mod"); err != nil {
 		return err
 	}
-	if err := fn.InputValidatorHandler.ValidateName(newName, "new mod"); err != nil {
+	if err := mod.InputValidatorHandler.ValidateName(newName, "new mod"); err != nil {
 		return err
 	}
 
-	apiService := fn.Client.ApiClient.ModulesApi
+	apiService := mod.Client.ApiClient.ModulesApi
 	requestBody := openapi.ModuleName{
 		Module: &openapi.SubjectNameSubject{
 			Name: &newName,
@@ -128,11 +140,12 @@ func (fn *ModService) Update(ctx context.Context, modName string, newName string
 	return pkg.ExtractError(err)
 }
 
-func (fn *ModService) List(ctx context.Context) (pkg.ModuleNameList, error) {
+func (mod *ModService) List(ctx context.Context) (pkg.ModuleNameList, error) {
 
-	fn.setAPIToken()
+	mod.injectHost(ctx)
+	mod.injectAPIToken()
 
-	apiService := fn.Client.ApiClient.ModulesApi
+	apiService := mod.Client.ApiClient.ModulesApi
 	response, _, err := apiService.ListModules(ctx).Execute()
 	if err != nil {
 		return pkg.ModuleNameList{}, pkg.ExtractError(err)
