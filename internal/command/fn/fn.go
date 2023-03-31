@@ -21,6 +21,8 @@ type Fn struct {
 	Build  Build  `cmd:"" aliases:"b" help:"compile a function into a wasm binary"`
 	Upload Upload `cmd:"" aliases:"up" help:"create functions by uploading wasm binaries"`
 	New    New    `cmd:"" aliases:"n" help:"create a new function from a template"`
+
+	Host string `short:"H" help:"API host/port of the platform (no protocol)"`
 }
 
 func (f *Fn) Help() string {

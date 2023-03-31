@@ -17,6 +17,7 @@ package fn
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -26,7 +27,10 @@ type Delete struct {
 	Module string `name:"module" short:"m" default:"_" help:"module of the function to delete"`
 }
 
-func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
+func (f *Delete) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger, parent *Fn) error {
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
+
 	err := fnHandler.Delete(ctx, f.Name, f.Module)
 	if err != nil {
 		return err

@@ -20,6 +20,8 @@ type Mod struct {
 	Update Update `cmd:"" aliases:"u,up" help:"update the name of a module"`
 	Create Create `cmd:"" aliases:"c" help:"create a new module"`
 	List   List   `cmd:"" aliases:"l,ls" help:"list all modules"`
+
+	Host string `short:"H" help:"API host/port of the platform (no protocol)"`
 }
 
 func (f *Mod) Help() string {

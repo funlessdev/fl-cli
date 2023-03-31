@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -34,7 +35,10 @@ type Upload struct {
 	Module string `short:"m" default:"_" help:"the module of the function"`
 }
 
-func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
+func (u *Upload) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger, parent *Fn) error {
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
+
 	_ = logger.StartSpinner("Reading wasm...")
 	code, err := openWasmFile(u.Source)
 	if err != nil {

@@ -39,7 +39,6 @@ type CLI struct {
 	Template template.Template `cmd:"" help:"pull function templates"`
 	Cfg      cfg.Cfg           `cmd:"" aliases:"c,config" help:"manage local configuration"`
 
-	Host    string           `short:"H" help:"API host of the platform"`
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
 }
 
@@ -91,7 +90,6 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(kubernetesRemover, (*deploy.KubernetesRemover)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
 		kong.BindTo(flConfig, (*client.Config)(nil)),
-		kong.Bind(&(cli.Host)),
 		kong.Vars{
 			"version":              version,
 			"config_keys":          pkg.ConfigKeys,

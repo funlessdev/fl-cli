@@ -17,6 +17,7 @@ package mod
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -25,8 +26,10 @@ type List struct {
 	Count bool `name:"count" short:"c" default:"false" help:"return number of results"`
 }
 
-func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
+func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger, parent *Mod) error {
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
 	res, err := modHandler.List(ctx)
+
 	if err != nil {
 		return err
 	}
