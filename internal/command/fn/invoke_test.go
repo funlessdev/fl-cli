@@ -48,11 +48,11 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(pkg.IvkResult{Result: testResult}, nil)
+		mockFnHandler.On("Invoke", mock.Anything, testFn, testMod, map[string]interface{}{}).Return(pkg.IvkResult{Result: testResult}, nil)
 
-		err := cmd.Run(testCtx, mockFnHandler, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger, &Fn{})
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testMod, map[string]interface{}{})
+		mockFnHandler.AssertCalled(t, "Invoke", mock.Anything, testFn, testMod, map[string]interface{}{})
 		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
@@ -65,12 +65,12 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, map[string]interface{}{}).Return(pkg.IvkResult{Result: testResult}, nil)
+		mockFnHandler.On("Invoke", mock.Anything, testFn, testMod, map[string]interface{}{}).Return(pkg.IvkResult{Result: testResult}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
+		err := cmd.Run(testCtx, mockFnHandler, bufLogger, &Fn{})
 
 		require.NoError(t, err)
 		assert.Equal(t, testResult, (&outbuf).String())
@@ -90,11 +90,11 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, mockArgs).Return(pkg.IvkResult{Result: testResult}, nil)
+		mockFnHandler.On("Invoke", mock.Anything, testFn, testMod, mockArgs).Return(pkg.IvkResult{Result: testResult}, nil)
 
-		err := cmd.Run(testCtx, mockFnHandler, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger, &Fn{})
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testMod, mockArgs)
+		mockFnHandler.AssertCalled(t, "Invoke", mock.Anything, testFn, testMod, mockArgs)
 		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
@@ -107,12 +107,12 @@ func TestFnInvoke(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Invoke", testCtx, testFn, testMod, testParsedJArgs).Return(
+		mockFnHandler.On("Invoke", mock.Anything, testFn, testMod, testParsedJArgs).Return(
 			pkg.IvkResult{Result: testResult}, nil)
 
-		err := cmd.Run(testCtx, mockFnHandler, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger, &Fn{})
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Invoke", testCtx, testFn, testMod, testParsedJArgs)
+		mockFnHandler.AssertCalled(t, "Invoke", mock.Anything, testFn, testMod, testParsedJArgs)
 		mockFnHandler.AssertNumberOfCalls(t, "Invoke", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
@@ -125,10 +125,10 @@ func TestFnInvoke(t *testing.T) {
 
 		mockFnHandler := mocks.NewFnHandler(t)
 		e := &openapi.GenericOpenAPIError{}
-		mockFnHandler.On("Invoke", testCtx, testFn, "", mock.Anything).Return(
+		mockFnHandler.On("Invoke", mock.Anything, testFn, "", mock.Anything).Return(
 			pkg.IvkResult{}, e)
 
-		err := cmd.Run(testCtx, mockFnHandler, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger, &Fn{})
 		require.Error(t, err)
 	})
 }

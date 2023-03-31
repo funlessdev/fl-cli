@@ -25,6 +25,7 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 )
@@ -44,15 +45,15 @@ func TestModGet(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Get", testCtx, testMod).Return(
+		mockModHandler.On("Get", mock.Anything, testMod).Return(
 			pkg.SingleModule{
 				Name:      testMod,
 				Functions: testFns,
 			}, nil)
 
-		err := cmd.Run(testCtx, mockModHandler, testLogger)
+		err := cmd.Run(testCtx, mockModHandler, testLogger, &Mod{})
 		require.NoError(t, err)
-		mockModHandler.AssertCalled(t, "Get", testCtx, testMod)
+		mockModHandler.AssertCalled(t, "Get", mock.Anything, testMod)
 		mockModHandler.AssertNumberOfCalls(t, "Get", 1)
 		mockModHandler.AssertExpectations(t)
 	})
@@ -63,7 +64,7 @@ func TestModGet(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Get", testCtx, testMod).Return(
+		mockModHandler.On("Get", mock.Anything, testMod).Return(
 			pkg.SingleModule{
 				Name:      testMod,
 				Functions: testFns,
@@ -72,7 +73,7 @@ func TestModGet(t *testing.T) {
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockModHandler, bufLogger)
+		err := cmd.Run(testCtx, mockModHandler, bufLogger, &Mod{})
 
 		require.NoError(t, err)
 		assert.Equal(t, fmt.Sprintf("Module: %s\nFunctions:\n%s\n%s\n%s\n", testMod, testFns[0], testFns[1], testFns[2]), (&outbuf).String())
@@ -86,7 +87,7 @@ func TestModGet(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Get", testCtx, testMod).Return(
+		mockModHandler.On("Get", mock.Anything, testMod).Return(
 			pkg.SingleModule{
 				Name:      testMod,
 				Functions: testFns,
@@ -95,7 +96,7 @@ func TestModGet(t *testing.T) {
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockModHandler, bufLogger)
+		err := cmd.Run(testCtx, mockModHandler, bufLogger, &Mod{})
 
 		require.NoError(t, err)
 		assert.Equal(t, fmt.Sprintf("Module: %s\nFunctions:\n%s\n%s\n%s\nCount: %d\n", testMod, testFns[0], testFns[1], testFns[2], len(testFns)), (&outbuf).String())
@@ -110,9 +111,9 @@ func TestModGet(t *testing.T) {
 		mockModHandler := mocks.NewModHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockModHandler.On("Get", testCtx, testMod).Return(pkg.SingleModule{}, e)
+		mockModHandler.On("Get", mock.Anything, testMod).Return(pkg.SingleModule{}, e)
 
-		err := cmd.Run(testCtx, mockModHandler, testLogger)
+		err := cmd.Run(testCtx, mockModHandler, testLogger, &Mod{})
 		require.Error(t, err)
 	})
 

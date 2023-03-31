@@ -24,6 +24,7 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 )
@@ -41,11 +42,11 @@ func TestModUpdate(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Update", testCtx, testMod, testNewMod).Return(nil)
+		mockModHandler.On("Update", mock.Anything, testMod, testNewMod).Return(nil)
 
-		err := cmd.Run(testCtx, mockModHandler, testLogger)
+		err := cmd.Run(testCtx, mockModHandler, testLogger, &Mod{})
 		require.NoError(t, err)
-		mockModHandler.AssertCalled(t, "Update", testCtx, testMod, testNewMod)
+		mockModHandler.AssertCalled(t, "Update", mock.Anything, testMod, testNewMod)
 		mockModHandler.AssertNumberOfCalls(t, "Update", 1)
 		mockModHandler.AssertExpectations(t)
 	})
@@ -56,12 +57,12 @@ func TestModUpdate(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("Update", testCtx, testMod, testNewMod).Return(nil)
+		mockModHandler.On("Update", mock.Anything, testMod, testNewMod).Return(nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockModHandler, bufLogger)
+		err := cmd.Run(testCtx, mockModHandler, bufLogger, &Mod{})
 
 		require.NoError(t, err)
 		assert.Equal(t, fmt.Sprintf("Successfully renamed module %s to %s.\n", testMod, testNewMod), (&outbuf).String())
@@ -77,9 +78,9 @@ func TestModUpdate(t *testing.T) {
 		mockModHandler := mocks.NewModHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockModHandler.On("Update", testCtx, testMod, testNewMod).Return(e)
+		mockModHandler.On("Update", mock.Anything, testMod, testNewMod).Return(e)
 
-		err := cmd.Run(testCtx, mockModHandler, testLogger)
+		err := cmd.Run(testCtx, mockModHandler, testLogger, &Mod{})
 		require.Error(t, err)
 	})
 }

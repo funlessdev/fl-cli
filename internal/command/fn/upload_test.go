@@ -46,7 +46,7 @@ func TestFnUpload(t *testing.T) {
 			Module: testMod,
 		}
 		mockFnHandler := mocks.NewFnHandler(t)
-		err := upload.Run(ctx, mockFnHandler, testLogger)
+		err := upload.Run(ctx, mockFnHandler, testLogger, &Fn{})
 		require.Error(t, err)
 	})
 
@@ -58,12 +58,12 @@ func TestFnUpload(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testMod, mock.Anything).Return(errors.New("error")).Once()
+		mockFnHandler.On("Create", mock.Anything, testFn, testMod, mock.Anything).Return(errors.New("error")).Once()
 
-		err := cmd.Run(ctx, mockFnHandler, testLogger)
+		err := cmd.Run(ctx, mockFnHandler, testLogger, &Fn{})
 		require.Error(t, err)
 
-		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testMod, mock.AnythingOfType("*os.File"))
+		mockFnHandler.AssertCalled(t, "Create", mock.Anything, testFn, testMod, mock.AnythingOfType("*os.File"))
 		mockFnHandler.AssertNumberOfCalls(t, "Create", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
@@ -85,12 +85,12 @@ Successfully uploaded function %s/%s 👌
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Create", ctx, testFn, testMod, mock.Anything).Return(nil)
+		mockFnHandler.On("Create", mock.Anything, testFn, testMod, mock.Anything).Return(nil)
 
 		var outbuf bytes.Buffer
 
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
-		err := cmd.Run(ctx, mockFnHandler, bufLogger)
+		err := cmd.Run(ctx, mockFnHandler, bufLogger, &Fn{})
 
 		require.NoError(t, err)
 		assert.Equal(t, testResult, (&outbuf).String())
