@@ -45,8 +45,8 @@ func (mod *ModService) injectAPIToken() {
 }
 
 func (mod *ModService) injectHost(ctx context.Context) {
-	overrideHost := ctx.Value("api_host").(string)
-	if overrideHost != "" {
+	overrideHost, ok := ctx.Value(pkg.FLContextKey("api_host")).(string)
+	if ok && overrideHost != "" {
 		apiConfig := mod.Client.ApiClient.GetConfig()
 		apiConfig.Host = overrideHost
 	}

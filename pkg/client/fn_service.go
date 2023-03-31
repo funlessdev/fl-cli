@@ -47,8 +47,8 @@ func (fn *FnService) injectAPIToken() {
 }
 
 func (fn *FnService) injectHost(ctx context.Context) {
-	overrideHost := ctx.Value("api_host").(string)
-	if overrideHost != "" {
+	overrideHost, ok := ctx.Value(pkg.FLContextKey("api_host")).(string)
+	if ok && overrideHost != "" {
 		apiConfig := fn.Client.ApiClient.GetConfig()
 		apiConfig.Host = overrideHost
 	}

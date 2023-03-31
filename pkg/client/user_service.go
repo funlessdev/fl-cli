@@ -41,8 +41,8 @@ func (u *UserService) injectAdminToken() {
 }
 
 func (u *UserService) injectHost(ctx context.Context) {
-	overrideHost := ctx.Value("api_host").(string)
-	if overrideHost != "" {
+	overrideHost, ok := ctx.Value(pkg.FLContextKey("api_host")).(string)
+	if ok && overrideHost != "" {
 		apiConfig := u.Client.ApiClient.GetConfig()
 		apiConfig.Host = overrideHost
 	}
