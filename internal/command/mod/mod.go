@@ -15,13 +15,9 @@
 package mod
 
 type Mod struct {
-	Get    Get    `cmd:"" aliases:"g" help:"list functions and information of a module"`
-	Delete Delete `cmd:"" aliases:"d,rm" help:"delete a module"`
-	Update Update `cmd:"" aliases:"u,up" help:"update the name of a module"`
-	Create Create `cmd:"" aliases:"c" help:"create a new module"`
-	List   List   `cmd:"" aliases:"l,ls" help:"list all modules"`
-}
-
-func (f *Mod) Help() string {
-	return "Manage modules (description TBD)"
+	Get    Get    `cmd:"" aliases:"g" help:"List functions and information of a module"`
+	Delete Delete `cmd:"" aliases:"d,rm" help:"Delete a module"`
+	Update Update `cmd:"" aliases:"u,up" help:"Update the name of a module"`
+	Create Create `cmd:"" aliases:"c" help:"Create a new module"`
+	List   List   `cmd:"" aliases:"l,ls" help:"List all modules"`
 }

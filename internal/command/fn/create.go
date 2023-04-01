@@ -26,10 +26,27 @@ import (
 )
 
 type Create struct {
-	Name     string `arg:"" help:"name of the function to create"`
-	Source   string `arg:"" type:"existingdir" help:"path of the source directory"`
-	Module   string `short:"m" default:"_" help:"module of the function to create"`
-	Language string `short:"l" required:"" enum:"rust,js" help:"programming language of the function"`
+	Name     string `arg:"" help:"Name of the function to create"`
+	Source   string `arg:"" type:"existingdir" help:"Path of the source directory"`
+	Module   string `short:"m" default:"_" help:"Module of the function to create"`
+	Language string `short:"l" required:"" enum:"rust,js" help:"Programming language of the function"`
+}
+
+func (c *Create) Help() string {
+	return `
+DESCRIPTION
+
+	It builds and uploads a function with the specified name from the 
+	given source. 
+	The "--language" flag is required, with the following possible values: [rust, js].
+	The "--module" flag can be used to choose a module other than 
+	the default one. 
+
+EXAMPLES
+	
+	$ fl fn create <your-function-name> <your-function-source> --language=<lang-from-enum> --module=<your-module-name>
+`
+
 }
 
 func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {

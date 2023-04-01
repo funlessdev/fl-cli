@@ -29,12 +29,27 @@ import (
 )
 
 type Build struct {
-	Name        string `arg:"" help:"the name of the function"`
-	Source      string `arg:"" type:"existingdir" help:"path of the source directory"`
-	Destination string `short:"d" type:"path" help:"path where the compiled wasm file will be saved" default:"."`
-	Language    string `short:"l" enum:"rust,js" required:"" help:"programming language of the function"`
+	Name        string `arg:"" help:"The name of the function"`
+	Source      string `arg:"" type:"existingdir" help:"Path of the source directory"`
+	Destination string `short:"d" type:"path" help:"Path where the compiled wasm file will be saved" default:"."`
+	Language    string `short:"l" enum:"rust,js" required:"" help:"Programming language of the function"`
 }
 
+func (c *Build) Help() string {
+	return `
+DESCRIPTION
+
+	It compiles a wasm binary from the function specified in the source arg.
+	The "--language" flag is required, with the following possible values: [rust, js].
+	The "--destination" flag can be used to choose a output directory 
+	other than the default one. 
+
+EXAMPLES
+	
+	$ fl fn build <your-function-name> <your-function-source> --language=<lang-from-enum> --destination=<your-output-directory>
+`
+
+}
 func (b *Build) Run(ctx context.Context, builder build.DockerBuilder, logger log.FLogger) error {
 	logger.Info(fmt.Sprintf("Building %s into a wasm binary...\n\n", b.Name))
 

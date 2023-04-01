@@ -22,7 +22,29 @@ import (
 )
 
 type Create struct {
-	Name string `arg:"" help:"name of the module to create"`
+	Name string `arg:"" help:"Name of the module to create"`
+}
+
+func (c *Create) Help() string {
+	return `
+DESCRIPRION
+
+	It creates a new module with the specified name.
+	Module name must respect the pattern [a-zA-Z0-9_]*, 
+	i.e., it must be an alphanumeric string with underscores allowed.
+
+EXAMPLES
+
+	$ fl mod list
+		_
+		
+	$ fl mod create <your-module-name>
+
+	$ fl mod list
+		_
+		<your-module-name>
+`
+
 }
 
 func (c *Create) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {

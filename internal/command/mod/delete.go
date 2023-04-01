@@ -22,7 +22,27 @@ import (
 )
 
 type Delete struct {
-	Name string `arg:"" help:"name of the module to delete"`
+	Name string `arg:"" help:"Name of the module to delete"`
+}
+
+func (c *Delete) Help() string {
+	return `
+DESCRIPTION
+
+	It deletes the module with the specified name.
+
+EXAMPLES
+
+	$ fl mod list
+		_
+		<your-module-name>
+
+	$ fl mod delete <your-module-name>
+
+	$ fl mod list
+		_
+	
+`
 }
 
 func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {

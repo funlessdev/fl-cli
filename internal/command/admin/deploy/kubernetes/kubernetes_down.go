@@ -22,7 +22,20 @@ import (
 )
 
 type Down struct {
-	KubeConfig string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
+	KubeConfig string `name:"kubeconfig" short:"k" help:"Absolute path to the kubeconfig file"`
+}
+
+func (f *Down) Help() string {
+	return `
+DESCRIPTION
+
+	It removes a Kubernetes FunLess deployment.
+	The "--kubeconfig" flag can be used to specify the absolute path 
+	to the kubeconfig file.
+
+EXAMPLES
+
+	$ fl admin deploy kubernetes down --kubeconfig <your-kubeconfig-path>`
 }
 
 func (k *Down) Run(ctx context.Context, remover deploy.KubernetesRemover, logger log.FLogger) error {

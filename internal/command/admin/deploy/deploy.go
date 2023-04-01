@@ -20,16 +20,28 @@ import (
 )
 
 type Deploy struct {
-	Docker     deploy_docker     `cmd:"" name:"docker" aliases:"d" help:"deploy locally with 1 core and 1 worker docker containers"`
-	Kubernetes deploy_kubernetes `cmd:"" name:"kubernetes" aliases:"k,k8s" help:"deploy on an existing kubernetes cluster"`
+	Docker     deploy_docker     `cmd:"" name:"docker" aliases:"d" help:"Deploy locally with 1 core and 1 worker docker containers"`
+	Kubernetes deploy_kubernetes `cmd:"" name:"kubernetes" aliases:"k,k8s" help:"Deploy on an existing kubernetes cluster"`
 }
 
 type deploy_docker struct {
-	Up   docker.Up   `cmd:"" name:"up" aliases:"u" help:"spin up Docker-based FunLess deployment"`
-	Down docker.Down `cmd:"" name:"down" aliases:"d" help:"tear down Docker-based FunLess deployment"`
+	Up   docker.Up   `cmd:"" name:"up" aliases:"u" help:"Spin up Docker-based FunLess deployment"`
+	Down docker.Down `cmd:"" name:"down" aliases:"d" help:"Tear down Docker-based FunLess deployment"`
 }
 
 type deploy_kubernetes struct {
-	Up   kubernetes.Up   `cmd:"" name:"up" aliases:"u" help:"spin up Kubernetes-based FunLess deployment"`
-	Down kubernetes.Down `cmd:"" name:"down" aliases:"d" help:"tear down Kubernetes-based FunLess deployment"`
+	Up   kubernetes.Up   `cmd:"" name:"up" aliases:"u" help:"Spin up Kubernetes-based FunLess deployment"`
+	Down kubernetes.Down `cmd:"" name:"down" aliases:"d" help:"Tear down Kubernetes-based FunLess deployment"`
+}
+
+func (f *Deploy) Help() string {
+	return `
+The deployment consists of a few main services:
+
+	FunLess Core: the orchestrator of the platform;
+	FunLess Worker(s): the functions executor;
+	Prometheus: metrics collector (also used for scheduling by the Core);
+	PostgreSQL DB: the database for functions/modules/users.
+
+`
 }

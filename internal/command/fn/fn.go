@@ -15,14 +15,10 @@
 package fn
 
 type Fn struct {
-	Invoke Invoke `cmd:"" aliases:"i" help:"invoke a function"`
-	Create Create `cmd:"" aliases:"c" help:"a combination of build and upload to create a function"`
-	Delete Delete `cmd:"" aliases:"d" help:"delete an existing function"`
-	Build  Build  `cmd:"" aliases:"b" help:"compile a function into a wasm binary"`
-	Upload Upload `cmd:"" aliases:"up" help:"create functions by uploading wasm binaries"`
-	New    New    `cmd:"" aliases:"n" help:"create a new function from a template"`
-}
-
-func (f *Fn) Help() string {
-	return "Manage functions (description TBD)"
+	Invoke Invoke `cmd:"" aliases:"i" help:"Invoke a function"`
+	Create Create `cmd:"" aliases:"c" help:"A combination of build and upload to create a function"`
+	Delete Delete `cmd:"" aliases:"d" help:"Delete an existing function"`
+	Build  Build  `cmd:"" aliases:"b" help:"Compile a function into a wasm binary"`
+	Upload Upload `cmd:"" aliases:"up" help:"Create functions by uploading wasm binaries"`
+	New    New    `cmd:"" aliases:"n" help:"Create a new function from a template"`
 }

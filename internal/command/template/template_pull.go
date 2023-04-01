@@ -27,9 +27,45 @@ import (
 )
 
 type Pull struct {
-	Repository string `arg:"" default:"https://github.com/funlessdev/fl-templates.git" help:"the repository to pull the template folder from"`
-	OutDir     string `short:"o" type:"existingdir" default:"." help:"the output directory where the template folder will be placed"`
-	Force      bool   `short:"f" default:"false" help:"overwrite the template if it already exists"`
+	Repository string `arg:"" default:"https://github.com/funlessdev/fl-templates.git" help:"The repository to pull the template folder from"`
+	OutDir     string `short:"o" type:"existingdir" default:"." help:"The output directory where the template folder will be placed"`
+	Force      bool   `short:"f" default:"false" help:"Overwrite the template if it already exists"`
+}
+
+func (f *Pull) Help() string {
+	return `
+DESCRIPTION
+
+	Pull template folder from a repository, the default one is 
+	https://github.com/funlessdev/fl-templates.git.
+	Another repository can be used as argument to override the default one.
+	The "--out-dir" can be used to specify a different path for the output 
+	other than the default one. 
+	The "--force" can be used to overwrite the template if it already exists.
+
+EXAMPLES
+
+	$ ls
+
+		my_subfolder
+
+	$ fl template pull <your-template-repository> --out-dir <your-template-output-dir> --force
+
+	$ ls
+
+		my_subfolder template
+
+---
+
+	For the default template repository:
+
+	$ fl template pull
+
+	$ ls ./template/
+
+		js rust
+`
+
 }
 
 type copyOpts struct {

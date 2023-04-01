@@ -26,10 +26,26 @@ import (
 )
 
 type New struct {
-	Name        string `arg:"" help:"the name of the function"`
-	Language    string `name:"lang" short:"l" required:"" enum:"rust, js" help:"the language of the function"`
-	TemplateDir string `short:"t" type:"path" default:"." help:"the directory where the template are located"`
-	OutDir      string `short:"o" type:"path" default:"." help:"the directory where the function will be created"`
+	Name        string `arg:"" help:"The name of the function"`
+	Language    string `name:"lang" short:"l" required:"" enum:"rust, js" help:"The language of the function"`
+	TemplateDir string `short:"t" type:"path" default:"." help:"The directory where the template are located"`
+	OutDir      string `short:"o" type:"path" default:"." help:"The directory where the function will be created"`
+}
+
+func (n *New) Help() string {
+	return `
+DESCRIPTION
+
+	It creates a new function with specified name from a template.
+	The "--lang" flag is required, with the following possible values: [rust, js].
+	The "--template-dir" and "--out-dir" flags can be used to choose a template 
+	directory and a output directory other than the default ones. 
+
+EXAMPLES
+	
+	$ fl fn new <your-function-name> --lang=<lang-from-enum> --template-dir=<your-template-dir> --out-dir=<your-output-dir>
+
+`
 }
 
 func (n *New) Run(ctx context.Context, logger log.FLogger) error {
@@ -63,7 +79,7 @@ func (n *New) Run(ctx context.Context, logger log.FLogger) error {
 		return err
 	}
 
-	logger.Infof("Function \"%s\" created!", n.Name)
+	logger.Infof("Function \"%s\" created!\n", n.Name)
 
 	return nil
 }

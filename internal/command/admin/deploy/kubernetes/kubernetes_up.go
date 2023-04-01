@@ -23,7 +23,20 @@ import (
 )
 
 type Up struct {
-	KubeConfig string `name:"kubeconfig" short:"k" help:"absolute path to the kubeconfig file"`
+	KubeConfig string `name:"kubeconfig" short:"k" help:"Absolute path to the kubeconfig file"`
+}
+
+func (f *Up) Help() string {
+	return `
+DESCRIPTION
+
+	It creates a Kubernetes FunLess deployment.
+	The "--kubeconfig" flag can be used to specify the absolute path 
+	to the kubeconfig file.
+
+EXAMPLES
+
+	$ fl admin deploy kubernetes up --kubeconfig <your-kubeconfig-path>`
 }
 
 func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {

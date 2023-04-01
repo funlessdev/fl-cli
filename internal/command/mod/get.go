@@ -22,8 +22,21 @@ import (
 )
 
 type Get struct {
-	Name  string `arg:"" help:"name of the module"`
-	Count bool   `name:"count" short:"c" default:"false" help:"return number of results"`
+	Name  string `arg:"" help:"Name of the module"`
+	Count bool   `name:"count" short:"c" default:"false" help:"Return number of results"`
+}
+
+func (c *Get) Help() string {
+	return `
+DESCRIPTION
+
+	List all the functions and informations about the specified module.
+	The "--count" flag can be used to return the number of results
+
+EXAMPLES
+	
+	$ fl mod get <your-module-name> --count
+`
 }
 
 func (g *Get) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
