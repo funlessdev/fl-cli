@@ -39,18 +39,14 @@ func (c *Build) Help() string {
 	return `
 DESCRIPTION
 
-	It creates wasm for the function specified in source.
-	It must be use the flag "--language" to specify the language of the 
-	function. The possible value is one of from the following list.
-
-		[rust, js]
-
-	The "--destination" flag can be used to choose a destination directory 
+	It compiles a wasm binary from the function specified in the source arg.
+	The "--language" flag is required, with the following possible values: [rust, js].
+	The "--destination" flag can be used to choose a output directory 
 	other than the default one. 
 
 EXAMPLES
 	
-	$ fl fn build <your-function-name> <your-function-source> --language=<lang-from-enum> --destination=<your-destination-directory>
+	$ fl fn build <your-function-name> <your-function-source> --language=<lang-from-enum> --destination=<your-output-directory>
 `
 
 }

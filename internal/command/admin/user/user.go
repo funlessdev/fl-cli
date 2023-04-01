@@ -49,7 +49,7 @@ DESCRIPTION
 	
 	Create a new FunLess user. A user is a (name, token) pair, used to 
 	authenticate to the FunLess API.
-	To create new user specify an unique name. The token will be generated 
+	To create a new user specify an unique name. The token will be generated 
 	automatically by the FunLess Platform.
 
 EXAMPLES

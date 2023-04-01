@@ -68,7 +68,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 
 	kong_ctx := kong.Parse(&cli,
 		kong.Name("fl"),
-		kong.Description("Funless CLI - fl"),
+		kong.Description("FunLess CLI - fl"),
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact:             true,
 			NoExpandSubcommands: true,

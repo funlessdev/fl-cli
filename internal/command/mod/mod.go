@@ -21,7 +21,3 @@ type Mod struct {
 	Create Create `cmd:"" aliases:"c" help:"Create a new module"`
 	List   List   `cmd:"" aliases:"l,ls" help:"List all modules"`
 }
-
-func (f *Mod) Help() string {
-	return "Group of commands for managing modules"
-}

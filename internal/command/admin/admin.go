@@ -23,7 +23,3 @@ type Admin struct {
 	Deploy deploy.Deploy `cmd:"" name:"deploy" aliases:"d" help:"Deploy FunLess on different setups"`
 	User   user.User     `cmd:"" name:"user" aliases:"u" help:"Create/delete FunLess users"`
 }
-
-func (f *Admin) Help() string {
-	return "Group of commands for managing and maintaining the platform"
-}

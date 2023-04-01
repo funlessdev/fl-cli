@@ -38,7 +38,7 @@ func (c *Upload) Help() string {
 	return `
 DESCRIPRION
 
-	It uploads a function with the specified name from the specified 
+	It uploads a function with the specified name from the given 
 	path of the wasm binary.
 	The "--module" flag can be used to choose a module other than 
 	the default one. 

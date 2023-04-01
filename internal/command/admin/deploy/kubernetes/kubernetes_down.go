@@ -29,7 +29,7 @@ func (f *Down) Help() string {
 	return `
 DESCRIPTION
 
-	It removes a Kubernetes Funless deployment.
+	It removes a Kubernetes FunLess deployment.
 	The "--kubeconfig" flag can be used to specify the absolute path 
 	to the kubeconfig file.
 

@@ -22,7 +22,3 @@ type Fn struct {
 	Upload Upload `cmd:"" aliases:"up" help:"Create functions by uploading wasm binaries"`
 	New    New    `cmd:"" aliases:"n" help:"Create a new function from a template"`
 }
-
-func (f *Fn) Help() string {
-	return "Group of commands for managing functions"
-}

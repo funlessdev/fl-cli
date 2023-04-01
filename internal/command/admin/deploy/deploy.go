@@ -36,39 +36,12 @@ type deploy_kubernetes struct {
 
 func (f *Deploy) Help() string {
 	return `
-Below is a description of the architecture.
+The deployment consists of a few main services:
 
-CORE
-
-	The orchestrator of the platform: it manages functions and modules.
-	In case of invocation requests, it acts as a scheduler to pick one 
-	of the available worker components.
-	
-WORKER
-
-	The actual functions executor: it is able to run multiple functions 
-	in parallel. In case of invocation requests, it uses a cache to avoid 
-	requesting the same function multiple times.
-
-PROMETHEUS
-
-	Collects metrics from the platform containers (Core and Worker).
-	It is also used by the Core to access the metrics of the Workers 
-	to make scheduling decisions. 
-
-POSTGRES
-
-	Used by the Core to store functions and modules.
-
-ELASTICSEARCH
-KIBANA
-FILEBEAT
-
-	This stack is used in docker deploy to collect and manage logs. 
+	FunLess Core: the orchestrator of the platform;
+	FunLess Worker(s): the functions executor;
+	Prometheus: metrics collector (also used for scheduling by the Core);
+	PostgreSQL DB: the database for functions/modules/users.
 
 `
-}
-
-func (f *deploy_docker) Help() string {
-	return "Group of commands for managing a local docker deployment with 1 core and 1 worker"
 }
