@@ -24,14 +24,14 @@ import (
 )
 
 type User struct {
-	Create CreateUser `cmd:"" name:"create" aliases:"c" help:"create a new FunLess user"`
-	List   ListUsers  `cmd:"" name:"list" aliases:"l" help:"list all FunLess users"`
+	Create CreateUser `cmd:"" name:"create" aliases:"c" help:"Create a new FunLess user"`
+	List   ListUsers  `cmd:"" name:"list" aliases:"l" help:"List all FunLess users"`
 
 	Host string `short:"H" help:"API host/port of the platform (no protocol)"`
 }
 
 type CreateUser struct {
-	Name string `arg:"" name:"name" help:"the name of the new user"`
+	Name string `arg:"" name:"name" help:"The name of the new user"`
 }
 
 func (u *CreateUser) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger, parent *User) error {
@@ -51,13 +51,16 @@ func (u *CreateUser) Run(ctx context.Context, userHandler client.UserHandler, lo
 
 func (u *User) Help() string {
 	return `
-Create a new FunLess user. A user is a (name, token) pair, used to authenticate to the FunLess API.
+DESCRIPTION
+	
+	Create a new FunLess user. A user is a (name, token) pair, used to 
+	authenticate to the FunLess API.
+	To create a new user specify an unique name. The token will be generated 
+	automatically by the FunLess Platform.
 
-To create new user specify an unique name. The token will be generated automatically by the FunLess Platform.
+EXAMPLES
 
-## Example
-
-$ fl admin user create userA\n
+	$ fl admin user create userA\n
 `
 }
 
@@ -83,11 +86,14 @@ func (u *ListUsers) Run(ctx context.Context, userHandler client.UserHandler, log
 
 func (u *ListUsers) Help() string {
 	return `
-List all existing FunLess user names. To create a new user use the "create" command.
-To get the token of an existing user use the "token" command (TODO). 
+DESCRIPTION
 
-## Example
+	List all existing FunLess user names. To create a new user use 
+	the "create" command.
+	To get the token of an existing user use the "token" command (TODO). 
 
-$ fl admin user list
+EXAMPLES
+
+	$ fl admin user list
 `
 }

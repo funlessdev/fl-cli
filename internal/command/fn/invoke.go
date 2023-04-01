@@ -24,10 +24,25 @@ import (
 )
 
 type Invoke struct {
-	Name     string            `arg:"" name:"name" help:"name of the function to invoke"`
-	Module   string            `name:"module" short:"m" default:"_" help:"module of the function to invoke"`
-	Args     map[string]string `name:"args" short:"a" help:"arguments of the function to invoke" xor:"args"`
-	JsonArgs string            `name:"json" short:"j" help:"json encoded arguments of the function to invoke; overrides args" xor:"args"`
+	Name     string            `arg:"" name:"name" help:"Name of the function to invoke"`
+	Module   string            `name:"module" short:"m" default:"_" help:"Module of the function to invoke"`
+	Args     map[string]string `name:"args" short:"a" help:"Arguments of the function to invoke" xor:"args"`
+	JsonArgs string            `name:"json" short:"j" help:"Json encoded arguments of the function to invoke; overrides args" xor:"args"`
+}
+
+func (c *Invoke) Help() string {
+	return `
+DESCRIPTION
+
+	It invokes the function with the specified name.
+	The "--module" flag can be used to choose a module other than the default one.
+	The "--args" and "--json" flags can be used to pass parameters to functions. 
+	"--json" flag overrides "--args"
+	
+EXAMPLES
+	
+	$ fl fn invoke <your-function-name> --module=<your-module-name>
+`
 }
 
 func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger, parent *Fn) error {

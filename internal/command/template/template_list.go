@@ -25,7 +25,20 @@ import (
 )
 
 type List struct {
-	TemplateDir string `short:"d" type:"path" default:"." help:"the directory to read the templates from"`
+	TemplateDir string `short:"d" type:"path" default:"." help:"The directory to read the templates from"`
+}
+
+func (f *List) Help() string {
+	return `
+DESCRIPTION
+
+	List all available templates.
+	The "--template-dir" can be used to specify a different path other than 
+	the default one.
+
+EXAMPLES
+
+	$ fl template list --template-dir <your-templates-path>`
 }
 
 func (l *List) Run(ctx context.Context, logger log.FLogger) error {
@@ -34,7 +47,7 @@ func (l *List) Run(ctx context.Context, logger log.FLogger) error {
 
 	templateFolders, err := os.ReadDir(tpath)
 	if os.IsNotExist(err) {
-		logger.Info("No templates found! You can use 'fl template pull' to download some templates.")
+		logger.Info("No templates found! You can use 'fl template pull' to download some templates.\n")
 		return nil
 	}
 

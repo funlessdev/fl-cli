@@ -23,7 +23,20 @@ import (
 )
 
 type List struct {
-	Count bool `name:"count" short:"c" default:"false" help:"return number of results"`
+	Count bool `name:"count" short:"c" default:"false" help:"Return number of results"`
+}
+
+func (c *List) Help() string {
+	return `
+DESCRIPTION
+
+	List all modules.
+	The "--count" flag can be used to return the number of results.
+
+EXAMPLES
+	
+	$ fl mod list --count
+`
 }
 
 func (l *List) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger, parent *Mod) error {

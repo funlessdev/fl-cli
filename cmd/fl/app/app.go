@@ -33,13 +33,13 @@ import (
 )
 
 type CLI struct {
-	Fn       fn.Fn             `cmd:"" help:"create, delete and manage functions"`
-	Mod      mod.Mod           `cmd:"" help:"create, delete and manage modules"`
-	Admin    admin.Admin       `cmd:"" aliases:"a" help:"deploy and manage the platform"`
-	Template template.Template `cmd:"" help:"pull function templates"`
-	Cfg      cfg.Cfg           `cmd:"" aliases:"c,config" help:"manage local configuration"`
+	Fn       fn.Fn             `cmd:"" help:"Create, delete and manage functions"`
+	Mod      mod.Mod           `cmd:"" help:"Create, delete and manage modules"`
+	Admin    admin.Admin       `cmd:"" aliases:"a" help:"Deploy and manage the platform"`
+	Template template.Template `cmd:"" help:"Pull function templates"`
+	Cfg      cfg.Cfg           `cmd:"" aliases:"c,config" help:"Manage local configuration"`
 
-	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"show fl version"`
+	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"Show fl version"`
 }
 
 func ParseCMD(version string) (*kong.Context, error) {
@@ -73,7 +73,7 @@ func ParseCMD(version string) (*kong.Context, error) {
 
 	kong_ctx := kong.Parse(&cli,
 		kong.Name("fl"),
-		kong.Description("Funless CLI - fl"),
+		kong.Description("FunLess CLI - fl"),
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact:             true,
 			NoExpandSubcommands: true,
