@@ -60,6 +60,7 @@ func TestDockerUpRun(t *testing.T) {
 			return homedirPath, nil
 		}
 		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(nil).Once()
+		mockDockerShell.On("LogTokens", mock.Anything).Return(nil).Once()
 		err := up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.NoError(t, err)
 
@@ -76,6 +77,7 @@ func TestDockerUpRun(t *testing.T) {
 	t.Run("should modify docker-compose.yml when given custom core/worker", func(t *testing.T) {
 		out.Reset()
 		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(nil).Once()
+		mockDockerShell.On("LogTokens", mock.Anything).Return(nil).Once()
 		_, path, err := homedir.ReadFromConfigDir("docker-compose.yml")
 		require.NoError(t, err)
 		os.Remove(path)
