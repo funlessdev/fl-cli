@@ -31,6 +31,7 @@ type DockerShell interface {
 	ComposeUp(ctx context.Context, composeFilePath string) error
 	ComposeDown(ctx context.Context, composeFilePath string) error
 	ComposeList(ctx context.Context) ([]string, error)
+	LogTokens(ctx context.Context) error
 }
 
 type FLDockerShell struct{}
@@ -48,6 +49,10 @@ func (sh *FLDockerShell) ComposeList(ctx context.Context) ([]string, error) {
 	err := runShellCmd(ctx, &buf, os.Stderr, "docker", "compose", "ls", "-q")
 	lines := strings.Split(buf.String(), "\n")
 	return lines, err
+}
+
+func (sh *FLDockerShell) LogTokens(ctx context.Context) error {
+	return runShellCmd(ctx, os.Stdout, os.Stderr, "docker", "exec", "fl-core-1", "cat", "/tmp/funless/tokens")
 }
 
 func runShellCmd(ctx context.Context, resultBuf io.Writer, errorBuf io.Writer, cmd string, args ...string) error {

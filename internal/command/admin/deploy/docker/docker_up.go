@@ -92,7 +92,16 @@ func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger,
 		return err
 	}
 
-	logger.Info("\nDeployment complete!\n")
+	logger.Info("\nExtracting auth tokens... 🔒\n\n")
+
+	err = dk.LogTokens(ctx)
+	if err != nil {
+		logger.Info("Couldn't extract auth tokens from core container. Completing deployment...")
+	} else {
+		logger.Info("\n\nRemember to add these tokens in ~/.fl/config as api_token and admin_token.")
+	}
+
+	logger.Info("\n\nDeployment complete!\n")
 	logger.Info("You can now start using FunLess! 🎉\n")
 
 	return nil
