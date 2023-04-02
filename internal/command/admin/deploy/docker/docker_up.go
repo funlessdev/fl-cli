@@ -19,13 +19,13 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -145,23 +145,35 @@ func downloadFolderFile(folder, file, url string) error {
 }
 
 func replaceImages(core string, worker string) error {
-	if core == pkg.CoreImg && worker == pkg.WorkerImg {
-		return nil
-	}
-
 	content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
 	if err != nil {
 		return errors.New("unable to read docker-compose.yml")
 	}
 
-	newCompose := string(content)
-	if core != pkg.CoreImg {
-		newCompose = strings.Replace(string(content), pkg.CoreImg, core, 1)
+	var composeYaml map[string]interface{}
+	err = yaml.Unmarshal(content, &composeYaml)
+	if err != nil {
+		return err
 	}
-	if worker != pkg.WorkerImg {
-		newCompose = strings.Replace(newCompose, pkg.WorkerImg, worker, 1)
+
+	svc := composeYaml["services"].(map[interface{}]interface{})
+	svcCore := svc["core"].(map[interface{}]interface{})
+	svcWorker := svc["worker"].(map[interface{}]interface{})
+
+	svcCore["image"] = core
+	svcWorker["image"] = worker
+
+	svc["core"] = svcCore
+	svc["worker"] = svcWorker
+	composeYaml["services"] = svc
+
+	newCompose, err := yaml.Marshal(composeYaml)
+
+	if err != nil {
+		return err
 	}
 
 	_, err = homedir.WriteToConfigDir("docker-compose.yml", []byte(newCompose), true)
+
 	return err
 }
