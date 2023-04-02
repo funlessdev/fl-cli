@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -52,8 +53,11 @@ EXAMPLES
 	$ fl admin deploy docker up --core <your-core-image> --worker <your-worker-image>`
 }
 
-func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger) error {
+func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger, config client.Config) error {
 	logger.Info("Deploying FunLess locally...\n\n")
+
+	cmdEnv := map[string]string{"SECRET_KEY_BASE": config.SecretKeyBase}
+	ctx = context.WithValue(ctx, pkg.FLContextKey("env"), cmdEnv)
 
 	_ = logger.StartSpinner("Setting things up...")
 
@@ -84,7 +88,7 @@ func (u *Up) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogger)
 
 	_ = logger.StopSpinner(nil)
 
-	if err := dk.ComposeUp(composeFilePath); err != nil {
+	if err := dk.ComposeUp(ctx, composeFilePath); err != nil {
 		return err
 	}
 

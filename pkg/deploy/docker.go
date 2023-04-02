@@ -16,46 +16,61 @@ package deploy
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/funlessdev/fl-cli/pkg"
 )
 
 type DockerShell interface {
-	ComposeUp(composeFilePath string) error
-	ComposeDown(composeFilePath string) error
-	ComposeList() ([]string, error)
+	ComposeUp(ctx context.Context, composeFilePath string) error
+	ComposeDown(ctx context.Context, composeFilePath string) error
+	ComposeList(ctx context.Context) ([]string, error)
 }
 
 type FLDockerShell struct{}
 
-func (sh *FLDockerShell) ComposeUp(composeFilePath string) error {
-	return runShellCmd(os.Stdout, os.Stderr, "docker", "compose", "-f", composeFilePath, "up", "-d")
+func (sh *FLDockerShell) ComposeUp(ctx context.Context, composeFilePath string) error {
+	return runShellCmd(ctx, os.Stdout, os.Stderr, "docker", "compose", "-f", composeFilePath, "up", "-d")
 }
 
-func (sh *FLDockerShell) ComposeDown(composeFilePath string) error {
-	return runShellCmd(os.Stdout, os.Stderr, "docker", "compose", "-f", composeFilePath, "down")
+func (sh *FLDockerShell) ComposeDown(ctx context.Context, composeFilePath string) error {
+	return runShellCmd(ctx, os.Stdout, os.Stderr, "docker", "compose", "-f", composeFilePath, "down")
 }
 
-func (sh *FLDockerShell) ComposeList() ([]string, error) {
+func (sh *FLDockerShell) ComposeList(ctx context.Context) ([]string, error) {
 	var buf bytes.Buffer
-	err := runShellCmd(&buf, os.Stderr, "docker", "compose", "ls", "-q")
+	err := runShellCmd(ctx, &buf, os.Stderr, "docker", "compose", "ls", "-q")
 	lines := strings.Split(buf.String(), "\n")
 	return lines, err
 }
 
-func runShellCmd(resultBuf io.Writer, errorBuf io.Writer, cmd string, args ...string) error {
-	exe, params := parseCmd(cmd, args...)
+func runShellCmd(ctx context.Context, resultBuf io.Writer, errorBuf io.Writer, cmd string, args ...string) error {
+	exe, params := parseCmd(ctx, cmd, args...)
 	command := exec.Command(exe, params...)
 	command.Stdout = resultBuf
 	command.Stderr = errorBuf
 
+	ctxEnv, ok := ctx.Value(pkg.FLContextKey("env")).(map[string]string)
+	command.Env = os.Environ()
+
+	if ok && ctxEnv != nil {
+		for k := range ctxEnv {
+			if ctxEnv[k] != "" {
+				command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, ctxEnv[k]))
+			}
+		}
+	}
+
 	return command.Run()
 }
 
-func parseCmd(cmd string, args ...string) (string, []string) {
+func parseCmd(ctx context.Context, cmd string, args ...string) (string, []string) {
 	re := regexp.MustCompile(`[\r\t\n\f ]+`)
 	a := strings.Split(re.ReplaceAllString(cmd, " "), " ")
 
