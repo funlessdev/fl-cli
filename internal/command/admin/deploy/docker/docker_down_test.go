@@ -22,6 +22,7 @@ import (
 
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/test/mocks"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -60,7 +61,7 @@ func TestDockerDownRun(t *testing.T) {
 		require.NoError(t, err)
 
 		out.Reset()
-		mockDockerShell.On("ComposeDown", path).Return(errors.New("some compose down error")).Once()
+		mockDockerShell.On("ComposeDown", mock.Anything, path).Return(errors.New("some compose down error")).Once()
 
 		err = down.Run(ctx, mockDockerShell, logger)
 		require.Error(t, err)
@@ -78,7 +79,7 @@ func TestDockerDownRun(t *testing.T) {
 		}()
 
 		out.Reset()
-		mockDockerShell.On("ComposeList").Return([]string{"fl"}, nil).Once()
+		mockDockerShell.On("ComposeList", mock.Anything).Return([]string{"fl"}, nil).Once()
 
 		err = down.Run(ctx, mockDockerShell, logger)
 		require.Error(t, err)
@@ -98,7 +99,7 @@ func TestDockerDownRun(t *testing.T) {
 		}()
 
 		out.Reset()
-		mockDockerShell.On("ComposeList").Return([]string{"test"}, nil).Once()
+		mockDockerShell.On("ComposeList", mock.Anything).Return([]string{"test"}, nil).Once()
 
 		err = down.Run(ctx, mockDockerShell, logger)
 		require.Error(t, err)
@@ -111,7 +112,7 @@ func TestDockerDownRun(t *testing.T) {
 		require.NoError(t, err)
 
 		out.Reset()
-		mockDockerShell.On("ComposeDown", path).Return(nil)
+		mockDockerShell.On("ComposeDown", mock.Anything, path).Return(nil)
 
 		err = down.Run(ctx, mockDockerShell, logger)
 		require.NoError(t, err)

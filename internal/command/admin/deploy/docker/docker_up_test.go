@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
@@ -49,7 +50,7 @@ func TestDockerUpRun(t *testing.T) {
 		homedir.GetHomeDir = func() (string, error) {
 			return "", errors.New("some home error")
 		}
-		err := up.Run(ctx, mockDockerShell, logger)
+		err := up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.Error(t, err)
 	})
 
@@ -57,8 +58,8 @@ func TestDockerUpRun(t *testing.T) {
 		homedir.GetHomeDir = func() (string, error) {
 			return homedirPath, nil
 		}
-		mockDockerShell.On("ComposeUp", mock.Anything).Return(nil).Once()
-		err := up.Run(ctx, mockDockerShell, logger)
+		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(nil).Once()
+		err := up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.NoError(t, err)
 
 		require.Contains(t, out.String(), "\nDeployment complete!")
@@ -66,21 +67,21 @@ func TestDockerUpRun(t *testing.T) {
 
 	t.Run("should return error when compose up fails", func(t *testing.T) {
 		out.Reset()
-		mockDockerShell.On("ComposeUp", mock.Anything).Return(errors.New("compose up error")).Once()
-		err := up.Run(ctx, mockDockerShell, logger)
+		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(errors.New("compose up error")).Once()
+		err := up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.Error(t, err)
 	})
 
 	t.Run("should modify docker-compose.yml when given custom core/worker", func(t *testing.T) {
 		out.Reset()
-		mockDockerShell.On("ComposeUp", mock.Anything).Return(nil).Once()
+		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(nil).Once()
 		_, path, err := homedir.ReadFromConfigDir("docker-compose.yml")
 		require.NoError(t, err)
 		os.Remove(path)
 
 		up.CoreImage = "custom-core"
 		up.WorkerImage = "custom-worker"
-		err = up.Run(ctx, mockDockerShell, logger)
+		err = up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.NoError(t, err)
 
 		require.Contains(t, out.String(), "\nDeployment complete!")
