@@ -1,4 +1,4 @@
-// Copyright 2022 Giuseppe De Palma, Matteo Trentin
+// Copyright 2023 Giuseppe De Palma, Matteo Trentin
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,14 @@
 package deploy
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/funlessdev/fl-cli/pkg"
 	apiAppsV1 "k8s.io/api/apps/v1"
@@ -27,8 +30,12 @@ import (
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiRbacV1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/remotecommand"
 )
 
 type KubernetesDeployer interface {
@@ -49,13 +56,13 @@ type KubernetesDeployer interface {
 	DeployCoreService(ctx context.Context) error
 	DeployWorker(ctx context.Context) error
 
-	ExtractTokens(ctx context.Context) error
+	ExtractTokens(ctx context.Context, stdout *bytes.Buffer, stderr *bytes.Buffer) error
 }
 
 type FLKubernetesDeployer struct {
 	kubernetesClientSet kubernetes.Interface
-
-	namespace string
+	restConfig          *rest.Config
+	namespace           string
 }
 
 func getYAMLContent(url string) ([]byte, error) {
@@ -94,6 +101,7 @@ func (k *FLKubernetesDeployer) WithConfig(config string) error {
 		return err
 	}
 
+	k.restConfig = kConfig
 	k.kubernetesClientSet = clientSet
 	return nil
 }
@@ -369,7 +377,45 @@ func (k *FLKubernetesDeployer) DeployWorker(ctx context.Context) error {
 	return err
 }
 
-func (k *FLKubernetesDeployer) ExtractTokens(ctx context.Context) error {
-	// TODO
-	return nil
+func (k *FLKubernetesDeployer) ExtractTokens(ctx context.Context, stdout *bytes.Buffer, stderr *bytes.Buffer) error {
+
+	corePods, err := k.kubernetesClientSet.CoreV1().Pods(k.namespace).List(ctx, v1.ListOptions{LabelSelector: "app=fl-core"})
+	if err != nil {
+		return err
+	}
+	if len(corePods.Items) == 0 {
+		return errors.New("no pods matching app=fl-core")
+	}
+
+	corePod := corePods.Items[0]
+	req := k.kubernetesClientSet.CoreV1().RESTClient().Post().Resource("pods").Name(corePod.Name).Namespace("fl").SubResource("exec")
+	options := &apiCoreV1.PodExecOptions{
+		Command: []string{
+			"sh",
+			"-c",
+			"cat /tmp/funless/tokens",
+		},
+		Stdin:  false,
+		Stdout: true,
+		Stderr: true,
+		TTY:    false,
+	}
+
+	req.VersionedParams(options, scheme.ParameterCodec)
+
+	exec, err := remotecommand.NewSPDYExecutor(k.restConfig, "POST", req.URL())
+	if err != nil {
+		return err
+	}
+
+	err = wait.Poll(time.Second, time.Second*120, func() (done bool, err error) {
+		e := exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+			Stdin:  nil,
+			Stdout: stdout,
+			Stderr: stderr,
+		})
+		return e == nil, nil
+	})
+
+	return err
 }

@@ -1,4 +1,4 @@
-// Copyright 2022 Giuseppe De Palma, Matteo Trentin
+// Copyright 2023 Giuseppe De Palma, Matteo Trentin
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,6 +119,17 @@ func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger
 	_ = logger.StartSpinner("Deploying Workers...")
 	if err := logger.StopSpinner(deployer.DeployWorker(ctx)); err != nil {
 		return err
+	}
+
+	var cmdOut, cmdErr bytes.Buffer
+	_ = logger.StartSpinner("Extracting auth tokens...")
+	if err := logger.StopSpinner(deployer.ExtractTokens(ctx, &cmdOut, &cmdErr)); err != nil {
+		logger.Infof("\n%+v\n", err)
+		logger.Infof("\n%+v\n", cmdErr.String())
+		logger.Info("Couldn't extract auth tokens from core pod. Completing deployment...")
+	} else {
+		logger.Infof("\n%+v\n", cmdOut.String())
+		logger.Info("\nRemember to add these tokens in ~/.fl/config as api_token and admin_token.\n")
 	}
 
 	logger.Info("\nDeployment complete!\n")
