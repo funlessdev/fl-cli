@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	apiAppsV1 "k8s.io/api/apps/v1"
 	apiBatchV1 "k8s.io/api/batch/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
@@ -43,9 +44,12 @@ type KubernetesDeployer interface {
 	DeployPostgres(ctx context.Context) error
 	DeployPostgresService(ctx context.Context) error
 	StartInitPostgres(ctx context.Context) error
+	CreateCoreSecrets(ctx context.Context) error
 	DeployCore(ctx context.Context) error
 	DeployCoreService(ctx context.Context) error
 	DeployWorker(ctx context.Context) error
+
+	ExtractTokens(ctx context.Context) error
 }
 
 type FLKubernetesDeployer struct {
@@ -284,6 +288,30 @@ func (k *FLKubernetesDeployer) StartInitPostgres(ctx context.Context) error {
 	return err
 }
 
+func (k *FLKubernetesDeployer) CreateCoreSecrets(ctx context.Context) error {
+	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/core-secret-key-base.yml")
+	if err != nil {
+		return err
+	}
+
+	typeMeta := v1.TypeMeta{Kind: "Secret", APIVersion: "v1"}
+	obj, err := ParseKubernetesYAML(yml, &apiCoreV1.Secret{TypeMeta: typeMeta})
+	if err != nil {
+		return err
+	}
+
+	secret := obj.(*apiCoreV1.Secret)
+
+	overrideSecretKeyBase, ok := ctx.Value(pkg.FLContextKey("secret_key_base")).(string)
+	if ok && overrideSecretKeyBase != "" {
+		secret.Data["secret_key_base"] = []byte(overrideSecretKeyBase)
+	}
+
+	_, err = k.kubernetesClientSet.CoreV1().Secrets(k.namespace).Create(ctx, secret, v1.CreateOptions{})
+
+	return err
+}
+
 func (k *FLKubernetesDeployer) DeployCore(ctx context.Context) error {
 	yml, err := getYAMLContent("https://raw.githubusercontent.com/funlessdev/fl-deploy/main/kind/core.yml")
 	if err != nil {
@@ -339,4 +367,9 @@ func (k *FLKubernetesDeployer) DeployWorker(ctx context.Context) error {
 	_, err = k.kubernetesClientSet.AppsV1().DaemonSets(k.namespace).Create(ctx, daemonSet, v1.CreateOptions{})
 
 	return err
+}
+
+func (k *FLKubernetesDeployer) ExtractTokens(ctx context.Context) error {
+	// TODO
+	return nil
 }

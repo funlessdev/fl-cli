@@ -18,6 +18,8 @@ import (
 	"bytes"
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -39,8 +41,10 @@ EXAMPLES
 	$ fl admin deploy kubernetes up --kubeconfig <your-kubeconfig-path>`
 }
 
-func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
+func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger, config client.Config) error {
 	logger.Info("Deploying FunLess on Kubernetes...\n\n")
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("secret_key_base"), config.SecretKeyBase)
 
 	_ = logger.StartSpinner("Setting things up...")
 	if err := logger.StopSpinner(deployer.WithConfig(k.KubeConfig)); err != nil {
@@ -94,6 +98,11 @@ func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger
 
 	_ = logger.StartSpinner("Starting init-postgres Job...")
 	if err := logger.StopSpinner(deployer.StartInitPostgres(ctx)); err != nil {
+		return err
+	}
+
+	_ = logger.StartSpinner("Creating Core Secrets...")
+	if err := logger.StopSpinner(deployer.CreateCoreSecrets(ctx)); err != nil {
 		return err
 	}
 
