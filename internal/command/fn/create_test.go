@@ -49,12 +49,12 @@ Successfully created function %s/%s.
 	testLogger, _ := log.NewLoggerBuilder().WithWriter(os.Stdout).DisableAnimation().Build()
 
 	mockFnHandler := mocks.NewFnHandler(t)
-	mockFnHandler.On("Create", ctx, testFn, testMod, mock.Anything).Return(nil)
+	mockFnHandler.On("Create", mock.Anything, testFn, testMod, mock.Anything).Return(nil)
 
 	mockBuilder := mocks.NewDockerBuilder(t)
 	mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil)
-	mockBuilder.On("PullBuilderImage", ctx).Return(nil)
-	mockBuilder.On("BuildSource", ctx, testDir).Return(nil)
+	mockBuilder.On("PullBuilderImage", mock.Anything).Return(nil)
+	mockBuilder.On("BuildSource", mock.Anything, testDir).Return(nil)
 
 	// monkey patch the openWasmFile function
 	openWasmFile = func(path string) (*os.File, error) {
@@ -73,11 +73,11 @@ Successfully created function %s/%s.
 
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
 
-		err := cmd.Run(ctx, mockBuilder, mockFnHandler, bufLogger)
+		err := cmd.Run(ctx, mockBuilder, mockFnHandler, bufLogger, &Fn{})
 
 		require.NoError(t, err)
 		assert.Equal(t, testResult, (&outbuf).String())
-		mockFnHandler.AssertCalled(t, "Create", ctx, testFn, testMod, mock.AnythingOfType("*os.File"))
+		mockFnHandler.AssertCalled(t, "Create", mock.Anything, testFn, testMod, mock.AnythingOfType("*os.File"))
 		mockFnHandler.AssertNumberOfCalls(t, "Create", 1)
 		mockFnHandler.AssertExpectations(t)
 		mockBuilder.AssertExpectations(t)
@@ -91,10 +91,10 @@ Successfully created function %s/%s.
 			Language: testLanguage,
 		}
 
-		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
+		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger, &Fn{})
 		require.NoError(t, err)
 
-		mockBuilder.AssertCalled(t, "BuildSource", ctx, testDir)
+		mockBuilder.AssertCalled(t, "BuildSource", mock.Anything, testDir)
 		mockBuilder.AssertNumberOfCalls(t, "BuildSource", 2)
 		mockBuilder.AssertExpectations(t)
 	})
@@ -110,7 +110,7 @@ Successfully created function %s/%s.
 		mockBuilder := mocks.NewDockerBuilder(t)
 		mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(errors.New("some error")).Once()
 
-		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
+		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger, &Fn{})
 		require.Error(t, err)
 		mockBuilder.AssertExpectations(t)
 	})
@@ -125,9 +125,9 @@ Successfully created function %s/%s.
 
 		mockBuilder := mocks.NewDockerBuilder(t)
 		mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", ctx).Return(errors.New("some error")).Once()
+		mockBuilder.On("PullBuilderImage", mock.Anything).Return(errors.New("some error")).Once()
 
-		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
+		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger, &Fn{})
 		require.Error(t, err)
 		mockBuilder.AssertExpectations(t)
 	})
@@ -142,10 +142,10 @@ Successfully created function %s/%s.
 
 		mockBuilder := mocks.NewDockerBuilder(t)
 		mockBuilder.On("Setup", mock.Anything, testLanguage, mock.Anything).Return(nil).Once()
-		mockBuilder.On("PullBuilderImage", ctx).Return(nil).Once()
-		mockBuilder.On("BuildSource", ctx, testDir).Return(errors.New("some error")).Once()
+		mockBuilder.On("PullBuilderImage", mock.Anything).Return(nil).Once()
+		mockBuilder.On("BuildSource", mock.Anything, testDir).Return(errors.New("some error")).Once()
 
-		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger)
+		err := cmd.Run(ctx, mockBuilder, mockFnHandler, testLogger, &Fn{})
 		require.Error(t, err)
 		mockBuilder.AssertExpectations(t)
 	})

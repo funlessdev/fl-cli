@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -25,21 +26,26 @@ import (
 type User struct {
 	Create CreateUser `cmd:"" name:"create" aliases:"c" help:"Create a new FunLess user"`
 	List   ListUsers  `cmd:"" name:"list" aliases:"l" help:"List all FunLess users"`
+
+	Host string `short:"H" help:"API host/port of the platform (no protocol)"`
 }
 
 type CreateUser struct {
 	Name string `arg:"" name:"name" help:"The name of the new user"`
 }
 
-func (u *CreateUser) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger) error {
-	logger.StartSpinner("Creating user...")
+func (u *CreateUser) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger, parent *User) error {
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
+
+	_ = logger.StartSpinner("Creating user...")
 	res, err := userHandler.Create(ctx, u.Name)
 	_ = logger.StopSpinner(err)
 	if err != nil {
 		return err
 	}
 	logger.Info(fmt.Sprintf("User %s created. Auth token:\n", res.Name))
-	logger.Info(res.Token)
+	logger.Info(res.Token + "\n")
 	return err
 }
 
@@ -61,16 +67,19 @@ EXAMPLES
 type ListUsers struct {
 }
 
-func (u *ListUsers) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger) error {
-	logger.StartSpinner("Listing existing users...")
+func (u *ListUsers) Run(ctx context.Context, userHandler client.UserHandler, logger log.FLogger, parent *User) error {
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
+
+	_ = logger.StartSpinner("Listing existing users...")
 	res, err := userHandler.List(ctx)
 	_ = logger.StopSpinner(err)
 	if err != nil {
 		return err
 	}
-	logger.Info("Users:")
+	logger.Info("Users:\n")
 	for _, user := range res.Names {
-		logger.Info(fmt.Sprintf("- %s", user))
+		logger.Info(fmt.Sprintf("- %s\n", user))
 	}
 	return err
 }

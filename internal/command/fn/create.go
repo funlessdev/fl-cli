@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/build"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -49,7 +50,10 @@ EXAMPLES
 
 }
 
-func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger) error {
+func (c *Create) Run(ctx context.Context, builder build.DockerBuilder, fnHandler client.FnHandler, logger log.FLogger, parent *Fn) error {
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
+
 	logger.Infof("Creating %s function...\n\n", c.Name)
 
 	_ = logger.StartSpinner("Building function...🏗 ️")

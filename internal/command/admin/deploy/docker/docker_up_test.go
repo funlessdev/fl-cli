@@ -23,11 +23,13 @@ import (
 	"testing"
 
 	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/homedir"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 func TestDockerUpRun(t *testing.T) {
@@ -49,7 +51,7 @@ func TestDockerUpRun(t *testing.T) {
 		homedir.GetHomeDir = func() (string, error) {
 			return "", errors.New("some home error")
 		}
-		err := up.Run(ctx, mockDockerShell, logger)
+		err := up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.Error(t, err)
 	})
 
@@ -57,8 +59,9 @@ func TestDockerUpRun(t *testing.T) {
 		homedir.GetHomeDir = func() (string, error) {
 			return homedirPath, nil
 		}
-		mockDockerShell.On("ComposeUp", mock.Anything).Return(nil).Once()
-		err := up.Run(ctx, mockDockerShell, logger)
+		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(nil).Once()
+		mockDockerShell.On("LogTokens", mock.Anything).Return(nil).Once()
+		err := up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.NoError(t, err)
 
 		require.Contains(t, out.String(), "\nDeployment complete!")
@@ -66,21 +69,22 @@ func TestDockerUpRun(t *testing.T) {
 
 	t.Run("should return error when compose up fails", func(t *testing.T) {
 		out.Reset()
-		mockDockerShell.On("ComposeUp", mock.Anything).Return(errors.New("compose up error")).Once()
-		err := up.Run(ctx, mockDockerShell, logger)
+		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(errors.New("compose up error")).Once()
+		err := up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.Error(t, err)
 	})
 
 	t.Run("should modify docker-compose.yml when given custom core/worker", func(t *testing.T) {
 		out.Reset()
-		mockDockerShell.On("ComposeUp", mock.Anything).Return(nil).Once()
+		mockDockerShell.On("ComposeUp", mock.Anything, mock.Anything).Return(nil).Once()
+		mockDockerShell.On("LogTokens", mock.Anything).Return(nil).Once()
 		_, path, err := homedir.ReadFromConfigDir("docker-compose.yml")
 		require.NoError(t, err)
 		os.Remove(path)
 
 		up.CoreImage = "custom-core"
 		up.WorkerImage = "custom-worker"
-		err = up.Run(ctx, mockDockerShell, logger)
+		err = up.Run(ctx, mockDockerShell, logger, client.Config{})
 		require.NoError(t, err)
 
 		require.Contains(t, out.String(), "\nDeployment complete!")
@@ -164,12 +168,21 @@ func Test_replaceImages(t *testing.T) {
 		content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
 		require.NoError(t, err)
 
-		expected := `  core:
-    image: core-test`
-		expectedWorker := `  worker:
-    image: ghcr.io/funlessdev/worker:latest`
-		require.Contains(t, string(content), expected, "core image should be the one provided")
-		require.Contains(t, string(content), expectedWorker, "worker image should be the default")
+		var contentYaml map[string]interface{}
+		err = yaml.Unmarshal(content, &contentYaml)
+		require.NoError(t, err)
+
+		svc, ok := contentYaml["services"].(map[interface{}]interface{})
+		require.True(t, ok)
+		svcCore, ok := svc["core"].(map[interface{}]interface{})
+		require.True(t, ok)
+		svcWorker, ok := svc["worker"].(map[interface{}]interface{})
+		require.True(t, ok)
+
+		expected := "core-test"
+		expectedWorker := "ghcr.io/funlessdev/worker:latest"
+		require.Equal(t, svcCore["image"], expected, "core image should be the one provided")
+		require.Equal(t, svcWorker["image"], expectedWorker, "worker image should be the default")
 	})
 
 	t.Run("should swap worker image when different from default", func(t *testing.T) {
@@ -183,12 +196,21 @@ func Test_replaceImages(t *testing.T) {
 		content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
 		require.NoError(t, err)
 
-		expected := `  core:
-    image: ghcr.io/funlessdev/core:latest`
-		expectedWorker := `  worker:
-    image: worker-test`
-		require.Contains(t, string(content), expected, "core image should be the default")
-		require.Contains(t, string(content), expectedWorker, "worker image should be the one provided")
+		var contentYaml map[string]interface{}
+		err = yaml.Unmarshal(content, &contentYaml)
+		require.NoError(t, err)
+
+		svc, ok := contentYaml["services"].(map[interface{}]interface{})
+		require.True(t, ok)
+		svcCore, ok := svc["core"].(map[interface{}]interface{})
+		require.True(t, ok)
+		svcWorker, ok := svc["worker"].(map[interface{}]interface{})
+		require.True(t, ok)
+
+		expected := "ghcr.io/funlessdev/core:latest"
+		expectedWorker := "worker-test"
+		require.Equal(t, svcCore["image"], expected, "core image should be the one provided")
+		require.Equal(t, svcWorker["image"], expectedWorker, "worker image should be the default")
 	})
 
 	t.Run("should swap both images when different from default", func(t *testing.T) {
@@ -202,12 +224,21 @@ func Test_replaceImages(t *testing.T) {
 		content, _, err := homedir.ReadFromConfigDir("docker-compose.yml")
 		require.NoError(t, err)
 
-		expected := `  core:
-    image: core-test`
-		expectedWorker := `  worker:
-    image: worker-test`
-		require.Contains(t, string(content), expected, "core image should be the one provided")
-		require.Contains(t, string(content), expectedWorker, "worker image should be the one provided")
+		var contentYaml map[string]interface{}
+		err = yaml.Unmarshal(content, &contentYaml)
+		require.NoError(t, err)
+
+		svc, ok := contentYaml["services"].(map[interface{}]interface{})
+		require.True(t, ok)
+		svcCore, ok := svc["core"].(map[interface{}]interface{})
+		require.True(t, ok)
+		svcWorker, ok := svc["worker"].(map[interface{}]interface{})
+		require.True(t, ok)
+
+		expected := "core-test"
+		expectedWorker := "worker-test"
+		require.Equal(t, svcCore["image"], expected, "core image should be the one provided")
+		require.Equal(t, svcWorker["image"], expectedWorker, "worker image should be the default")
 	})
 
 }

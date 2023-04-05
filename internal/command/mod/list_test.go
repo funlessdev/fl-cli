@@ -25,6 +25,7 @@ import (
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 )
@@ -41,11 +42,11 @@ func TestModList(t *testing.T) {
 		cmd := List{}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("List", testCtx).Return(pkg.ModuleNameList{Names: testMods}, nil)
+		mockModHandler.On("List", mock.Anything).Return(pkg.ModuleNameList{Names: testMods}, nil)
 
-		err := cmd.Run(testCtx, mockModHandler, testLogger)
+		err := cmd.Run(testCtx, mockModHandler, testLogger, &Mod{})
 		require.NoError(t, err)
-		mockModHandler.AssertCalled(t, "List", testCtx)
+		mockModHandler.AssertCalled(t, "List", mock.Anything)
 		mockModHandler.AssertNumberOfCalls(t, "List", 1)
 		mockModHandler.AssertExpectations(t)
 	})
@@ -54,12 +55,12 @@ func TestModList(t *testing.T) {
 		cmd := List{}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("List", testCtx).Return(pkg.ModuleNameList{Names: testMods}, nil)
+		mockModHandler.On("List", mock.Anything).Return(pkg.ModuleNameList{Names: testMods}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockModHandler, bufLogger)
+		err := cmd.Run(testCtx, mockModHandler, bufLogger, &Mod{})
 
 		require.NoError(t, err)
 		assert.Equal(t, fmt.Sprintf("%s\n%s\n%s\n", testMods[0], testMods[1], testMods[2]), (&outbuf).String())
@@ -72,12 +73,12 @@ func TestModList(t *testing.T) {
 		}
 
 		mockModHandler := mocks.NewModHandler(t)
-		mockModHandler.On("List", testCtx).Return(pkg.ModuleNameList{Names: testMods}, nil)
+		mockModHandler.On("List", mock.Anything).Return(pkg.ModuleNameList{Names: testMods}, nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockModHandler, bufLogger)
+		err := cmd.Run(testCtx, mockModHandler, bufLogger, &Mod{})
 
 		require.NoError(t, err)
 		assert.Equal(t, fmt.Sprintf("%s\n%s\n%s\nCount: %d\n", testMods[0], testMods[1], testMods[2], len(testMods)), (&outbuf).String())
@@ -90,9 +91,9 @@ func TestModList(t *testing.T) {
 		mockModHandler := mocks.NewModHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockModHandler.On("List", testCtx).Return(pkg.ModuleNameList{}, e)
+		mockModHandler.On("List", mock.Anything).Return(pkg.ModuleNameList{}, e)
 
-		err := cmd.Run(testCtx, mockModHandler, testLogger)
+		err := cmd.Run(testCtx, mockModHandler, testLogger, &Mod{})
 		require.Error(t, err)
 	})
 }

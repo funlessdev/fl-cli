@@ -15,11 +15,16 @@
 package client
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+	"strings"
 
+	"github.com/funlessdev/fl-cli/pkg/homedir"
 	openapi "github.com/funlessdev/fl-client-sdk-go"
 )
 
@@ -34,8 +39,65 @@ type Client struct {
 }
 
 type Config struct {
-	Host    string
-	BaseURL *url.URL
+	Path          string
+	Host          string
+	BaseURL       *url.URL
+	SecretKeyBase string // used when deploying the platform, unused when using API
+	AdminToken    string
+	APIToken      string
+}
+
+// NewConfig creates a new funless config, reading the information from the given configPath
+func NewConfig(configPath string) (Config, error) {
+
+	config, path, err := homedir.ReadFromConfigDir(configPath)
+
+	outConfig := Config{
+		Host:          "http://localhost:4000",
+		SecretKeyBase: "",
+		AdminToken:    "",
+		APIToken:      "",
+	}
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			return outConfig, nil
+		} else {
+			return Config{}, err
+		}
+	}
+	configReader := bytes.NewReader(config)
+	configScanner := bufio.NewScanner(configReader)
+	configMap := make(map[string]string)
+	for configScanner.Scan() {
+		line := configScanner.Text()
+		lineParts := strings.Split(line, "=")
+		if len(lineParts) == 2 {
+			key, value := strings.TrimSpace(lineParts[0]), strings.TrimSpace(lineParts[1])
+			configMap[key] = value
+		}
+	}
+
+	if err = configScanner.Err(); err != nil {
+		return Config{}, err
+	}
+
+	outConfig.Path = path
+
+	if host, v := configMap["api_host"]; v {
+		outConfig.Host = host
+	}
+	if secretKeyBase, v := configMap["secret_key_base"]; v {
+		outConfig.SecretKeyBase = secretKeyBase
+	}
+	if adminToken, v := configMap["admin_token"]; v {
+		outConfig.AdminToken = adminToken
+	}
+	if apiToken, v := configMap["api_token"]; v {
+		outConfig.APIToken = apiToken
+	}
+
+	return outConfig, nil
 }
 
 // NewClient creates a new funless client with the provided http client and configuration.

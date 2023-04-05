@@ -32,7 +32,27 @@ type UserService struct {
 
 var _ UserHandler = &UserService{}
 
+func (u *UserService) injectAdminToken() {
+	if u.Client != nil {
+		adminToken := u.Client.Config.AdminToken
+		apiConfig := u.Client.ApiClient.GetConfig()
+		apiConfig.DefaultHeader["Authorization"] = "Bearer " + adminToken
+	}
+}
+
+func (u *UserService) injectHost(ctx context.Context) {
+	overrideHost, ok := ctx.Value(pkg.FLContextKey("api_host")).(string)
+	if ok && overrideHost != "" {
+		apiConfig := u.Client.ApiClient.GetConfig()
+		apiConfig.Host = overrideHost
+	}
+}
+
 func (u *UserService) Create(ctx context.Context, name string) (pkg.UserNameToken, error) {
+
+	u.injectHost(ctx)
+	u.injectAdminToken()
+
 	apiService := u.Client.ApiClient.SubjectsApi
 
 	requestBody := openapi.SubjectName{
@@ -51,6 +71,9 @@ func (u *UserService) Create(ctx context.Context, name string) (pkg.UserNameToke
 }
 
 func (u *UserService) List(ctx context.Context) (pkg.UserNamesList, error) {
+
+	u.injectHost(ctx)
+	u.injectAdminToken()
 
 	apiService := u.Client.ApiClient.SubjectsApi
 

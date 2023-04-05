@@ -50,6 +50,8 @@ type FLError struct {
 	} `json:"errors"`
 }
 
+type FLContextKey string
+
 func ExtractError(err error) error {
 	var e FLError
 	openApiError, castOk := err.(*openapi.GenericOpenAPIError)

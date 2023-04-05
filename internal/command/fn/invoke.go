@@ -18,13 +18,14 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
 
 type Invoke struct {
 	Name     string            `arg:"" name:"name" help:"Name of the function to invoke"`
-	Module   string            `name:"module" short:"n" default:"_" help:"Module of the function to invoke"`
+	Module   string            `name:"module" short:"m" default:"_" help:"Module of the function to invoke"`
 	Args     map[string]string `name:"args" short:"a" help:"Arguments of the function to invoke" xor:"args"`
 	JsonArgs string            `name:"json" short:"j" help:"Json encoded arguments of the function to invoke; overrides args" xor:"args"`
 }
@@ -44,7 +45,10 @@ EXAMPLES
 `
 }
 
-func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger) error {
+func (f *Invoke) Run(ctx context.Context, fnHandler client.FnHandler, logger log.FLogger, parent *Fn) error {
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
+
 	args := make(map[string]interface{}, len(f.Args))
 	if f.Args != nil {
 		for k, v := range f.Args {

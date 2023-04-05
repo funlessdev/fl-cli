@@ -17,6 +17,7 @@ package mod
 import (
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -45,7 +46,8 @@ EXAMPLES
 `
 }
 
-func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger) error {
+func (d *Delete) Run(ctx context.Context, modHandler client.ModHandler, logger log.FLogger, parent *Mod) error {
+	ctx = context.WithValue(ctx, pkg.FLContextKey("api_host"), parent.Host)
 	err := modHandler.Delete(ctx, d.Name)
 
 	if err != nil {

@@ -34,7 +34,7 @@ func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogge
 	if err != nil {
 		errorMsg := "unable to read docker-compose.yml file"
 		if os.IsNotExist(err) {
-			lines, _ := dk.ComposeList()
+			lines, _ := dk.ComposeList(ctx)
 			if slices.Contains(lines, "fl") {
 				errorMsg = "unable to locate docker-compose.yml, but a local deployment was found. The file might have been moved or deleted."
 			} else {
@@ -45,7 +45,7 @@ func (r *Down) Run(ctx context.Context, dk deploy.DockerShell, logger log.FLogge
 	}
 	defer os.Remove(composeFilePath)
 
-	err = dk.ComposeDown(composeFilePath)
+	err = dk.ComposeDown(ctx, composeFilePath)
 	if err != nil {
 		return err
 	}

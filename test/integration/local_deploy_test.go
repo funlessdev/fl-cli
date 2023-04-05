@@ -23,6 +23,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
 	"github.com/funlessdev/fl-cli/pkg"
+	flClient "github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/docker"
 	"github.com/funlessdev/fl-cli/pkg/log"
@@ -62,7 +63,7 @@ func TestAdminDevRun(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("should successfully deploy and remove funless when no errors occurr", func(t *testing.T) {
-		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
+		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger, flClient.Config{})
 		assert.NoError(t, err)
 
 		assertContainer(t, flDocker, coreName)
@@ -81,7 +82,7 @@ func TestAdminDevRun(t *testing.T) {
 
 	t.Run("should successfully deploy without creating networks when they already exist", func(t *testing.T) {
 
-		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
+		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger, flClient.Config{})
 		assert.NoError(t, err)
 
 		assertContainer(t, flDocker, coreName)
@@ -104,7 +105,7 @@ func TestAdminDevRun(t *testing.T) {
 		// _ = deployer.StartCore(ctx)
 		assertContainer(t, flDocker, coreName)
 
-		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
+		err := admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger, flClient.Config{})
 		assert.Error(t, err)
 
 		err = admCmd.Deploy.Docker.Down.Run(ctx, dockerShell, logger)
@@ -122,7 +123,7 @@ func TestAdminDevRun(t *testing.T) {
 
 		os.RemoveAll(logFolder) // cleanup folder from previous test runs
 
-		err = admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger)
+		err = admCmd.Deploy.Docker.Up.Run(ctx, dockerShell, logger, flClient.Config{})
 		assert.NoError(t, err)
 
 		assert.DirExists(t, logFolder)

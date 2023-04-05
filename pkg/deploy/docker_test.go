@@ -16,6 +16,7 @@ package deploy
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"testing"
 
@@ -24,11 +25,13 @@ import (
 
 func Test_parseCmd(t *testing.T) {
 	t.Run("should split cmd from params in cmd string", func(t *testing.T) {
-		exe, _ := parseCmd("docker info")
+		testCtx := context.Background()
+		exe, _ := parseCmd(testCtx, "docker info")
 		assert.Equal(t, "docker", exe)
 	})
 	t.Run("should append arg in cmd string at the start of params array", func(t *testing.T) {
-		_, params := parseCmd("docker info", "hello")
+		testCtx := context.Background()
+		_, params := parseCmd(testCtx, "docker info", "hello")
 		assert.Equal(t, []string{"info", "hello"}, params)
 	})
 }
@@ -37,34 +40,42 @@ func Test_runShellCmd(t *testing.T) {
 
 	t.Run("should return the command output in output buffer", func(t *testing.T) {
 		var outBuf bytes.Buffer
-		err := runShellCmd(&outBuf, os.Stderr, "echo", "hello")
+		testCtx := context.Background()
+
+		err := runShellCmd(testCtx, &outBuf, os.Stderr, "echo", "hello")
 		assert.Nil(t, err)
 		assert.Equal(t, "hello\n", outBuf.String())
 	})
 
 	t.Run("should return in error buffer all the contents of stderr", func(t *testing.T) {
 		var errBuf bytes.Buffer
-		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/sh", "-c", "echo hello err 1>&2")
+		testCtx := context.Background()
+
+		errSecond := runShellCmd(testCtx, os.Stdout, &errBuf, "/bin/sh", "-c", "echo hello err 1>&2")
 		assert.Nil(t, errSecond)
 		assert.Equal(t, "hello err\n", errBuf.String())
 
 	})
 
 	t.Run("should return an error in case of command fail", func(t *testing.T) {
-		err := runShellCmd(os.Stdout, os.Stderr, "exit", "1")
+		testCtx := context.Background()
+
+		err := runShellCmd(testCtx, os.Stdout, os.Stderr, "exit", "1")
 		assert.NotNil(t, err)
 	})
 
 	t.Run("should return the content of StdOut and StdErr despite the command fail", func(t *testing.T) {
 		var outBuf bytes.Buffer
 		var errBuf bytes.Buffer
-		errFirst := runShellCmd(&outBuf, &errBuf, "echo", "hello out")
+		testCtx := context.Background()
+
+		errFirst := runShellCmd(testCtx, &outBuf, &errBuf, "echo", "hello out")
 		assert.Nil(t, errFirst)
 
-		errSecond := runShellCmd(os.Stdout, &errBuf, "/bin/sh", "-c", "echo hello err 1>&2")
+		errSecond := runShellCmd(testCtx, os.Stdout, &errBuf, "/bin/sh", "-c", "echo hello err 1>&2")
 		assert.Nil(t, errSecond)
 
-		errThird := runShellCmd(&outBuf, &errBuf, "exit", "1")
+		errThird := runShellCmd(testCtx, &outBuf, &errBuf, "exit", "1")
 		assert.NotNil(t, errThird)
 
 		assert.Equal(t, "hello out\n", outBuf.String())

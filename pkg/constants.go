@@ -43,4 +43,6 @@ const (
 
 	DefaultTemplateRepository = "https://github.com/funlessdev/fl-templates.git"
 	ConfigDir                 = ".fl"
+	ConfigFileName            = "config"
+	ConfigKeys                = "api_host,api_token,admin_token,secret_key_base"
 )

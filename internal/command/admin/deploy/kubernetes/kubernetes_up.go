@@ -1,4 +1,4 @@
-// Copyright 2022 Giuseppe De Palma, Matteo Trentin
+// Copyright 2023 Giuseppe De Palma, Matteo Trentin
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ import (
 	"bytes"
 	"context"
 
+	"github.com/funlessdev/fl-cli/pkg"
+	"github.com/funlessdev/fl-cli/pkg/client"
 	"github.com/funlessdev/fl-cli/pkg/deploy"
 	"github.com/funlessdev/fl-cli/pkg/log"
 )
@@ -39,8 +41,10 @@ EXAMPLES
 	$ fl admin deploy kubernetes up --kubeconfig <your-kubeconfig-path>`
 }
 
-func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger) error {
+func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger log.FLogger, config client.Config) error {
 	logger.Info("Deploying FunLess on Kubernetes...\n\n")
+
+	ctx = context.WithValue(ctx, pkg.FLContextKey("secret_key_base"), config.SecretKeyBase)
 
 	_ = logger.StartSpinner("Setting things up...")
 	if err := logger.StopSpinner(deployer.WithConfig(k.KubeConfig)); err != nil {
@@ -97,6 +101,11 @@ func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger
 		return err
 	}
 
+	_ = logger.StartSpinner("Creating Core Secrets...")
+	if err := logger.StopSpinner(deployer.CreateCoreSecrets(ctx)); err != nil {
+		return err
+	}
+
 	_ = logger.StartSpinner("Deploying Core...")
 	if err := logger.StopSpinner(deployer.DeployCore(ctx)); err != nil {
 		return err
@@ -110,6 +119,17 @@ func (k *Up) Run(ctx context.Context, deployer deploy.KubernetesDeployer, logger
 	_ = logger.StartSpinner("Deploying Workers...")
 	if err := logger.StopSpinner(deployer.DeployWorker(ctx)); err != nil {
 		return err
+	}
+
+	var cmdOut, cmdErr bytes.Buffer
+	_ = logger.StartSpinner("Extracting auth tokens...")
+	if err := logger.StopSpinner(deployer.ExtractTokens(ctx, &cmdOut, &cmdErr)); err != nil {
+		logger.Infof("\n%+v\n", err)
+		logger.Infof("\n%+v\n", cmdErr.String())
+		logger.Info("Couldn't extract auth tokens from core pod. Completing deployment...")
+	} else {
+		logger.Infof("\n%+v\n", cmdOut.String())
+		logger.Info("\nRemember to add these tokens in ~/.fl/config as api_token and admin_token.\n")
 	}
 
 	logger.Info("\nDeployment complete!\n")

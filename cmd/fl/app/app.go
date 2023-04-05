@@ -21,6 +21,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/funlessdev/fl-cli/internal/command/admin"
+	"github.com/funlessdev/fl-cli/internal/command/cfg"
 	"github.com/funlessdev/fl-cli/internal/command/fn"
 	"github.com/funlessdev/fl-cli/internal/command/mod"
 	"github.com/funlessdev/fl-cli/internal/command/template"
@@ -36,6 +37,7 @@ type CLI struct {
 	Mod      mod.Mod           `cmd:"" help:"Create, delete and manage modules"`
 	Admin    admin.Admin       `cmd:"" aliases:"a" help:"Deploy and manage the platform"`
 	Template template.Template `cmd:"" help:"Pull function templates"`
+	Cfg      cfg.Cfg           `cmd:"" aliases:"c,config" help:"Manage local configuration"`
 
 	Version kong.VersionFlag `short:"v" cmd:"" passthrough:"" help:"Show fl version"`
 }
@@ -56,7 +58,10 @@ func ParseCMD(version string) (*kong.Context, error) {
 		return nil, err
 	}
 
-	flConfig := client.Config{Host: "http://localhost:4000"}
+	flConfig, err := client.NewConfig(pkg.ConfigFileName)
+	if err != nil {
+		return nil, err
+	}
 	flClient, err := client.NewClient(http.DefaultClient, flConfig)
 	validator := client.InputValidator{}
 	if err != nil {
@@ -78,14 +83,16 @@ func ParseCMD(version string) (*kong.Context, error) {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(fnSvc, (*client.FnHandler)(nil)),
 		kong.BindTo(modSvc, (*client.ModHandler)(nil)),
+		kong.BindTo(userSvc, (*client.UserHandler)(nil)),
 		kong.BindTo(logger, (*log.FLogger)(nil)),
 		kong.BindTo(dockerShell, (*deploy.DockerShell)(nil)),
 		kong.BindTo(kubernetesDeployer, (*deploy.KubernetesDeployer)(nil)),
 		kong.BindTo(kubernetesRemover, (*deploy.KubernetesRemover)(nil)),
 		kong.BindTo(wasmBuilder, (*build.DockerBuilder)(nil)),
-		kong.BindTo(userSvc, (*client.UserHandler)(nil)),
+		kong.BindTo(flConfig, (*client.Config)(nil)),
 		kong.Vars{
 			"version":              version,
+			"config_keys":          pkg.ConfigKeys,
 			"default_core_image":   pkg.CoreImg,
 			"default_worker_image": pkg.WorkerImg,
 		},

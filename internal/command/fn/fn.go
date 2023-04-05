@@ -21,4 +21,6 @@ type Fn struct {
 	Build  Build  `cmd:"" aliases:"b" help:"Compile a function into a wasm binary"`
 	Upload Upload `cmd:"" aliases:"up" help:"Create functions by uploading wasm binaries"`
 	New    New    `cmd:"" aliases:"n" help:"Create a new function from a template"`
+
+	Host string `short:"H" help:"API host/port of the platform (no protocol)"`
 }

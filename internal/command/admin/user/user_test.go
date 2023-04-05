@@ -22,6 +22,7 @@ import (
 	"github.com/funlessdev/fl-cli/pkg"
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,12 +35,12 @@ func TestCreateUser(t *testing.T) {
 	var outbuf bytes.Buffer
 	bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
 	mockUserHandler := mocks.NewUserHandler(t)
-	mockUserHandler.On("Create", ctx, "userA").Return(mockResult, nil)
+	mockUserHandler.On("Create", mock.Anything, "userA").Return(mockResult, nil)
 
 	cmd := CreateUser{Name: "userA"}
-	err := cmd.Run(ctx, mockUserHandler, bufLogger)
+	err := cmd.Run(ctx, mockUserHandler, bufLogger, &User{})
 	require.NoError(t, err)
-	mockUserHandler.AssertCalled(t, "Create", ctx, "userA")
+	mockUserHandler.AssertCalled(t, "Create", mock.Anything, "userA")
 	mockUserHandler.AssertNumberOfCalls(t, "Create", 1)
 	mockUserHandler.AssertExpectations(t)
 
@@ -53,12 +54,12 @@ func TestListUsers(t *testing.T) {
 	var outbuf bytes.Buffer
 	bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).DisableAnimation().Build()
 	mockUserHandler := mocks.NewUserHandler(t)
-	mockUserHandler.On("List", ctx).Return(mockResult, nil)
+	mockUserHandler.On("List", mock.Anything).Return(mockResult, nil)
 
 	cmd := ListUsers{}
-	err := cmd.Run(ctx, mockUserHandler, bufLogger)
+	err := cmd.Run(ctx, mockUserHandler, bufLogger, &User{})
 	require.NoError(t, err)
-	mockUserHandler.AssertCalled(t, "List", ctx)
+	mockUserHandler.AssertCalled(t, "List", mock.Anything)
 	mockUserHandler.AssertNumberOfCalls(t, "List", 1)
 	mockUserHandler.AssertExpectations(t)
 

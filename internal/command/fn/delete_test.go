@@ -23,6 +23,7 @@ import (
 
 	"github.com/funlessdev/fl-cli/pkg/log"
 	"github.com/funlessdev/fl-cli/test/mocks"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -42,11 +43,11 @@ func TestFnDelete(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testMod).Return(nil)
+		mockFnHandler.On("Delete", mock.Anything, testFn, testMod).Return(nil)
 
-		err := cmd.Run(testCtx, mockFnHandler, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger, &Fn{})
 		require.NoError(t, err)
-		mockFnHandler.AssertCalled(t, "Delete", testCtx, testFn, testMod)
+		mockFnHandler.AssertCalled(t, "Delete", mock.Anything, testFn, testMod)
 		mockFnHandler.AssertNumberOfCalls(t, "Delete", 1)
 		mockFnHandler.AssertExpectations(t)
 	})
@@ -57,12 +58,12 @@ func TestFnDelete(t *testing.T) {
 		}
 
 		mockFnHandler := mocks.NewFnHandler(t)
-		mockFnHandler.On("Delete", testCtx, testFn, testMod).Return(nil)
+		mockFnHandler.On("Delete", mock.Anything, testFn, testMod).Return(nil)
 
 		var outbuf bytes.Buffer
 		bufLogger, _ := log.NewLoggerBuilder().WithWriter(&outbuf).Build()
 
-		err := cmd.Run(testCtx, mockFnHandler, bufLogger)
+		err := cmd.Run(testCtx, mockFnHandler, bufLogger, &Fn{})
 
 		require.NoError(t, err)
 		assert.Equal(t, fmt.Sprintf("\nSuccessfully deleted function %s/%s.\n", testMod, testFn), (&outbuf).String())
@@ -78,9 +79,9 @@ func TestFnDelete(t *testing.T) {
 		mockFnHandler := mocks.NewFnHandler(t)
 
 		e := &openapi.GenericOpenAPIError{}
-		mockFnHandler.On("Delete", testCtx, testFn, testMod).Return(e)
+		mockFnHandler.On("Delete", mock.Anything, testFn, testMod).Return(e)
 
-		err := cmd.Run(testCtx, mockFnHandler, testLogger)
+		err := cmd.Run(testCtx, mockFnHandler, testLogger, &Fn{})
 		require.Error(t, err)
 	})
 }
