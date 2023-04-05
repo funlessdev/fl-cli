@@ -14,6 +14,37 @@
   ~ limitations under the License.
 -->
 
+## v0.4.0 (2023-04-05)
+
+### Feat
+
+- **deploy**: add token extraction from fl-core pod in k8s deployment
+- **deploy**: inject secret_key_base from config in k8s secret
+- add auth token logging in docker deploy
+- **deploy**: add secret_key_base from config in docker env
+- **command**: add override host flag in user/fn/mod subcommands
+- **client**: add injecthost function to services
+- **cfg**: add cfg subcommand for config management
+- **client**: expand config; read from existing config file
+- **admin**: add user list command
+- **admin**: add user subcmd to create user
+- **kubernetes**: add postgres entities in k8s up
+
+### Fix
+
+- **docker**: correctly handle custom worker/core images
+- **client**: add custom type for fl context keys
+- **cfg**: handle missing config file; set correct host key
+- **user_service**: add missing auth token in requests
+- **mod_service**: add missing auth token in requests
+- **fn_service**: add missing api auth token in requests
+- **deploy**: set correct types in k8s deployment
+
+### Refactor
+
+- isolate openapi structs to client layer
+- move error handling to common file
+
 ## v0.3.3 (2023-02-02)
 
 ### Fix
